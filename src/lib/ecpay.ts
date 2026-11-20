@@ -188,6 +188,15 @@ function formatTradeDate(date = new Date()): string {
   return `${get("year")}/${get("month")}/${get("day")} ${hour}:${get("minute")}:${get("second")}`;
 }
 
+/** ECPay TradeDesc/ItemName reject many punctuation marks — keep CJK/alnum/space. */
+export function sanitizeEcpayText(value: string, maxLen: number): string {
+  return value
+    .replace(/[^\u4e00-\u9fffA-Za-z0-9\s_\-.#]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLen);
+}
+
 export function buildCheckoutParams(input: EcpayOrderInput) {
   const { MerchantID, paymentUrl, isStage } = getEcpayConfig();
 
@@ -196,9 +205,9 @@ export function buildCheckoutParams(input: EcpayOrderInput) {
     MerchantTradeNo: input.merchantTradeNo,
     MerchantTradeDate: formatTradeDate(),
     PaymentType: "aio",
-    TotalAmount: String(input.totalAmount),
-    TradeDesc: input.tradeDesc,
-    ItemName: input.itemName,
+    TotalAmount: String(Math.max(1, Math.round(Number(input.totalAmount) || 0))),
+    TradeDesc: sanitizeEcpayText(input.tradeDesc, 200),
+    ItemName: sanitizeEcpayText(input.itemName, 400),
     ReturnURL: input.returnURL,
     // ALL shows methods the merchant actually enabled (avoids 10200074 when Credit is closed)
     ChoosePayment: getEcpayChoosePayment(),

@@ -79,11 +79,28 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
     }
     if (contentType.includes("text/html")) {
       const html = await res.text();
-      // Prefer replacing the document via a blob URL — more reliable than
-      // document.write() on mobile Safari when leaving the SPA for ECPay.
-      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      window.location.assign(url);
+      // Submit the ECPay form from this origin (avoid blob: pages — some
+      // gateways reject or mishandle posts that start from blob URLs).
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const srcForm = doc.querySelector("form");
+      if (!srcForm?.action) {
+        throw new Error("綠界付款表單無效");
+      }
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = srcForm.action;
+      form.acceptCharset = "UTF-8";
+      form.style.display = "none";
+      srcForm.querySelectorAll("input").forEach((input) => {
+        const field = document.createElement("input");
+        field.type = "hidden";
+        field.name = input.name;
+        field.value = input.value;
+        form.appendChild(field);
+      });
+      document.body.appendChild(form);
+      form.submit();
       return;
     }
     throw new Error("付款回應格式錯誤");
