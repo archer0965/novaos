@@ -39,22 +39,50 @@ export function isEcpayStage(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
+function trimEnv(name: string): string {
+  return (process.env[name] || "").trim();
+}
+
+/**
+ * Which ECPay checkout methods to offer.
+ * Default ALL — Credit alone fails with 10200074 when card collection is not enabled.
+ * Override with ECPAY_CHOOSE_PAYMENT=Credit|ATM|CVS|...
+ */
+export function getEcpayChoosePayment(): string {
+  const raw = trimEnv("ECPAY_CHOOSE_PAYMENT").toLowerCase();
+  const map: Record<string, string> = {
+    all: "ALL",
+    credit: "Credit",
+    webatm: "WebATM",
+    atm: "ATM",
+    cvs: "CVS",
+    barcode: "BARCODE",
+    applepay: "ApplePay",
+    twqr: "TWQR",
+    bnpl: "BNPL",
+    weixin: "WeiXin",
+    digitalpayment: "DigitalPayment",
+  };
+  if (!raw) return "ALL";
+  return map[raw] || trimEnv("ECPAY_CHOOSE_PAYMENT") || "ALL";
+}
+
 export function getEcpayConfig(): EcpayConfig {
   const stage = isEcpayStage();
 
   if (stage) {
     return {
-      MerchantID: process.env.ECPAY_MERCHANT_ID || ECPAY_STAGE_DEFAULTS.MerchantID,
-      HashKey: process.env.ECPAY_HASH_KEY || ECPAY_STAGE_DEFAULTS.HashKey,
-      HashIV: process.env.ECPAY_HASH_IV || ECPAY_STAGE_DEFAULTS.HashIV,
+      MerchantID: trimEnv("ECPAY_MERCHANT_ID") || ECPAY_STAGE_DEFAULTS.MerchantID,
+      HashKey: trimEnv("ECPAY_HASH_KEY") || ECPAY_STAGE_DEFAULTS.HashKey,
+      HashIV: trimEnv("ECPAY_HASH_IV") || ECPAY_STAGE_DEFAULTS.HashIV,
       paymentUrl: "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
       isStage: true,
     };
   }
 
-  const MerchantID = process.env.ECPAY_MERCHANT_ID;
-  const HashKey = process.env.ECPAY_HASH_KEY;
-  const HashIV = process.env.ECPAY_HASH_IV;
+  const MerchantID = trimEnv("ECPAY_MERCHANT_ID");
+  const HashKey = trimEnv("ECPAY_HASH_KEY");
+  const HashIV = trimEnv("ECPAY_HASH_IV");
 
   if (!MerchantID || !HashKey || !HashIV) {
     throw new Error(
@@ -172,7 +200,8 @@ export function buildCheckoutParams(input: EcpayOrderInput) {
     TradeDesc: input.tradeDesc,
     ItemName: input.itemName,
     ReturnURL: input.returnURL,
-    ChoosePayment: "Credit",
+    // ALL shows methods the merchant actually enabled (avoids 10200074 when Credit is closed)
+    ChoosePayment: getEcpayChoosePayment(),
     EncryptType: "1",
   };
 
