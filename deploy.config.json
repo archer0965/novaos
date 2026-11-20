@@ -1,0 +1,10 @@
+{
+  "platform": "vercel",
+  "projectName": "paycheck-tw",
+  "projectId": "prj_mILX487HCaUsMTX8kbxA43T3JCFh",
+  "orgId": "team_URN9eKgTk6M0L0eggsVt1Iw0",
+  "productionUrl": "https://paycheck.com.de",
+  "productionHost": "paycheck.com.de",
+  "legacyHosts": ["paycheck-tw.vercel.app", "www.paycheck.com.de"],
+  "notes": "PERMANENT production host is paycheck.com.de. All future production deploys MUST target this project and this URL. Do not create a new Vercel project. Do not change productionHost."
+}
