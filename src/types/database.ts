@@ -51,6 +51,8 @@ export interface Profile {
   free_shipping_threshold?: number | null;
   /** Asia/Taipei YYYY-MM-DD of last daily LINE digest */
   last_daily_digest_on?: string | null;
+  /** false = skip daily LINE accounting digest (e.g. test shops) */
+  daily_digest_enabled?: boolean | null;
   plan_type: PlanType | LegacyPlanType | string;
   billing_cycle?: BillingCycle | null;
   trial_ends_at?: string | null;

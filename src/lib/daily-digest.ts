@@ -42,7 +42,22 @@ type SellerRow = {
   line_user_id: string | null;
   line_channel_access_token: string | null;
   last_daily_digest_on: string | null;
+  daily_digest_enabled?: boolean | null;
 };
+
+/** Known test shops that must never receive daily digests. */
+const DIGEST_BLOCKLIST_SHOP_NAMES = new Set(
+  ["gcy shop", "gcy"].map((s) => s.toLowerCase())
+);
+
+export function isDailyDigestDisabled(seller: {
+  shop_name?: string | null;
+  daily_digest_enabled?: boolean | null;
+}): boolean {
+  if (seller.daily_digest_enabled === false) return true;
+  const name = (seller.shop_name || "").trim().toLowerCase();
+  return DIGEST_BLOCKLIST_SHOP_NAMES.has(name);
+}
 
 async function productIdsForSeller(
   admin: ReturnType<typeof createAdminClient>,
@@ -71,6 +86,16 @@ export async function buildAndSendDailyDigest(
       shopName: seller.shop_name,
       sent: false,
       skipped: "no_line_user_id",
+    };
+  }
+
+  // Test / opted-out shops: never auto-send (manual force still allowed for admins)
+  if (!opts?.force && isDailyDigestDisabled(seller)) {
+    return {
+      sellerId: seller.id,
+      shopName: seller.shop_name,
+      sent: false,
+      skipped: "digest_disabled",
     };
   }
 
@@ -234,7 +259,7 @@ export async function runDailyDigestForAllSellers(opts?: {
   const { data, error } = await admin
     .from("profiles")
     .select(
-      "id, shop_name, line_user_id, line_channel_access_token, last_daily_digest_on"
+      "id, shop_name, line_user_id, line_channel_access_token, last_daily_digest_on, daily_digest_enabled"
     )
     .not("line_user_id", "is", null);
 
@@ -244,6 +269,15 @@ export async function runDailyDigestForAllSellers(opts?: {
   let sent = 0;
   for (const row of data || []) {
     if (!row.line_user_id) continue;
+    if (!opts?.force && isDailyDigestDisabled(row as SellerRow)) {
+      results.push({
+        sellerId: row.id,
+        shopName: row.shop_name,
+        sent: false,
+        skipped: "digest_disabled",
+      });
+      continue;
+    }
     const result = await buildAndSendDailyDigest(row as SellerRow, {
       force: opts?.force,
     });
