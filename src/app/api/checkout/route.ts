@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildAutoSubmitHtml, buildCheckoutParams } from "@/lib/ecpay";
+import {
+  buildAutoSubmitHtml,
+  buildCheckoutParams,
+  checkEcpayGatewayHealth,
+} from "@/lib/ecpay";
 import {
   listActivationsForSeller,
   resolveSellerPricingTier,
@@ -54,6 +58,18 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "請先登入" }, { status: 401 });
+    }
+
+    const gateway = await checkEcpayGatewayHealth();
+    if (!gateway.ok) {
+      return NextResponse.json(
+        {
+          error: gateway.message,
+          code: gateway.code || "ECPAY_GATEWAY",
+          gateway,
+        },
+        { status: 503 }
+      );
     }
 
     const json = await request.json().catch(() => ({}));

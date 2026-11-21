@@ -3,7 +3,11 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserEmailById } from "@/lib/admin";
-import { buildAutoSubmitHtml, buildCheckoutParams } from "@/lib/ecpay";
+import {
+  buildAutoSubmitHtml,
+  buildCheckoutParams,
+  checkEcpayGatewayHealth,
+} from "@/lib/ecpay";
 import { sendSubscriptionConfirmedEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site";
 import { calculateUpgradeProration } from "@/lib/subscription";
@@ -123,6 +127,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: quote.message, code: quote.reason, quote },
         { status: 400 }
+      );
+    }
+
+    const gateway = await checkEcpayGatewayHealth();
+    if (!gateway.ok && !(quote.topUpAmount <= 0 && quote.keepExpiresAt)) {
+      return NextResponse.json(
+        {
+          error: gateway.message,
+          code: gateway.code || "ECPAY_GATEWAY",
+          gateway,
+        },
+        { status: 503 }
       );
     }
 
