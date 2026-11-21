@@ -9,3 +9,5 @@ public/swe-worker-*.js
 tsconfig.tsbuildinfo
 *.log
 .env*
+audit-screenshots
+audit-report.json
