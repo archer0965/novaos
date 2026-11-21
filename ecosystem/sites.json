@@ -49,6 +49,16 @@
       "repo": null,
       "role": "product",
       "notes": "個人訂閱費用管理；Vercel 未連接 Git，無法在此環境同步原始碼。"
+    },
+    {
+      "id": "dimension",
+      "name": "拓維空間",
+      "nameEn": "NovaDimension AI",
+      "url": "https://novadimension.vercel.app",
+      "vercelProject": "novadimension",
+      "repo": null,
+      "role": "product",
+      "notes": "AI 軟裝空間改造；Vercel 未連接 Git。價目以該站為準。"
     }
   ]
 }

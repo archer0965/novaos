@@ -12,6 +12,7 @@ export type CentralProductId =
   | "novastore"
   | "booking"
   | "docmate"
+  | "dimension"
   | "subkeeper";
 
 export type CentralPlanRow = {
@@ -28,7 +29,7 @@ export type CentralPlanRow = {
   feature_list: string[];
   discount_rules: string;
   product_status: "active" | "beta" | "deprecated";
-  authority: "novaos-hub" | "docmate-site" | "local-free";
+  authority: "novaos-hub" | "docmate-site" | "dimension-site" | "local-free";
   notes?: string;
 };
 
@@ -175,6 +176,55 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     discount_rules: "早鳥／一般／大使",
     product_status: "active",
     authority: "docmate-site",
+  },
+  {
+    product_id: "dimension",
+    product_name: "拓維空間",
+    product_url: "https://novadimension.vercel.app",
+    plan_id: "trial",
+    plan_name: "免費體驗",
+    monthly_price: 0,
+    half_yearly_price: 0,
+    yearly_price: 0,
+    trial_days: 0,
+    usage_limits: { credits: 1 },
+    feature_list: ["註冊送 1 次 AI 生成", "基礎空間分析"],
+    discount_rules: "無",
+    product_status: "active",
+    authority: "dimension-site",
+  },
+  {
+    product_id: "dimension",
+    product_name: "拓維空間",
+    product_url: "https://novadimension.vercel.app",
+    plan_id: "single",
+    plan_name: "單張體驗",
+    monthly_price: 39,
+    half_yearly_price: null,
+    yearly_price: null,
+    trial_days: 0,
+    usage_limits: { credits: 1 },
+    feature_list: ["1 次高清生成", "完整動線／採光報告"],
+    discount_rules: "單次購買",
+    product_status: "active",
+    authority: "dimension-site",
+    notes: "價目以 novadimension.vercel.app 為準",
+  },
+  {
+    product_id: "dimension",
+    product_name: "拓維空間",
+    product_url: "https://novadimension.vercel.app",
+    plan_id: "monthly",
+    plan_name: "尊榮月繳",
+    monthly_price: 299,
+    half_yearly_price: 1614,
+    yearly_price: null,
+    trial_days: 0,
+    usage_limits: { credits: "unlimited" },
+    feature_list: ["無限生成", "優先算力"],
+    discount_rules: "半年方案享 9 折（以該站為準）",
+    product_status: "active",
+    authority: "dimension-site",
   },
   {
     product_id: "hub",

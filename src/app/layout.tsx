@@ -28,7 +28,7 @@ const Toaster = dynamic(
 
 const siteTitle = "拓新雲端 NovaOS｜專業雲端工具與軟體解決方案";
 const siteDescription =
-  "拓新雲端開發商業級雲端產品矩陣：NovaStore 賣場對帳、拓脈預約、DocMate AI 文件智能、SubKeeper 訂閱管理——讓微型團隊用企業級穩定度成長。";
+  "拓新雲端開發商業級雲端產品矩陣：NovaStore 賣場對帳、拓脈預約、DocMate AI 文件智能、拓維空間 AI 軟裝、SubKeeper 訂閱管理——讓微型團隊用企業級穩定度成長。";
 const twitterDescription =
   "拓新雲端 NovaOS：商業級雲端工具與軟體解決方案開發商。";
 
@@ -46,10 +46,13 @@ export const metadata: Metadata = {
     "拓新雲端",
     "拓脈預約",
     "NovaStore",
+    "拓維空間",
+    "NovaDimension",
     "美業預約",
     "自動對帳",
     "代購",
     "團購",
+    "AI 軟裝",
   ],
   authors: [{ name: "拓新雲端 NovaOS" }],
   creator: "拓新雲端 NovaOS",

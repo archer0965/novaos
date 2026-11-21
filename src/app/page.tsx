@@ -18,7 +18,7 @@ const jsonLd = {
   name: siteConfig.legalName,
   url: PRODUCTION_URL,
   description:
-    "拓新雲端 NovaOS——專業雲端工具與軟體解決方案開發商，提供 NovaStore、拓脈預約、DocMate AI、SubKeeper 等產品矩陣。",
+    "拓新雲端 NovaOS——專業雲端工具與軟體解決方案開發商，提供 NovaStore、拓脈預約、DocMate AI、拓維空間、SubKeeper 等產品矩陣。",
   email: siteConfig.supportEmail,
   brand: {
     "@type": "Brand",

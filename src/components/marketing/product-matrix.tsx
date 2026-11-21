@@ -9,6 +9,7 @@ const accentRing: Record<ProductCard["accent"], string> = {
   emerald:
     "from-emerald-400/25 via-transparent to-transparent hover:border-emerald-400/40",
   sky: "from-sky-400/25 via-transparent to-transparent hover:border-sky-400/40",
+  rose: "from-rose-400/25 via-transparent to-transparent hover:border-rose-400/40",
 };
 
 const accentText: Record<ProductCard["accent"], string> = {
@@ -16,6 +17,7 @@ const accentText: Record<ProductCard["accent"], string> = {
   amber: "text-amber-300",
   emerald: "text-emerald-300",
   sky: "text-sky-300",
+  rose: "text-rose-300",
 };
 
 const accentBtn: Record<ProductCard["accent"], string> = {
@@ -23,6 +25,7 @@ const accentBtn: Record<ProductCard["accent"], string> = {
   amber: "bg-amber-400 text-slate-950 hover:bg-amber-300",
   emerald: "bg-emerald-400 text-slate-950 hover:bg-emerald-300",
   sky: "bg-sky-400 text-slate-950 hover:bg-sky-300",
+  rose: "bg-rose-400 text-slate-950 hover:bg-rose-300",
 };
 
 export function ProductMatrix() {

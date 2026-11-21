@@ -1,7 +1,7 @@
 import type { NovaModuleId } from "@/lib/novaos";
 
 export type ProductCard = {
-  id: NovaModuleId | "hub";
+  id: NovaModuleId | "hub" | "dimension";
   name: string;
   nameEn: string;
   tagline: string;
@@ -12,7 +12,7 @@ export type ProductCard = {
   href: string;
   external?: boolean;
   badge?: string;
-  accent: "cyan" | "amber" | "emerald" | "sky";
+  accent: "cyan" | "amber" | "emerald" | "sky" | "rose";
 };
 
 /** Commercial product matrix for the NovaOS brand hub. */
@@ -67,6 +67,25 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     external: true,
     badge: "獨立站",
     accent: "sky",
+  },
+  {
+    id: "dimension",
+    name: "拓維空間",
+    nameEn: "NovaDimension AI",
+    tagline: "AI 軟裝空間改造：動線、採光與 3D 擬真渲染",
+    audience: "想改造房間氛圍的屋主、租屋族與軟裝靈感探索者",
+    highlights: [
+      "上傳房間照片，約 30 秒產出 AI 軟裝擬真圖",
+      "動線規劃與採光分析報告",
+      "多種風格可選（奶油／極簡／北歐等）",
+      "綠界 ECPay 單次 Credit 或月繳暢用",
+    ],
+    advantage: "把「空想軟裝」變成可比較 Before／After 的擬真決策工具",
+    ctaLabel: "體驗拓維空間",
+    href: "https://novadimension.vercel.app",
+    external: true,
+    badge: "獨立站",
+    accent: "rose",
   },
   {
     id: "pass",

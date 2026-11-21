@@ -19,8 +19,8 @@ export default function DisclaimerPage() {
       <Section title="1. 系統輔助性質">
         <p>
           拓新雲端 NovaOS
-          及旗下工具（含 NovaStore、拓脈預約、Nova AI
-          Doc／DocMate、拓管等）係提供數位流程與資訊輔助，旨在提升營運或個人管理效率。本服務：
+          及旗下工具（含 NovaStore、拓脈預約、DocMate AI、拓維空間
+          NovaDimension、SubKeeper 等）係提供數位流程與資訊輔助，旨在提升營運或個人管理效率。本服務：
         </p>
         <ul>
           <li>不構成法律、會計、稅務、投資、醫療或其他專業意見；</li>

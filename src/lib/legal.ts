@@ -15,6 +15,7 @@ export const LEGAL_COVERED_SERVICES = [
   { name: "NovaStore", note: "賣場、對帳與訂單相關工具" },
   { name: "拓脈預約", note: "美業／服務業預約與檔期工具" },
   { name: "Nova AI Doc（DocMate）", note: "AI 文件摘要、問答與知識整理" },
+  { name: "拓維空間（NovaDimension AI）", note: "AI 軟裝空間改造與擬真渲染" },
   { name: "SubKeeper", note: "個人訂閱費用管理與扣款提醒（本機保存）" },
 ] as const;
 

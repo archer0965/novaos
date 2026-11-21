@@ -20,7 +20,8 @@ export default function RefundPolicyPage() {
         <p>
           本政策適用於透過拓新雲端 NovaOS
           總站或其授權結帳流程（含綠界科技 ECPay）購買之訂閱、方案升級與相關付費項目，涵蓋旗下工具之付費方案（如
-          NovaStore、拓脈預約、Nova AI Doc／DocMate、拓管相關付費權益等）。免費額度、試用與人工審核優惠另依站上說明。
+          NovaStore、拓脈預約、DocMate AI、拓維空間、SubKeeper
+          相關付費權益等）。免費額度、試用與人工審核優惠另依站上說明。
         </p>
       </Section>
 
