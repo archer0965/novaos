@@ -63,7 +63,7 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     highlights: ["PDF 上傳即摘要", "依文件內容精準問答", "複習考題與筆記架構"],
     advantage: "把長文件變成可讀、可問、可複習的知識資產",
     ctaLabel: "體驗 AI 文件助理",
-    href: "https://docmate-ai-one.vercel.app",
+    href: "https://docmate-ai-one.vercel.app/signup",
     external: true,
     badge: "獨立站",
     accent: "sky",
