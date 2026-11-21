@@ -9,6 +9,10 @@ import { PRODUCTION_URL, siteConfig } from "@/lib/site";
 export const LEGAL_LAST_UPDATED = "2026 年 11 月 22 日";
 export const LEGAL_LAST_UPDATED_ISO = "2026-11-22";
 
+/** Shared copy: payment proof (no uniform invoice while unincorporated). */
+export const LEGAL_PAYMENT_PROOF_NOTICE =
+  "本服務目前為個人/團隊獨立營運，尚未設立公司，暫無開立統一發票服務。使用者完成付款後，系統與綠界金流將提供電子交易明細與付款成功紀錄作為憑證。未來若依營運發展或中華民國法令規定辦理公司設立與商業登記，相關發票開立事宜將另行於本網站公告並依規定辦理。";
+
 /** Products / services covered by NovaOS legal documents. */
 export const LEGAL_COVERED_SERVICES = [
   { name: "拓新雲端 NovaOS", note: "總站帳號、訂閱中控與產品矩陣入口" },

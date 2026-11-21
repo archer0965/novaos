@@ -57,11 +57,11 @@ export function LegalContactBlock() {
           ))}
         </ul>
         <p className="mt-3">
-          正式公司名稱、統一編號或其他法定聯絡資訊確認後，可於環境變數或{" "}
+          目前為個人／團隊獨立營運階段；若日後完成公司設立與商業登記，正式公司名稱與統一編號將於本頁更新，並另行公告相關憑證事宜（詳見付款憑證說明）。可於環境變數或{" "}
           <code className="rounded bg-secondary px-1 py-0.5 text-[11px]">
             src/lib/site.ts
           </code>{" "}
-          補齊，全站條款頁會自動同步。
+          補齊登記資訊後全站同步。
         </p>
       </div>
     </section>

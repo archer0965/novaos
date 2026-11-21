@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell } from "@/components/legal/legal-page-shell";
+import { LEGAL_PAYMENT_PROOF_NOTICE } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -97,10 +98,8 @@ export default function RefundPolicyPage() {
         </ul>
       </Section>
 
-      <Section title="6. 發票與收據">
-        <p>
-          電子發票或收據開立方式、載具與公司統編開立需求，依我們當時公告之流程辦理。若需公司戶發票，請於付款前或客服指定期限內提供正確統編與抬頭（正式公司名稱與統編請見法律中心聯絡區塊之預留欄位，確認後將對外公告）。
-        </p>
+      <Section title="6. 付款憑證">
+        <p>{LEGAL_PAYMENT_PROOF_NOTICE}</p>
       </Section>
 
       <Section title="7. 政策變更與相關文件">

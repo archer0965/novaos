@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell } from "@/components/legal/legal-page-shell";
+import { LEGAL_PAYMENT_PROOF_NOTICE } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -71,6 +72,7 @@ export default function TermsPage() {
             。
           </li>
           <li>付款方式、取消續訂與退款規則以付費與退款政策為準。</li>
+          <li>{LEGAL_PAYMENT_PROOF_NOTICE}</li>
         </ul>
       </Section>
 

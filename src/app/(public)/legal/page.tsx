@@ -7,6 +7,7 @@ import {
   LEGAL_COVERED_SERVICES,
   LEGAL_DOC_LINKS,
   LEGAL_LAST_UPDATED,
+  LEGAL_PAYMENT_PROOF_NOTICE,
 } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
@@ -69,6 +70,13 @@ export default function LegalIndexPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="rounded-2xl border border-border/70 bg-card/60 p-5">
+        <h2 className="font-display text-lg font-semibold">付款憑證說明</h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          {LEGAL_PAYMENT_PROOF_NOTICE}
+        </p>
       </section>
 
       <LegalContactBlock />
