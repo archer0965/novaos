@@ -43,12 +43,12 @@
     },
     {
       "id": "subkeeper",
-      "name": "SubKeeper",
-      "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
-      "vercelProject": "temporary-speedy-reef-cy4xhhu",
-      "repo": null,
+      "name": "訂閱管家",
+      "url": "https://paycheck.com.de/dashboard/subkeeper",
+      "vercelProject": "novaos",
+      "repo": "https://github.com/archer0965/novaos",
       "role": "product",
-      "notes": "個人訂閱費用管理；Vercel 未連接 Git，無法在此環境同步原始碼。"
+      "notes": "已內建於主站；須登入拓新雲端。舊獨立站 temporary-speedy-reef 僅作歷史參考。"
     },
     {
       "id": "dimension",

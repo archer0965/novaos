@@ -360,7 +360,7 @@ export const PRICING_CONFIG = {
       isPopular: false,
       blurb: "註冊後請啟用子模組開始試用",
       features: [
-        "訂閱中控永久免費；個人訂閱管理見 SubKeeper",
+        "訂閱中控永久免費；個人訂閱管理見 訂閱管家",
         "註冊不扣早鳥名額、不開始試用倒數",
         "付費模組點擊啟用後才開始試用",
       ],

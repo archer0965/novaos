@@ -20,7 +20,7 @@ export const LEGAL_COVERED_SERVICES = [
   { name: "拓脈預約", note: "美業／服務業預約與檔期工具" },
   { name: "Nova AI Doc", note: "AI 文件摘要、問答與知識整理" },
   { name: "拓維空間（NovaDimension AI）", note: "AI 軟裝空間改造與擬真渲染" },
-  { name: "SubKeeper", note: "個人訂閱費用管理與扣款提醒（本機保存）" },
+  { name: "訂閱管家", note: "個人訂閱費用管理與扣款提醒（須登入拓新雲端帳號）" },
 ] as const;
 
 export type LegalDocId =

@@ -1,7 +1,7 @@
 {
   "name": "拓新雲端 NovaOS",
   "short_name": "NovaOS",
-  "description": "拓新雲端——專業雲端工具與軟體解決方案：NovaStore、拓脈預約、Nova AI Doc、拓維空間、SubKeeper",
+  "description": "拓新雲端——專業雲端工具與軟體解決方案：NovaStore、拓脈預約、Nova AI Doc、拓維空間、訂閱管家",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

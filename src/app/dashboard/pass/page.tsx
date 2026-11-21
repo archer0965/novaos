@@ -14,7 +14,7 @@ import { TIER_META } from "@/lib/pricing-tiers";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 
-export const metadata = { title: "SubKeeper 訂閱中控" };
+export const metadata = { title: "訂閱中控" };
 
 export default async function PassPage() {
   const supabase = createClient();
@@ -66,7 +66,7 @@ export default async function PassPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-border/80 bg-gradient-to-br from-slate-50 via-background to-amber-50/40 p-5 md:p-6">
-        <p className="text-sm text-muted-foreground">⚙️ SubKeeper / 訂閱中控</p>
+        <p className="text-sm text-muted-foreground">⚙️ 訂閱中控</p>
         <h1 className="mt-1 font-display text-2xl font-semibold">
           訂閱、對帳與同業裂變
         </h1>
@@ -74,7 +74,14 @@ export default async function PassPage() {
           <span className="mr-2 rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">
             永久免費
           </span>
-          訂閱中控不需訂閱、不佔早鳥名額。個人訂閱開銷請用獨立產品 SubKeeper。付費升級統一走
+          訂閱中控不需訂閱、不佔早鳥名額。個人訂閱開銷請用{" "}
+          <Link
+            href="/dashboard/subkeeper"
+            className="font-medium text-emerald-800 underline-offset-2 hover:underline"
+          >
+            訂閱管家
+          </Link>
+          （需登入）。付費升級統一走
           <span className="ml-1 font-medium text-emerald-800">
             {PAYMENT_GATEWAY_STATUS.label}
           </span>

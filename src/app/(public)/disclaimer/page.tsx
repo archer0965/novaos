@@ -20,7 +20,7 @@ export default function DisclaimerPage() {
         <p>
           拓新雲端 NovaOS
           及旗下工具（含 NovaStore、拓脈預約、Nova AI Doc、拓維空間
-          NovaDimension、SubKeeper 等）係提供數位流程與資訊輔助，旨在提升營運或個人管理效率。本服務：
+          NovaDimension、訂閱管家 等）係提供數位流程與資訊輔助，旨在提升營運或個人管理效率。本服務：
         </p>
         <ul>
           <li>不構成法律、會計、稅務、投資、醫療或其他專業意見；</li>

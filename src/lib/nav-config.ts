@@ -102,7 +102,7 @@ export const MODULE_FEATURE_MENUS: Record<NovaModuleId, NavItem[]> = {
     },
   ],
   pass: [
-    { href: "/dashboard/pass", label: "訂閱與拓管", emoji: "⚙️", match: "exact" },
+    { href: "/dashboard/pass", label: "訂閱中控", emoji: "⚙️", match: "exact" },
     {
       href: "/dashboard/pass#upgrade",
       label: "方案升級",
@@ -112,6 +112,12 @@ export const MODULE_FEATURE_MENUS: Record<NovaModuleId, NavItem[]> = {
       href: "/dashboard/pass#referral",
       label: "同業推薦碼",
       emoji: "🔗",
+    },
+    {
+      href: "/dashboard/subkeeper",
+      label: "訂閱管家",
+      emoji: "📒",
+      match: "prefix",
     },
     {
       href: "/dashboard/settings",
@@ -135,6 +141,7 @@ export function resolveNavMode(pathname: string): NavMode {
   if (pathname.startsWith("/dashboard/ai-doc")) return "ai_doc";
   if (
     pathname.startsWith("/dashboard/pass") ||
+    pathname.startsWith("/dashboard/subkeeper") ||
     pathname.startsWith("/dashboard/settings")
   ) {
     return "pass";

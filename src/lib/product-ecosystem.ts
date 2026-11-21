@@ -1,7 +1,8 @@
 import type { NovaModuleId } from "@/lib/novaos";
+import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 
 export type ProductCard = {
-  id: NovaModuleId | "hub" | "dimension";
+  id: NovaModuleId | "hub" | "dimension" | "subkeeper";
   name: string;
   nameEn: string;
   tagline: string;
@@ -88,21 +89,20 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     accent: "rose",
   },
   {
-    id: "pass",
-    name: "SubKeeper",
-    nameEn: "SubKeeper",
-    tagline: "個人訂閱費用管理與退訂提醒",
+    id: "subkeeper",
+    name: SUBKEEPER_PRODUCT.name,
+    nameEn: SUBKEEPER_PRODUCT.nameEn,
+    tagline: SUBKEEPER_PRODUCT.tagline,
     audience: "需要掌握月費訂閱、避免忘記扣款的個人用戶",
     highlights: [
-      "免登入，資料保存在本機瀏覽器",
-      "訂閱開銷總覽與週期追蹤",
-      "扣款前 3 天行事曆提醒可匯出",
+      "須登入拓新雲端帳號（與其他子產品同一身分）",
+      "訂閱開銷總覽與週期追蹤，資料雲端保存",
+      "扣款前提醒天數可自訂",
     ],
-    advantage: "重新開啟或網站更新也不丟資料，輕量掌握每一筆訂閱",
-    ctaLabel: "進入 SubKeeper",
-    href: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
-    external: true,
-    badge: "永久免費",
+    advantage: "登入即用、跨裝置同步，開銷紀錄綁定你的拓新雲端帳號",
+    ctaLabel: `進入${SUBKEEPER_PRODUCT.name}`,
+    href: SUBKEEPER_PRODUCT.signupHref,
+    badge: "永久免費｜需登入",
     accent: "emerald",
   },
 ];

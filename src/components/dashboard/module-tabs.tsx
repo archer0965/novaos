@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 import { cn } from "@/lib/utils";
 
 const ORDER: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
@@ -14,6 +15,9 @@ export function ModuleTabs({
 }) {
   const pathname = usePathname();
   const unlockedSet = new Set(unlocked);
+  const subkeeperActive =
+    pathname === SUBKEEPER_PRODUCT.href ||
+    pathname.startsWith(`${SUBKEEPER_PRODUCT.href}/`);
 
   return (
     <div className="mb-6 overflow-x-auto">
@@ -39,7 +43,7 @@ export function ModuleTabs({
               )}
               title={
                 free
-                  ? "拓管永久免費"
+                  ? "訂閱中控永久免費"
                   : locked
                     ? "尚未啟用 — 點擊前往啟用試用"
                     : mod.blurb
@@ -55,6 +59,21 @@ export function ModuleTabs({
             </Link>
           );
         })}
+        <Link
+          href={SUBKEEPER_PRODUCT.href}
+          prefetch
+          className={cn(
+            "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
+            subkeeperActive
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-background hover:text-foreground"
+          )}
+          title="需登入拓新雲端；個人訂閱開銷雲端保存"
+        >
+          <span aria-hidden>📒</span>
+          <span className="font-medium">{SUBKEEPER_PRODUCT.name}</span>
+          <span className="text-[10px] opacity-80">免費</span>
+        </Link>
       </div>
     </div>
   );

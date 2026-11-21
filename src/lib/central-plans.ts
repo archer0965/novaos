@@ -4,7 +4,7 @@
  * Authority (owner 2026-11-22; path policy same day):
  * - Payment path: paid upgrades → NovaOS hub ECPay (when source available)
  * - Prices: NovaStore + 拓脈 follow hub catalog; Nova AI Doc / 拓維 keep site prices
- * - SubKeeper → free / local (no paid plans)
+ * - 訂閱管家 → free / local (no paid plans)
  */
 
 export type CentralProductId =
@@ -244,19 +244,20 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
   },
   {
     product_id: "subkeeper",
-    product_name: "SubKeeper",
-    product_url: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+    product_name: "訂閱管家",
+    product_url: "https://paycheck.com.de/dashboard/subkeeper",
     plan_id: "free",
-    plan_name: "免費（本機）",
+    plan_name: "免費（需登入）",
     monthly_price: 0,
     half_yearly_price: 0,
     yearly_price: 0,
     trial_days: 0,
-    usage_limits: { storage: "localStorage" },
-    feature_list: ["免登入", "本機保存訂閱"],
+    usage_limits: { storage: "cloud" },
+    feature_list: ["拓新雲端統一登入", "雲端保存訂閱清單"],
     discount_rules: "無",
     product_status: "active",
     authority: "local-free",
+    notes: "入口 /dashboard/subkeeper；與 NovaStore／Nova AI Doc 共用 Auth",
   },
 ];
 
