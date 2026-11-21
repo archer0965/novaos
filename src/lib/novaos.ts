@@ -6,7 +6,7 @@ export const NOVA_BRAND = {
   displayName: "拓新雲端 NovaOS",
   shortName: "NovaOS",
   legalName: "拓新雲端 NovaOS",
-  tagline: "美業與微型賣家的企業級營運中台：預約 · 賣場 · AI 文件 · 訂閱對帳",
+  tagline: "專業雲端工具與軟體解決方案——賣場、預約、AI 文件與營運中控",
   domain: "paycheck.com.de",
 } as const;
 

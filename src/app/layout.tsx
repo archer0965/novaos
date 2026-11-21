@@ -26,11 +26,11 @@ const Toaster = dynamic(
   { ssr: false }
 );
 
-const siteTitle = "拓新雲端 NovaOS｜美業與微型賣家營運中台";
+const siteTitle = "拓新雲端 NovaOS｜專業雲端工具與軟體解決方案";
 const siteDescription =
-  "拓脈預約、NovaStore、Nova AI Doc 與永久免費的拓管 Nova Pass——微型營運中台一站整合。現場付／手動轉帳，同業推薦現折。";
+  "拓新雲端開發商業級雲端產品矩陣：NovaStore 賣場對帳、拓脈預約、Nova AI Doc 文件智能、拓管 Nova Pass——讓微型團隊用企業級穩定度成長。";
 const twitterDescription =
-  "拓新雲端 NovaOS：預約 · 賣場 · AI 文件 · 拓管（免費），企業級微型營運中台。";
+  "拓新雲端 NovaOS：商業級雲端工具與軟體解決方案開發商。";
 
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_URL),
