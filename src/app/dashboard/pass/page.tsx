@@ -75,13 +75,15 @@ export default async function PassPage() {
             永久免費
           </span>
           訂閱中控不需訂閱、不佔早鳥名額。個人訂閱開銷請用{" "}
-          <Link
-            href="/dashboard/subkeeper"
+          <a
+            href="https://temporary-speedy-reef-cy4xhhu.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-medium text-emerald-800 underline-offset-2 hover:underline"
           >
             訂閱管家
-          </Link>
-          （需登入）。付費升級統一走
+          </a>
+          。付費升級統一走
           <span className="ml-1 font-medium text-emerald-800">
             {PAYMENT_GATEWAY_STATUS.label}
           </span>

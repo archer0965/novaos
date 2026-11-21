@@ -15,10 +15,6 @@ export function ModuleTabs({
 }) {
   const pathname = usePathname();
   const unlockedSet = new Set(unlocked);
-  const subkeeperActive =
-    pathname === SUBKEEPER_PRODUCT.href ||
-    pathname.startsWith(`${SUBKEEPER_PRODUCT.href}/`);
-
   return (
     <div className="mb-6 overflow-x-auto">
       <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border/80 bg-secondary/40 p-1 sm:min-w-0">
@@ -59,21 +55,17 @@ export function ModuleTabs({
             </Link>
           );
         })}
-        <Link
-          href={SUBKEEPER_PRODUCT.href}
-          prefetch
-          className={cn(
-            "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
-            subkeeperActive
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-background hover:text-foreground"
-          )}
-          title="需登入拓新雲端；個人訂閱開銷雲端保存"
+        <a
+          href={SUBKEEPER_PRODUCT.siteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+          title="開啟訂閱管家（獨立站）"
         >
           <span aria-hidden>📒</span>
           <span className="font-medium">{SUBKEEPER_PRODUCT.name}</span>
           <span className="text-[10px] opacity-80">免費</span>
-        </Link>
+        </a>
       </div>
     </div>
   );

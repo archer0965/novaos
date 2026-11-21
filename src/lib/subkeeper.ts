@@ -4,16 +4,18 @@ export const SUBKEEPER_PRODUCT = {
   id: "subkeeper",
   name: "訂閱管家",
   nameEn: "Subscription Keeper",
-  /** Public entry (shows NovaOS login gate when anonymous). */
-  publicHref: "/subkeeper",
-  /** Authenticated workspace. */
+  /** Canonical product URL (standalone site). */
+  siteUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+  /** Marketing / product-matrix entry. */
+  publicHref: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+  /** Optional hub-hosted workspace (auth experiments). */
   href: "/dashboard/subkeeper",
-  /** Marketing / gate: unified NovaOS login. */
+  /** Marketing / gate: unified NovaOS login then open product. */
   loginHref: "/login?next=%2Fdashboard%2Fsubkeeper",
   signupHref: "/signup?next=%2Fdashboard%2Fsubkeeper",
   tagline: "個人訂閱費用管理與扣款提醒",
   hubUrl: "https://paycheck.com.de",
-  /** Legacy standalone URL (localStorage era). */
+  /** Alias of siteUrl (historical localStorage-era standalone). */
   legacyUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
   /** Exact key used by old SubKeeper web app. */
   legacyStorageKey: "subkeeper-subscriptions-v1",

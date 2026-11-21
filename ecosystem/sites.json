@@ -44,11 +44,11 @@
     {
       "id": "subkeeper",
       "name": "訂閱管家",
-      "url": "https://paycheck.com.de/subkeeper",
-      "vercelProject": "novaos",
-      "repo": "https://github.com/archer0965/novaos",
+      "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+      "vercelProject": "temporary-speedy-reef-cy4xhhu",
+      "repo": null,
       "role": "product",
-      "notes": "公開 /subkeeper 登入閘道；工作區 /dashboard/subkeeper。需套用 migration 028+029。"
+      "notes": "訂閱管家正式網址；Vercel 未連接 Git。"
     },
     {
       "id": "dimension",

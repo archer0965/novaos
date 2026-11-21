@@ -126,7 +126,13 @@ export function UserAccountMenu() {
           <Link href="/dashboard">產品矩陣／總控台</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={SUBKEEPER_PRODUCT.href}>訂閱管家</Link>
+          <a
+            href={SUBKEEPER_PRODUCT.siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            訂閱管家
+          </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard/settings">帳戶設定</Link>

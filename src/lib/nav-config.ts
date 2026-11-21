@@ -114,10 +114,9 @@ export const MODULE_FEATURE_MENUS: Record<NovaModuleId, NavItem[]> = {
       emoji: "🔗",
     },
     {
-      href: "/dashboard/subkeeper",
+      href: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
       label: "訂閱管家",
       emoji: "📒",
-      match: "prefix",
     },
     {
       href: "/dashboard/settings",

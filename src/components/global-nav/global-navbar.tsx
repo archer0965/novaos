@@ -53,7 +53,7 @@ const QUICK_DESKTOP: {
   },
   {
     id: "subkeeper",
-    href: SUBKEEPER_PRODUCT.href,
+    href: SUBKEEPER_PRODUCT.siteUrl,
     label: SUBKEEPER_PRODUCT.name,
   },
 ];
@@ -118,7 +118,7 @@ export function GlobalNavbar({
                     item.id === "hub"
                       ? pathname === "/dashboard"
                       : item.id === "subkeeper"
-                        ? pathname.startsWith(SUBKEEPER_PRODUCT.href)
+                        ? false
                         : mode === item.id;
                   const free =
                     item.id === "hub" ||
@@ -129,11 +129,15 @@ export function GlobalNavbar({
                     item.id !== "subkeeper" &&
                     !free &&
                     !unlocked.has(item.id as NovaModuleId);
+                  const external = item.id === "subkeeper";
                   return (
                     <Link
                       key={item.id}
                       href={item.href}
-                      prefetch
+                      prefetch={!external}
+                      {...(external
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
                       className={cn(
                         "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
                         active
@@ -142,7 +146,7 @@ export function GlobalNavbar({
                       )}
                       title={
                         item.id === "subkeeper"
-                          ? "需登入 · 永久免費"
+                          ? "開啟訂閱管家（獨立站）"
                           : free
                             ? "永久免費"
                             : locked
