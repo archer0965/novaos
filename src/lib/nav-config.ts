@@ -145,7 +145,7 @@ export function resolveNavMode(pathname: string): NavMode {
   ) {
     return "pass";
   }
-  // /dashboard, /dashboard/admin, marketing pages → hub
+  // /dashboard, /admin, marketing pages → hub
   return "hub";
 }
 
