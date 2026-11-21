@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Mail, MessageCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "聯絡我們",
-  description: "NovaStore 客服聯絡方式。",
+  description: "拓新雲端 NovaOS 客服聯絡方式：Email 與 LINE 官方帳號。",
 };
 
 export default function ContactPage() {
@@ -15,7 +16,11 @@ export default function ContactPage() {
           聯絡我們
         </h1>
         <p className="text-muted-foreground">
-          金流、訂閱、對帳功能或個資相關問題，歡迎透過以下管道聯繫。
+          金流、訂閱、產品功能或個資相關問題，歡迎透過以下管道聯繫。條款文件請見{" "}
+          <Link href="/legal" className="text-primary underline-offset-2 hover:underline">
+            條款與法律中心
+          </Link>
+          。
         </p>
       </header>
 

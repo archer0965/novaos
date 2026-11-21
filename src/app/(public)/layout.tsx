@@ -11,9 +11,12 @@ export default function PublicLegalLayout({
   return (
     <div className="relative min-h-screen">
       <header className="border-b border-border/70 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
           <BrandLogo size="sm" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link href="/legal">法律中心</Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">登入</Link>
             </Button>

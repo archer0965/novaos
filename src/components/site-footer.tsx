@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
+import { LEGAL_DOC_LINKS } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
 export function SiteFooter() {
@@ -7,7 +8,7 @@ export function SiteFooter() {
 
   return (
     <footer className="relative z-10 border-t border-border/60 bg-card/40">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <BrandLogo size="sm" />
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">
@@ -38,30 +39,38 @@ export function SiteFooter() {
                 點此加入
               </a>
             </li>
+            <li>
+              <Link href="/contact" className="hover:text-primary">
+                聯絡我們
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div className="text-sm">
-          <p className="font-medium text-foreground">法律與資訊</p>
+          <p className="font-medium text-foreground">條款與法律</p>
           <ul className="mt-3 space-y-2 text-muted-foreground">
             <li>
-              <Link href="/terms" className="hover:text-primary">
-                服務條款與訂閱退款政策
+              <Link href="/legal" className="font-medium text-foreground hover:text-primary">
+                條款與法律中心
               </Link>
             </li>
-            <li>
-              <Link href="/privacy" className="hover:text-primary">
-                隱私權政策（個資法）
-              </Link>
-            </li>
+            {LEGAL_DOC_LINKS.map((doc) => (
+              <li key={doc.id}>
+                <Link href={doc.href} className="hover:text-primary">
+                  {doc.shortTitle}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="text-sm">
+          <p className="font-medium text-foreground">快速連結</p>
+          <ul className="mt-3 space-y-2 text-muted-foreground">
             <li>
               <Link href="/track" className="hover:text-primary">
                 買家查單
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="hover:text-primary">
-                聯絡我們
               </Link>
             </li>
             <li>
@@ -70,8 +79,13 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/#faq" className="hover:text-primary">
-                常見問題
+              <Link href="/#partner" className="hover:text-primary">
+                特約／大使申請
+              </Link>
+            </li>
+            <li>
+              <Link href="/signup" className="hover:text-primary">
+                免費註冊
               </Link>
             </li>
           </ul>
@@ -79,6 +93,10 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border/50 py-4 text-center text-xs text-muted-foreground">
         © {year} {siteConfig.legalName}
+        {siteConfig.companyRegisteredName
+          ? ` · ${siteConfig.companyRegisteredName}`
+          : ""}
+        {siteConfig.companyTaxId ? ` · 統編 ${siteConfig.companyTaxId}` : ""}
       </div>
     </footer>
   );

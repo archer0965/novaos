@@ -26,4 +26,11 @@ export const siteConfig = {
     "https://line.me/R/ti/p/@801rbtgm",
   companyAddress:
     process.env.NEXT_PUBLIC_COMPANY_ADDRESS || "台灣（線上服務）",
+  /**
+   * Optional registered entity fields — leave empty until confirmed.
+   * Set via env: NEXT_PUBLIC_COMPANY_LEGAL_NAME / NEXT_PUBLIC_COMPANY_TAX_ID
+   */
+  companyRegisteredName:
+    process.env.NEXT_PUBLIC_COMPANY_LEGAL_NAME?.trim() || "",
+  companyTaxId: process.env.NEXT_PUBLIC_COMPANY_TAX_ID?.trim() || "",
 };

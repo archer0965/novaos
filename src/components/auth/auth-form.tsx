@@ -157,10 +157,14 @@ export function AuthForm({
                 註冊即表示您同意我們的{" "}
                 <Link href="/terms" className="text-primary underline-offset-2 hover:underline">
                   服務條款
-                </Link>{" "}
-                與{" "}
+                </Link>
+                、{" "}
                 <Link href="/privacy" className="text-primary underline-offset-2 hover:underline">
                   隱私權政策
+                </Link>
+                與{" "}
+                <Link href="/legal" className="text-primary underline-offset-2 hover:underline">
+                  相關法律文件
                 </Link>
                 。
               </p>

@@ -38,9 +38,19 @@ export function shouldOfferInstallOnPath(pathname: string): boolean {
   const parts = pathname.split("/").filter(Boolean);
   if (
     parts.length === 2 &&
-    !["dashboard", "login", "signup", "auth", "api", "contact", "privacy", "terms"].includes(
-      parts[0]
-    )
+    ![
+      "dashboard",
+      "login",
+      "signup",
+      "auth",
+      "api",
+      "contact",
+      "privacy",
+      "terms",
+      "legal",
+      "refund",
+      "disclaimer",
+    ].includes(parts[0])
   ) {
     return false;
   }
