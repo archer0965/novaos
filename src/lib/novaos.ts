@@ -48,17 +48,17 @@ export const NOVA_MODULES: Record<NovaModuleId, NovaModuleDef> = {
   },
   pass: {
     id: "pass",
-    name: "拓管 Nova Pass",
-    nameEn: "Nova Pass",
+    name: "訂閱中控",
+    nameEn: "Billing Hub",
     emoji: "⚙️",
     href: "/dashboard/pass",
-    blurb: "訂閱續費、對帳管理與同業裂變推薦碼（完全免費）",
+    blurb: "方案升級、付款與推薦碼中控（永久免費；個人訂閱管理請用 SubKeeper）",
   },
 };
 
 export const NOVA_MODULE_IDS = Object.keys(NOVA_MODULES) as NovaModuleId[];
 
-/** Paid product modules — 拓管 is free forever and never sold alone. */
+/** Paid product modules — billing hub (pass) is free forever and never sold alone. */
 export const PAID_MODULE_IDS: NovaModuleId[] = ["booking", "store", "ai_doc"];
 
 /** Always unlocked for every registered account — no trial, no early-bird seat. */

@@ -39,16 +39,16 @@
       "vercelProject": "taiwanbiz",
       "repo": null,
       "role": "product",
-      "notes": "獨立站；repo 待綁定後可 sync。"
+      "notes": "獨立站；Vercel 專案未連接 Git，無法在此環境同步／稽核原始碼。"
     },
     {
-      "id": "pass",
-      "name": "拓管",
+      "id": "subkeeper",
+      "name": "SubKeeper",
       "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
-      "vercelProject": null,
+      "vercelProject": "temporary-speedy-reef-cy4xhhu",
       "repo": null,
       "role": "product",
-      "notes": "SubKeeper 訂閱管家；repo 待綁定後可 sync。"
+      "notes": "個人訂閱費用管理；Vercel 未連接 Git，無法在此環境同步原始碼。"
     }
   ]
 }

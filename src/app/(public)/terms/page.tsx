@@ -19,8 +19,8 @@ export default function TermsPage() {
       <Section title="1. 接受條款">
         <p>
           歡迎使用「{siteConfig.legalName}」（下稱「本服務」）。本服務包含總站帳號體系、訂閱中控，以及旗下
-          NovaStore、拓脈預約、Nova AI Doc（DocMate）、拓管（SubKeeper／Nova
-          Pass）等雲端工具與相關功能。您註冊、登入或以其他方式使用本服務，即表示您已閱讀、瞭解並同意受本服務條款拘束。若您不同意，請立即停止使用。
+          NovaStore、拓脈預約、DocMate AI、SubKeeper
+          等雲端工具與相關功能。您註冊、登入或以其他方式使用本服務，即表示您已閱讀、瞭解並同意受本服務條款拘束。若您不同意，請立即停止使用。
         </p>
       </Section>
 

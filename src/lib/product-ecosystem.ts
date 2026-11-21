@@ -70,9 +70,9 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
   },
   {
     id: "pass",
-    name: "拓管",
+    name: "SubKeeper",
     nameEn: "SubKeeper",
-    tagline: "個人訂閱開銷總管與退訂提醒",
+    tagline: "個人訂閱費用管理與退訂提醒",
     audience: "需要掌握月費訂閱、避免忘記扣款的個人用戶",
     highlights: [
       "免登入，資料保存在本機瀏覽器",
@@ -80,7 +80,7 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
       "扣款前 3 天行事曆提醒可匯出",
     ],
     advantage: "重新開啟或網站更新也不丟資料，輕量掌握每一筆訂閱",
-    ctaLabel: "進入拓管",
+    ctaLabel: "進入 SubKeeper",
     href: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
     external: true,
     badge: "永久免費",
