@@ -15,10 +15,10 @@
 
 ## 一次改多站 vs 只改一站
 
-- **一次改多站**：在本專案執行 `npm run ecosystem:sync`，到 `ecosystem/sites/<id>` 修改後，**在該子目錄內** `git push` 回子站 remote。
+- **一次改多站**：在本專案執行 `npm run ecosystem:sync`，到 `/agent/ecosystem-sites/<id>` 修改後，**在該子目錄內** `git push` 回子站 remote。
 - **只改一站**：開啟該站自己的 Cursor／GitHub 專案即可；不要把子站原始碼 commit 進本 hub repo。
 
-`ecosystem/sites/` 已 gitignore，避免主站與子站歷史互相污染。
+Checkout 放在主站目錄外（預設 `/agent/ecosystem-sites`），避免 Next build／tsc 掃到子站，也避免 git 歷史互相污染。
 
 詳見 `ecosystem/README.md`。
 

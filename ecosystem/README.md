@@ -10,7 +10,10 @@
 | 子站（NovaStore／DocMate…） | **各自獨立 repo** | 優先在該專案改；或在本專案 `ecosystem/sites/<id>` checkout 改完後 **push 回該 repo** |
 | 產品網址／矩陣文案 | 本 repo `ecosystem/sites.json` + `src/lib/product-ecosystem.ts` | 只改主站即可更新導流與稽核清單 |
 
-`ecosystem/sites/` **不會進 git**（見根目錄 `.gitignore`）。裡面是各子站的獨立 clone，歷史與主站分開，因此不會產生跨 repo merge 衝突。
+子站 checkout 放在 **主站目錄外**（預設 `/agent/ecosystem-sites/`），因此：
+
+- 不會進主站 git（也不會被 Next／tsc 掃到）
+- 每個資料夾有自己的 `.git`，push 回各自 remote，與主站零衝突
 
 ## 一次拉齊所有子站
 
@@ -21,17 +24,19 @@ npm run ecosystem:sync
 會把 `sites.json` 裡有 `repo` 或本機 `localFallback` 的專案放到：
 
 ```
-ecosystem/sites/novastore
-ecosystem/sites/docmate
+/agent/ecosystem-sites/novastore
+/agent/ecosystem-sites/docmate
 …
 ```
+
+（可用環境變數 `NOVAOS_ECOSYSTEM_SITES_DIR` 覆寫路徑。）
 
 ## 建議工作流
 
 **A. 一次改多站（用主站環境）**
 
 1. `npm run ecosystem:sync`
-2. 在 `ecosystem/sites/<id>` 改程式
+2. 在 `/agent/ecosystem-sites/<id>` 改程式
 3. 於該目錄 `git commit` + `git push`（推到**子站自己的 remote**）
 4. 若只改導流網址／產品矩陣：改 `ecosystem/sites.json` 與 `src/lib/product-ecosystem.ts`
 
@@ -45,5 +50,5 @@ ecosystem/sites/docmate
 
 1. 在 `sites.json` 的 `sites` 陣列加一筆（`id` / `url` / `repo`）
 2. 更新 `src/lib/product-ecosystem.ts` 產品卡
-3. 更新 `scripts/audit-sites.js` 檢測清單（或改讀 sites.json）
+3. （稽核清單會自動讀 `sites.json`）
 4. `npm run ecosystem:sync`

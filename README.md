@@ -19,7 +19,7 @@
 
 ```bash
 npm run ecosystem:sync
-# 編輯 ecosystem/sites/<id>/ …
+# 編輯 /agent/ecosystem-sites/<id>/ …
 # 在該子目錄 git commit && git push（推到子站自己的 remote）
 ```
 

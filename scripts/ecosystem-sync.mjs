@@ -15,7 +15,14 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const MANIFEST = path.join(ROOT, "ecosystem", "sites.json");
-const SITES_DIR = path.join(ROOT, "ecosystem", "sites");
+/**
+ * Checkouts live OUTSIDE the Next.js app tree so TypeScript / next build
+ * never typechecks sibling products (avoids path alias collisions).
+ * Default: /agent/ecosystem-sites
+ */
+const SITES_DIR =
+  process.env.NOVAOS_ECOSYSTEM_SITES_DIR ||
+  path.resolve(ROOT, "..", "ecosystem-sites");
 
 function run(cmd, args, cwd) {
   const res = spawnSync(cmd, args, {
@@ -123,7 +130,7 @@ function main() {
   console.log("\nDone.");
   console.log(`Summary → ${path.relative(ROOT, summaryPath)}`);
   console.log(
-    "Edit under ecosystem/sites/<id>, then commit+push inside that folder (its own git)."
+    `Edit under ${SITES_DIR}/<id>, then commit+push inside that folder (its own git).`
   );
 }
 

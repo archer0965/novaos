@@ -12,3 +12,4 @@ tsconfig.tsbuildinfo
 audit-screenshots
 audit-report.json
 ecosystem/sites
+# legacy path; checkouts now live at /agent/ecosystem-sites by default
