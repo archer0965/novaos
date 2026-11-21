@@ -9,10 +9,6 @@ import { ShareLink } from "@/components/dashboard/share-link";
 import { SubscriptionCard } from "@/components/dashboard/subscription-card";
 import { UsageCard } from "@/components/dashboard/usage-card";
 import { isAdminEmail } from "@/lib/admin";
-import {
-  trialDaysForNewSignup,
-  trialEndsAtAfterDays,
-} from "@/lib/signup-early-bird";
 import { getSellerOrderMetrics } from "@/lib/store";
 import { createClient } from "@/lib/supabase/server";
 import { currentUsageMonth, getReportShareUrl } from "@/lib/utils-format";
@@ -57,14 +53,13 @@ export default async function DashboardPage() {
     ]);
 
   if (!profile) {
-    // Ensure profile row exists for older accounts / race before trigger
-    const days = await trialDaysForNewSignup();
-    const early = days > 7;
+    // Registration does NOT start trial or consume early-bird seats
     await supabase.from("profiles").upsert({
       id: user.id,
       shop_name: "",
-      trial_ends_at: trialEndsAtAfterDays(days),
-      signup_early_bird: early,
+      trial_ends_at: null,
+      signup_early_bird: false,
+      active_modules: [],
     });
     redirect("/dashboard/settings");
   }

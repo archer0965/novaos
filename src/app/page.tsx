@@ -4,9 +4,9 @@ import { BrandLogo } from "@/components/brand-logo";
 import { LandingHeroBanner } from "@/components/landing-hero-banner";
 import { LandingNavMenu } from "@/components/landing-nav-menu";
 import { PwaBootRedirect } from "@/components/pwa-boot-redirect";
-import { SignupEarlyBirdTopBanner } from "@/components/signup-early-bird-top-banner";
 import { Button } from "@/components/ui/button";
-import { getSignupEarlyBirdStatus } from "@/lib/signup-early-bird";
+import { getAllModuleEarlyBirdStatuses } from "@/lib/module-activation";
+import { NOVA_MODULES } from "@/lib/novaos";
 import { PRODUCTION_URL, siteConfig } from "@/lib/site";
 import { FREE_TRIAL } from "@/types/database";
 
@@ -88,18 +88,20 @@ const SiteFooter = dynamic(
 );
 
 export default async function LandingPage() {
-  const earlySignup = await getSignupEarlyBirdStatus();
-  const trialDays = earlySignup.open
-    ? earlySignup.trialDays
-    : FREE_TRIAL.durationDays;
+  const moduleEarly = await getAllModuleEarlyBirdStatuses().catch(() => []);
+  const openCount = moduleEarly.filter((s) => s.open).length;
+  const trialDays = openCount > 0 ? 14 : FREE_TRIAL.durationDays;
 
-  const trialLine = earlySignup.open ? (
+  const trialLine = (
     <p>
-      早鳥優惠進行中：前 {earlySignup.max} 名享 {earlySignup.trialDays}{" "}
-      天試用（{earlySignup.used}/{earlySignup.max}）
+      註冊不扣早鳥名額；啟用子模組後才開始試用（各模組前 15 名 14 天／其餘 7 天）。
+      {openCount > 0
+        ? `目前 ${openCount} 個模組仍有早鳥名額：${moduleEarly
+            .filter((s) => s.open)
+            .map((s) => `${NOVA_MODULES[s.moduleId].name} ${s.remaining}`)
+            .join("、")}`
+        : "早鳥名額已滿，啟用後仍享 7 天一般試用。"}
     </p>
-  ) : (
-    <p>新註冊先免費試用 {trialDays} 天，立刻建立獨立賣場開始收單。</p>
   );
 
   return (
@@ -110,22 +112,7 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {earlySignup.open ? (
-        <SignupEarlyBirdTopBanner
-          used={earlySignup.used}
-          max={earlySignup.max}
-          trialDays={earlySignup.trialDays}
-          remaining={earlySignup.remaining}
-        />
-      ) : null}
-
-      <header
-        className={
-          earlySignup.open
-            ? "relative z-50 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:py-5"
-            : "relative z-50 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:absolute md:inset-x-0 md:top-0 md:mx-auto md:w-full md:max-w-6xl md:py-5"
-        }
-      >
+      <header className="relative z-50 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:absolute md:inset-x-0 md:top-0 md:mx-auto md:w-full md:max-w-6xl md:py-5">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <BrandLogo size="md" className="text-sky-50" />
         </div>

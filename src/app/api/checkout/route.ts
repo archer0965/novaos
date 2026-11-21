@@ -3,11 +3,20 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildAutoSubmitHtml, buildCheckoutParams } from "@/lib/ecpay";
-import { isNovaModuleId, NOVA_MODULE_IDS, REFERRAL_CONFIG } from "@/lib/novaos";
+import {
+  listActivationsForSeller,
+  resolveSellerPricingTier,
+} from "@/lib/module-activation";
+import {
+  isNovaModuleId,
+  NOVA_MODULE_IDS,
+  REFERRAL_CONFIG,
+  type NovaModuleId,
+} from "@/lib/novaos";
+import { buildCheckoutQuote } from "@/lib/pricing-tiers";
 import { getSiteUrl } from "@/lib/site";
 import {
   PLAN_CATALOG,
-  getCheckoutAmount,
   getCycleLabel,
   isPaidPlan,
   normalizeBillingCycle,
@@ -59,11 +68,15 @@ export async function POST(request: Request) {
     }
 
     const cycle = normalizeBillingCycle(parsed.data.cycle) as BillingCycle;
+    const moduleRaw = parsed.data.module || "";
+    const selectedModule: NovaModuleId | null = isNovaModuleId(moduleRaw)
+      ? moduleRaw
+      : null;
 
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "is_early_bird, discount_tier, referral_discount_used, referral_credit_balance, referred_by"
+        "is_early_bird, discount_tier, is_ambassador, referral_discount_used, referral_credit_balance, referred_by"
       )
       .eq("id", user.id)
       .maybeSingle();
@@ -98,18 +111,24 @@ export async function POST(request: Request) {
           )
         : 0;
 
-    const amount = getCheckoutAmount(plan, cycle, {
-      discountTier: profile?.discount_tier,
-      isEarlyBird: profile?.is_early_bird,
+    const activations = await listActivationsForSeller(user.id);
+    const tier = resolveSellerPricingTier({
+      profile: profile || {},
+      activations,
+      moduleId: plan === "starter" ? selectedModule || "store" : null,
+    });
+
+    const quote = buildCheckoutQuote({
+      plan,
+      cycle,
+      tier,
       referralFirstDiscount: Boolean(referrerId),
       applyCredit,
     });
+    const amount = quote.finalAmount;
 
-    // Persist selected module for basic plan
     if (plan === "starter") {
-      const mod = isNovaModuleId(parsed.data.module || "")
-        ? parsed.data.module!
-        : "store";
+      const mod = selectedModule || "store";
       await supabase
         .from("profiles")
         .update({ active_modules: [mod] })
@@ -123,8 +142,6 @@ export async function POST(request: Request) {
 
     const catalog = PLAN_CATALOG[plan];
     const cycleLabel = getCycleLabel(cycle);
-    const earlyBird =
-      profile?.discount_tier === "lifetime_special" || profile?.is_early_bird;
 
     const baseUrl = getSiteUrl();
     const stamp = Date.now().toString(36).toUpperCase();
@@ -134,14 +151,12 @@ export async function POST(request: Request) {
     const { paymentUrl, params } = buildCheckoutParams({
       merchantTradeNo,
       totalAmount: amount,
-      tradeDesc: `NovaOS ${catalog.name} ${cycleLabel}${
-        earlyBird ? " special" : ""
-      }`,
+      tradeDesc: `NovaOS ${catalog.name} ${cycleLabel} ${tier}`,
       itemName: `NovaOS ${catalog.name} ${cycleLabel}`,
       returnURL: `${baseUrl}/api/checkout/callback`,
       clientBackURL: `${baseUrl}/dashboard/pass?upgraded=pending`,
       customField1: user.id,
-      customField2: `${plan}:${cycle}${referrerId ? `:ref` : ""}${
+      customField2: `${plan}:${cycle}:t${tier}${referrerId ? `:ref` : ""}${
         applyCredit ? `:c${applyCredit}` : ""
       }`,
     });
@@ -152,6 +167,14 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
+        "X-NovaOS-Quote": JSON.stringify({
+          baseAmount: quote.baseAmount,
+          tierAmount: quote.tierAmount,
+          finalAmount: quote.finalAmount,
+          tier: quote.tier,
+          foldLabel: quote.foldLabel,
+          savingsVsBase: quote.savingsVsBase,
+        }),
       },
     });
   } catch (error) {

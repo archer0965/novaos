@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ModuleActivationRow } from "@/lib/module-activation";
 import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import {
+  buildCheckoutQuote,
+  resolvePricingTier,
+  TIER_META,
+  type PricingTierId,
+} from "@/lib/pricing-tiers";
 import { isSubscriptionExpired } from "@/lib/subscription";
 import type { UpgradeProrationQuote } from "@/lib/subscription";
 import {
@@ -15,12 +22,9 @@ import {
   PRIMARY_PAID_PLAN_KEYS,
   PLAN_CATALOG,
   PLAN_RANK,
-  formatDiscountFold,
-  getCheckoutAmount,
-  getCycleAvgMonthly,
   getCycleLabel,
-  getEarlyBirdMultiplier,
   getPlanDisplayName,
+  hasAmbassadorDiscount,
   hasLifetimeSpecialDiscount,
   isDowngrade,
   isPaidPlan,
@@ -33,7 +37,7 @@ import {
 } from "@/types/database";
 import { cn } from "@/lib/utils";
 
-const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "yearly"];
+const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
 const MODULE_PICK: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
 
 function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
@@ -43,17 +47,19 @@ function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
   return PLAN_RANK[target] > PLAN_RANK[current];
 }
 
-export function PlanUpgrade({ profile }: { profile: Profile }) {
+export function PlanUpgrade({
+  profile,
+  activations = [],
+  forcedTier,
+}: {
+  profile: Profile;
+  activations?: ModuleActivationRow[];
+  forcedTier?: PricingTierId | null;
+}) {
   const current = normalizePlan(profile.plan_type);
   const trialOn = isTrialActive(profile.trial_ends_at);
-  const earlyBird = hasLifetimeSpecialDiscount(
-    profile.discount_tier,
-    profile.is_early_bird
-  );
   const [cycle, setCycle] = useState<BillingCycle>(
-    normalizeBillingCycle(profile.billing_cycle) === "half_yearly"
-      ? "monthly"
-      : normalizeBillingCycle(profile.billing_cycle)
+    normalizeBillingCycle(profile.billing_cycle)
   );
   const [loadingPlan, setLoadingPlan] = useState<PaidPlanKey | null>(null);
   const [quote, setQuote] = useState<UpgradeProrationQuote | null>(null);
@@ -62,6 +68,44 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
     (profile.active_modules?.[0] as NovaModuleId) || "store"
   );
   const [referralCode, setReferralCode] = useState("");
+
+  const partner = hasLifetimeSpecialDiscount(
+    profile.discount_tier,
+    profile.is_early_bird
+  );
+  const ambassador = hasAmbassadorDiscount(
+    profile.discount_tier,
+    profile.is_ambassador
+  );
+  const anyEarly = activations.some((a) => a.is_module_early_bird);
+  const modEarly = Boolean(
+    activations.find((a) => a.module_id === selectedModule)?.is_module_early_bird
+  );
+
+  const tierForStarter = useMemo(
+    () =>
+      forcedTier ||
+      resolvePricingTier({
+        moduleId: selectedModule,
+        isPartnerStore: partner,
+        isAmbassador: ambassador,
+        moduleIsEarlyBird: modEarly,
+        anyModuleEarlyBird: anyEarly,
+      }),
+    [forcedTier, selectedModule, partner, ambassador, modEarly, anyEarly]
+  );
+
+  const tierForBundle = useMemo(
+    () =>
+      forcedTier ||
+      resolvePricingTier({
+        moduleId: null,
+        isPartnerStore: partner,
+        isAmbassador: ambassador,
+        anyModuleEarlyBird: anyEarly,
+      }),
+    [forcedTier, partner, ambassador, anyEarly]
+  );
 
   async function submitHtmlCheckout(
     url: string,
@@ -197,8 +241,8 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {trialOn
-              ? `${FREE_TRIAL.description}｜試用至 ${trialLabel}（台北時間）`
-              : "有效期內升級可折抵剩餘金額；提前續費自原到期日累加。"}
+              ? `${FREE_TRIAL.description}｜試用參考至 ${trialLabel}（台北時間）`
+              : "註冊不會開始試用；請先啟用子模組。應付＝原價 × 資格折扣 − 推薦現折。"}
           </p>
         </div>
         <div className="inline-flex flex-wrap rounded-xl bg-secondary p-1">
@@ -240,7 +284,7 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>基礎版選擇模組</Label>
+          <Label>基礎版選擇模組（影響資格判定）</Label>
           <div className="flex flex-wrap gap-1.5">
             {MODULE_PICK.map((id) => {
               const mod = NOVA_MODULES[id];
@@ -262,16 +306,22 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
               );
             })}
           </div>
+          <p className="text-xs text-muted-foreground">
+            基礎版資格：{TIER_META[tierForStarter].label}（
+            {TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：
+            {TIER_META[tierForBundle].label}
+          </p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {PRIMARY_PAID_PLAN_KEYS.map((key) => {
           const plan = PLAN_CATALOG[key];
-          const listPrice = getCheckoutAmount(key, cycle);
-          const price = getCheckoutAmount(key, cycle, {
-            discountTier: profile.discount_tier,
-            isEarlyBird: profile.is_early_bird,
+          const tier = key === "unlimited" ? tierForBundle : tierForStarter;
+          const priceQuote = buildCheckoutQuote({
+            plan: key,
+            cycle,
+            tier,
             referralFirstDiscount:
               firstDiscountEligible && Boolean(referralCode.trim()),
             applyCredit:
@@ -279,14 +329,12 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
                 ? Math.min(100, Number(profile.referral_credit_balance) || 0)
                 : 0,
           });
-          const avg = getCycleAvgMonthly(key, cycle, {
-            discountTier: profile.discount_tier,
-            isEarlyBird: profile.is_early_bird,
-          });
-          const fold = formatDiscountFold(getEarlyBirdMultiplier(cycle));
-          const isCurrent = current === key || (current === "pro" && key === "starter");
+          const isCurrent =
+            current === key || (current === "pro" && key === "starter");
           const downgrade = isDowngrade(current, key);
           const prorate = canProrateUpgrade(profile, key);
+          const period =
+            cycle === "yearly" ? "年" : cycle === "half_yearly" ? "半年" : "月";
 
           return (
             <div
@@ -302,7 +350,7 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
                 <p className="font-display text-lg font-semibold">{plan.name}</p>
                 {plan.isPopular ? (
                   <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-                    {plan.popularBadge || "特惠"}
+                    {plan.popularBadge || "旗艦"}
                   </span>
                 ) : null}
               </div>
@@ -317,35 +365,34 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
                 {plan.blurb}
               </p>
               <p className="mt-4 font-display text-3xl font-bold">
-                ${price}
+                {priceQuote.savingsVsBase > 0 ? (
+                  <span className="mr-2 text-base font-medium line-through opacity-70">
+                    ${priceQuote.baseAmount}
+                  </span>
+                ) : null}
+                ${priceQuote.finalAmount}
                 <span className="text-base font-medium opacity-80">
                   {" "}
-                  / {cycle === "yearly" ? "年" : "月"}
+                  / {period}
                 </span>
               </p>
-              {price < listPrice ? (
-                <p
-                  className={cn(
-                    "mt-1 text-xs font-medium",
-                    plan.isPopular ? "text-accent" : "text-amber-700"
-                  )}
-                >
-                  已套用折扣（原價 ${listPrice}
-                  {earlyBird ? ` · 特約 ${fold}` : ""}）
-                </p>
-              ) : null}
-              {cycle !== "monthly" ? (
-                <p
-                  className={cn(
-                    "mt-1 text-xs",
-                    plan.isPopular
-                      ? "text-primary-foreground/75"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  約每月 ${avg}
-                </p>
-              ) : null}
+              <p
+                className={cn(
+                  "mt-1 text-xs font-medium",
+                  plan.isPopular ? "text-accent" : "text-amber-700"
+                )}
+              >
+                {priceQuote.tierLabel} · {priceQuote.foldLabel}
+                {priceQuote.savingsVsBase > 0
+                  ? ` · 省 $${priceQuote.savingsVsBase}`
+                  : ""}
+                {priceQuote.referralDiscount
+                  ? ` · 推薦 −$${priceQuote.referralDiscount}`
+                  : ""}
+                {priceQuote.creditApplied
+                  ? ` · 扣抵 −$${priceQuote.creditApplied}`
+                  : ""}
+              </p>
               <ul className="mt-4 space-y-2 text-sm">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminEmail } from "@/lib/admin";
+import { listActivationsForSeller } from "@/lib/module-activation";
 import { canOpenModule } from "@/lib/module-access";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
@@ -28,13 +29,18 @@ export async function POST(request: Request) {
       .select("plan_type, trial_ends_at, expires_at, active_modules")
       .eq("id", user.id)
       .maybeSingle();
+    const activations = await listActivationsForSeller(user.id);
     if (
       !profile ||
       !canOpenModule(profile as Profile, "booking", {
         isAdmin: isAdminEmail(user.email),
+        activations,
       })
     ) {
-      return NextResponse.json({ error: "方案未包含拓脈預約" }, { status: 403 });
+      return NextResponse.json(
+        { error: "請先啟用拓脈預約子模組" },
+        { status: 403 }
+      );
     }
 
     const parsed = schema.safeParse(await request.json());

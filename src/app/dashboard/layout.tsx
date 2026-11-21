@@ -3,6 +3,7 @@ import { DashboardNav } from "@/components/dashboard/nav";
 import { ModuleTabs } from "@/components/dashboard/module-tabs";
 import { SiteFooter } from "@/components/site-footer";
 import { ensureAdminProfile, isAdminEmail } from "@/lib/admin";
+import { listActivationsForSeller } from "@/lib/module-activation";
 import { resolveUnlockedModules } from "@/lib/module-access";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
@@ -27,19 +28,25 @@ export default async function DashboardLayout({
       plan_type: "free",
       trial_ends_at: null,
       expires_at: null,
-      active_modules: ["store", "pass"],
+      active_modules: [],
     },
-    { isAdmin }
+    { isAdmin, activations: [] }
   );
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan_type, trial_ends_at, expires_at, active_modules")
-      .eq("id", user.id)
-      .maybeSingle();
+    const [{ data: profile }, activations] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("plan_type, trial_ends_at, expires_at, active_modules")
+        .eq("id", user.id)
+        .maybeSingle(),
+      listActivationsForSeller(user.id),
+    ]);
     if (profile) {
-      unlocked = resolveUnlockedModules(profile as Profile, { isAdmin });
+      unlocked = resolveUnlockedModules(profile as Profile, {
+        isAdmin,
+        activations,
+      });
     }
   }
 

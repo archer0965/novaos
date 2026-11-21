@@ -1,14 +1,13 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { BarChart3, Package, PackagePlus, Sparkles, Ticket } from "lucide-react";
 import { ShopShareCard } from "@/components/store/shop-share-card";
 import { Button } from "@/components/ui/button";
+import { requireModuleOrGate } from "@/lib/require-module";
 import {
   ensureShopSlug,
   getShopStorefrontUrl,
   listSellerStoreStats,
 } from "@/lib/store";
-import { createClient } from "@/lib/supabase/server";
 import { formatTWD } from "@/lib/utils-format";
 
 export const metadata = {
@@ -16,25 +15,17 @@ export const metadata = {
 };
 
 export default async function StoreHubPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const access = await requireModuleOrGate("store");
+  if (!access.ok) return access.gate;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("shop_name, shop_slug")
-    .eq("id", user.id)
-    .maybeSingle();
-
+  const profile = access.profile;
   const shopSlug = await ensureShopSlug(
-    user.id,
-    profile?.shop_name || "shop",
-    profile?.shop_slug
+    access.userId,
+    profile.shop_name || "shop",
+    profile.shop_slug
   );
   const shopUrl = getShopStorefrontUrl(shopSlug);
-  const items = await listSellerStoreStats(user.id);
+  const items = await listSellerStoreStats(access.userId);
   const active = items.filter((i) => i.status !== "closed").length;
   const pending = items.reduce((s, i) => s + i.pending_count, 0);
   const sold = items.reduce((s, i) => s + i.ordered_quantity, 0);

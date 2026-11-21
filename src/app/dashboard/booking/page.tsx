@@ -1,47 +1,30 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { CalendarClock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { isAdminEmail } from "@/lib/admin";
-import { canOpenModule } from "@/lib/module-access";
+import { requireModuleOrGate } from "@/lib/require-module";
 import { PAYMENT_GATEWAY_STATUS } from "@/lib/novaos";
 import { getSiteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/types/database";
 
 export const metadata = { title: "拓脈預約" };
 
 export default async function BookingDashboardPage() {
+  const access = await requireModuleOrGate("booking");
+  if (!access.ok) return access.gate;
+
+  const { userId, profile } = access;
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const isAdmin = isAdminEmail(user.email);
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "id, shop_name, shop_slug, plan_type, trial_ends_at, expires_at, active_modules, deposit_enabled"
-    )
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile) redirect("/dashboard/pass");
-  if (!canOpenModule(profile as Profile, "booking", { isAdmin })) {
-    redirect("/dashboard/pass#upgrade");
-  }
 
   const [{ data: services }, { data: appointments }] = await Promise.all([
     supabase
       .from("booking_services")
       .select("id, title, duration_minutes, price, offpeak_discount_pct, buffer_minutes, is_active")
-      .eq("seller_id", user.id)
+      .eq("seller_id", userId)
       .order("created_at", { ascending: false }),
     supabase
       .from("booking_appointments")
       .select("id, customer_name, customer_phone, starts_at, ends_at, status, pay_mode, note")
-      .eq("seller_id", user.id)
+      .eq("seller_id", userId)
       .order("starts_at", { ascending: true })
       .limit(30),
   ]);

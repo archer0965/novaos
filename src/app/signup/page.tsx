@@ -1,8 +1,7 @@
 import { AuthForm } from "@/components/auth/auth-form";
-import { SignupEarlyBirdTopBanner } from "@/components/signup-early-bird-top-banner";
 import { sanitizeNextPath } from "@/lib/safe-next";
-import { getSignupEarlyBirdStatus } from "@/lib/signup-early-bird";
-import { SIGNUP_EARLY_BIRD } from "@/types/database";
+import { getAllModuleEarlyBirdStatuses } from "@/lib/module-activation";
+import { NOVA_MODULES } from "@/lib/novaos";
 
 export const metadata = { title: "免費註冊" };
 export const revalidate = 60;
@@ -12,21 +11,17 @@ export default async function SignupPage({
 }: {
   searchParams: { next?: string };
 }) {
-  const early = await getSignupEarlyBirdStatus();
-  const signupHint = early.open
-    ? `${SIGNUP_EARLY_BIRD.description}（目前 ${early.used}/${early.max}）・不是一般 7 天試用`
-    : null;
+  const statuses = await getAllModuleEarlyBirdStatuses().catch(() => []);
+  const openMods = statuses.filter((s) => s.open);
+  const signupHint =
+    openMods.length > 0
+      ? `註冊不會扣早鳥名額；啟用子模組後才開始試用。目前仍有早鳥名額的模組：${openMods
+          .map((s) => `${NOVA_MODULES[s.moduleId].name} ${s.remaining}/${s.max}`)
+          .join("、")}`
+      : "註冊不會開始試用倒數；請登入後至各模組頁點擊「啟用」。";
 
   return (
     <div className="min-h-screen">
-      {early.open ? (
-        <SignupEarlyBirdTopBanner
-          used={early.used}
-          max={early.max}
-          trialDays={early.trialDays}
-          remaining={early.remaining}
-        />
-      ) : null}
       <AuthForm
         mode="signup"
         nextPath={sanitizeNextPath(searchParams.next)}

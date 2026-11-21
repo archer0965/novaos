@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import { SettingsForm } from "@/components/dashboard/settings-form";
 import { isAdminEmail } from "@/lib/admin";
-import {
-  trialDaysForNewSignup,
-  trialEndsAtAfterDays,
-} from "@/lib/signup-early-bird";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 
@@ -29,14 +25,14 @@ export default async function SettingsPage() {
     .maybeSingle();
 
   if (!profile) {
-    const days = await trialDaysForNewSignup();
     const { data: created } = await supabase
       .from("profiles")
       .upsert({
         id: user.id,
         shop_name: "",
-        trial_ends_at: trialEndsAtAfterDays(days),
-        signup_early_bird: days > 7,
+        trial_ends_at: null,
+        signup_early_bird: false,
+        active_modules: [],
       })
       .select("*")
       .single();

@@ -6,6 +6,12 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NOVA_MODULES, REFERRAL_CONFIG } from "@/lib/novaos";
 import {
+  SUBSCRIPTION_BASE_PRICES,
+  TIER_CHECKOUT_TOTALS,
+  TIER_META,
+  type PricingTierId,
+} from "@/lib/pricing-tiers";
+import {
   BILLING_CYCLES,
   PRIMARY_PAID_PLAN_KEYS,
   PLAN_CATALOG,
@@ -13,23 +19,47 @@ import {
 } from "@/types/database";
 import { cn } from "@/lib/utils";
 
-const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "yearly"];
+const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
+const TIER_OPTIONS: PricingTierId[] = ["early_bird", "general", "vip"];
 
 export function LandingPricing() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const [tier, setTier] = useState<PricingTierId>("early_bird");
 
   return (
     <section id="pricing" className="relative z-10 scroll-mt-20 py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          NovaOS 方案價格
+          NovaOS 方案與折扣階梯
         </h2>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          單模組專注經營，或一次解鎖拓脈預約／NovaStore／AI Doc／拓管。年繳相當於免費贈送
-          2 個月。被推薦人首次付款現折 NT${REFERRAL_CONFIG.refereeFirstDiscount}。
+          註冊不會開始試用；啟用子模組後才佔用該模組早鳥名額（各 15 名）。應付金額＝週期原價 ×
+          資格折扣 − 推薦碼首月 $
+          {REFERRAL_CONFIG.refereeFirstDiscount}。
         </p>
 
-        <div className="mt-6 inline-flex flex-wrap rounded-xl bg-secondary p-1">
+        <div className="mt-6 flex flex-wrap gap-2">
+          {TIER_OPTIONS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTier(id)}
+              className={cn(
+                "rounded-xl border px-3 py-2 text-sm",
+                tier === id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background/70 text-muted-foreground"
+              )}
+            >
+              {TIER_META[id].label}
+              <span className="ml-1 opacity-80">
+                （{TIER_META[id].trialDays} 天試用）
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 inline-flex flex-wrap rounded-xl bg-secondary p-1">
           {CYCLE_OPTIONS.map((value) => {
             const meta = BILLING_CYCLES[value];
             return (
@@ -44,7 +74,7 @@ export function LandingPricing() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {meta.label}
+                {meta.label} · {TIER_META[tier].foldLabels[cycle]}
               </button>
             );
           })}
@@ -53,12 +83,16 @@ export function LandingPricing() {
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {PRIMARY_PAID_PLAN_KEYS.map((key) => {
             const plan = PLAN_CATALOG[key];
-            const price = plan.prices[cycle];
-            const period = cycle === "yearly" ? "年" : "月";
+            const planKey = key === "unlimited" ? "unlimited" : "starter";
+            const base = SUBSCRIPTION_BASE_PRICES[planKey][cycle];
+            const price = TIER_CHECKOUT_TOTALS[tier][planKey][cycle];
+            const period =
+              cycle === "yearly" ? "年" : cycle === "half_yearly" ? "半年" : "月";
             const firstMonth =
               cycle === "monthly"
-                ? Math.max(1, price.total - REFERRAL_CONFIG.refereeFirstDiscount)
+                ? Math.max(1, price - REFERRAL_CONFIG.refereeFirstDiscount)
                 : null;
+            const saved = Math.max(0, base - price);
 
             return (
               <div
@@ -72,7 +106,7 @@ export function LandingPricing() {
               >
                 {plan.isPopular ? (
                   <p className="absolute right-4 top-4 text-xs font-semibold text-accent">
-                    {plan.popularBadge || "特惠中"}
+                    {plan.popularBadge || "旗艦"}
                   </p>
                 ) : null}
                 <p
@@ -86,9 +120,7 @@ export function LandingPricing() {
                   {plan.name}
                 </p>
                 <p className="mt-3 font-display text-4xl font-bold tracking-tight">
-                  {"listPriceMonthly" in plan &&
-                  plan.listPriceMonthly &&
-                  cycle === "monthly" ? (
+                  {saved > 0 ? (
                     <span
                       className={cn(
                         "mr-2 text-lg font-medium line-through",
@@ -97,10 +129,10 @@ export function LandingPricing() {
                           : "text-muted-foreground"
                       )}
                     >
-                      ${plan.listPriceMonthly}
+                      ${base.toLocaleString("zh-TW")}
                     </span>
                   ) : null}
-                  NT${price.total.toLocaleString("zh-TW")}
+                  NT${price.toLocaleString("zh-TW")}
                   <span
                     className={cn(
                       "text-base font-medium",
@@ -121,7 +153,10 @@ export function LandingPricing() {
                       : "text-muted-foreground"
                   )}
                 >
-                  {plan.blurb}
+                  {TIER_META[tier].foldLabels[cycle]}
+                  {saved > 0
+                    ? ` · 省 NT$${saved.toLocaleString("zh-TW")}`
+                    : ""}
                 </p>
                 {firstMonth ? (
                   <p
@@ -131,18 +166,6 @@ export function LandingPricing() {
                     )}
                   >
                     推薦碼首月 NT${firstMonth}
-                  </p>
-                ) : null}
-                {cycle === "yearly" ? (
-                  <p
-                    className={cn(
-                      "mt-1 text-xs",
-                      plan.isPopular
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    約每月 NT${price.avgMonthly.toLocaleString("zh-TW")}
                   </p>
                 ) : null}
                 <ul
@@ -173,7 +196,7 @@ export function LandingPricing() {
                   )}
                   variant={plan.isPopular ? "default" : "outline"}
                 >
-                  <Link href="/signup">選擇方案</Link>
+                  <Link href="/signup">註冊後啟用模組</Link>
                 </Button>
               </div>
             );
@@ -190,6 +213,9 @@ export function LandingPricing() {
                 {m.emoji} {m.name}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{m.blurb}</p>
+              <p className="mt-2 text-[11px] text-amber-800">
+                早鳥名額各自 15 名，啟用時才佔用
+              </p>
             </div>
           ))}
         </div>

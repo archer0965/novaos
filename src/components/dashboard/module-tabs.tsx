@@ -26,7 +26,7 @@ export function ModuleTabs({
           return (
             <Link
               key={id}
-              href={locked ? "/dashboard/pass#upgrade" : mod.href}
+              href={mod.href}
               prefetch
               className={cn(
                 "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
@@ -36,12 +36,12 @@ export function ModuleTabs({
                     ? "text-muted-foreground/70 hover:bg-background/60"
                     : "text-muted-foreground hover:bg-background hover:text-foreground"
               )}
-              title={locked ? "方案未包含此模組 — 前往拓管升級" : mod.blurb}
+              title={locked ? "尚未啟用 — 點擊前往啟用試用" : mod.blurb}
             >
               <span aria-hidden>{mod.emoji}</span>
               <span className="font-medium">{mod.name}</span>
               {locked ? (
-                <span className="text-[10px] opacity-70">鎖</span>
+                <span className="text-[10px] opacity-70">啟用</span>
               ) : null}
             </Link>
           );

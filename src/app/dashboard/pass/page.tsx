@@ -5,7 +5,12 @@ import { PlanUpgrade } from "@/components/dashboard/plan-upgrade";
 import { SettingsForm } from "@/components/dashboard/settings-form";
 import { SubscriptionCard } from "@/components/dashboard/subscription-card";
 import { isAdminEmail } from "@/lib/admin";
+import {
+  getAllModuleEarlyBirdStatuses,
+  listActivationsForSeller,
+} from "@/lib/module-activation";
 import { generateReferralCode, NOVA_MODULES, PAYMENT_GATEWAY_STATUS } from "@/lib/novaos";
+import { TIER_META } from "@/lib/pricing-tiers";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
 
@@ -22,7 +27,7 @@ export default async function PassPage() {
   let { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, shop_name, shop_slug, shop_bio, bank_code, bank_account, line_user_id, line_channel_access_token, line_channel_secret, enable_cod, cod_url, cod_label, shipping_fee, free_shipping_enabled, free_shipping_threshold, plan_type, billing_cycle, trial_ends_at, expires_at, is_early_bird, discount_tier, signup_early_bird, monthly_usage_count, usage_month, active_modules, referral_code, referred_by, referral_discount_used, referral_credit_balance, deposit_enabled, ecpay_merchant_id, created_at"
+      "id, shop_name, shop_slug, shop_bio, bank_code, bank_account, line_user_id, line_channel_access_token, line_channel_secret, enable_cod, cod_url, cod_label, shipping_fee, free_shipping_enabled, free_shipping_threshold, plan_type, billing_cycle, trial_ends_at, expires_at, is_early_bird, discount_tier, is_ambassador, signup_early_bird, monthly_usage_count, usage_month, active_modules, referral_code, referred_by, referral_discount_used, referral_credit_balance, deposit_enabled, ecpay_merchant_id, created_at"
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -53,6 +58,11 @@ export default async function PassPage() {
     line_channel_secret: null,
   } satisfies Profile;
 
+  const [activations, earlyStatuses] = await Promise.all([
+    listActivationsForSeller(user.id),
+    getAllModuleEarlyBirdStatuses(),
+  ]);
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-border/80 bg-gradient-to-br from-slate-50 via-background to-amber-50/40 p-5 md:p-6">
@@ -61,11 +71,45 @@ export default async function PassPage() {
           訂閱、對帳與同業裂變
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          管理方案、推薦碼與帳戶設定。金流狀態：
+          註冊不會開始試用；請至各模組頁點擊啟用。金流狀態：
           <span className="ml-1 font-medium text-amber-800">
             {PAYMENT_GATEWAY_STATUS.label}
           </span>
         </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {typedProfile.is_early_bird ? (
+            <span className="rounded-md bg-amber-100 px-2 py-1 text-amber-950">
+              特約店家 · {TIER_META.vip.label}
+            </span>
+          ) : null}
+          {typedProfile.is_ambassador ? (
+            <span className="rounded-md bg-violet-100 px-2 py-1 text-violet-950">
+              推廣大使 · AI Doc
+            </span>
+          ) : null}
+          {activations.map((a) => (
+            <span
+              key={a.id}
+              className="rounded-md bg-sky-100 px-2 py-1 text-sky-950"
+            >
+              已啟用 {a.module_id}
+              {a.is_module_early_bird ? "（早鳥）" : ""}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border px-4 py-3 text-sm">
+        <p className="font-medium">各子模組早鳥名額（啟用時才佔用）</p>
+        <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+          {earlyStatuses.map((s) => (
+            <li key={s.moduleId} className="text-muted-foreground">
+              {NOVA_MODULES[s.moduleId].emoji} {NOVA_MODULES[s.moduleId].name}：
+              {s.used}/{s.max}
+              {s.open ? `（剩 ${s.remaining}）` : "（已滿・一般 7 天）"}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <SubscriptionCard profile={typedProfile} isAdmin={isAdmin} />
@@ -111,7 +155,7 @@ export default async function PassPage() {
       </section>
 
       <section id="upgrade">
-        <PlanUpgrade profile={typedProfile} />
+        <PlanUpgrade profile={typedProfile} activations={activations} />
       </section>
 
       <section className="space-y-3">

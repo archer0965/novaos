@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminEmail } from "@/lib/admin";
 import {
+  assignAmbassador,
   assignEarlyBird,
   countEarlyBirdSeats,
   listEarlyBirdSeats,
+  revokeAmbassador,
   revokeEarlyBird,
 } from "@/lib/early-bird";
 import { createClient } from "@/lib/supabase/server";
@@ -56,7 +58,14 @@ export async function GET() {
 
 const bodySchema = z.object({
   email: z.string().email("請輸入有效信箱"),
-  action: z.enum(["assign", "revoke"]).default("assign"),
+  action: z
+    .enum([
+      "assign",
+      "revoke",
+      "assign_ambassador",
+      "revoke_ambassador",
+    ])
+    .default("assign"),
 });
 
 export async function POST(request: Request) {
@@ -75,6 +84,16 @@ export async function POST(request: Request) {
 
     if (parsed.data.action === "revoke") {
       const result = await revokeEarlyBird(parsed.data.email);
+      return NextResponse.json({ ok: true, ...result });
+    }
+    if (parsed.data.action === "assign_ambassador") {
+      const result = await assignAmbassador({
+        targetUserEmail: parsed.data.email,
+      });
+      return NextResponse.json({ ok: true, ...result });
+    }
+    if (parsed.data.action === "revoke_ambassador") {
+      const result = await revokeAmbassador(parsed.data.email);
       return NextResponse.json({ ok: true, ...result });
     }
 

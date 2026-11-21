@@ -50,7 +50,7 @@ export default function CreateBookingServicePage() {
       <div>
         <h1 className="font-display text-2xl font-semibold">新增預約服務</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          設定時長、價格、離峰折扣與防撞緩衝（分鐘）。
+          設定時長、價格、離峰折扣與防撞緩衝（分鐘）。若尚未啟用拓脈預約，API 將拒絕寫入。
         </p>
       </div>
       {(
