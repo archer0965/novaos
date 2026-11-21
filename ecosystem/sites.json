@@ -1,0 +1,54 @@
+{
+  "$schema": "./sites.schema.json",
+  "hub": {
+    "id": "hub",
+    "name": "拓新雲端",
+    "nameEn": "NovaOS",
+    "packageName": "novaos",
+    "url": "https://paycheck.com.de",
+    "vercelProject": "novaos",
+    "repo": "https://github.com/archer0965/novaos",
+    "localPath": ".",
+    "role": "hub",
+    "notes": "品牌主站與產品矩陣；可一次同步編輯子站 checkout。"
+  },
+  "sites": [
+    {
+      "id": "novastore",
+      "name": "NovaStore",
+      "url": "https://novastore-omega.vercel.app",
+      "vercelProject": "novastore",
+      "repo": "https://github.com/archer0965/novastore",
+      "localFallback": "../repos/novastore",
+      "role": "product",
+      "notes": "今日以前抽出的獨立賣場專案；單一修改請在 novastore 專案進行。"
+    },
+    {
+      "id": "docmate",
+      "name": "DocMate AI",
+      "url": "https://docmate-ai-one.vercel.app",
+      "vercelProject": "docmate-ai",
+      "repo": "https://github.com/archer0965/docmate-ai",
+      "localFallback": "../repos/docmate-ai",
+      "role": "product"
+    },
+    {
+      "id": "booking",
+      "name": "拓脈預約",
+      "url": "https://taiwanbiz.vercel.app",
+      "vercelProject": "taiwanbiz",
+      "repo": null,
+      "role": "product",
+      "notes": "獨立站；repo 待綁定後可 sync。"
+    },
+    {
+      "id": "pass",
+      "name": "拓管",
+      "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+      "vercelProject": null,
+      "repo": null,
+      "role": "product",
+      "notes": "SubKeeper 訂閱管家；repo 待綁定後可 sync。"
+    }
+  ]
+}

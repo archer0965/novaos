@@ -11,3 +11,4 @@ tsconfig.tsbuildinfo
 .env*
 audit-screenshots
 audit-report.json
+ecosystem/sites

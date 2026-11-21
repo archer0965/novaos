@@ -21,34 +21,25 @@ const { chromium, devices } = require("playwright");
 const ROOT = path.resolve(__dirname, "..");
 const SHOT_DIR = path.join(ROOT, "audit-screenshots");
 const REPORT_PATH = path.join(ROOT, "audit-report.json");
+const MANIFEST_PATH = path.join(ROOT, "ecosystem", "sites.json");
 
-const SITES = [
-  {
-    id: "hub",
-    name: "拓新雲端（主站）",
-    url: "https://paycheck.com.de",
-  },
-  {
-    id: "docmate",
-    name: "DocMate AI",
-    url: "https://docmate-ai-one.vercel.app",
-  },
-  {
-    id: "pass",
-    name: "拓管",
-    url: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
-  },
-  {
-    id: "novastore",
-    name: "NovaStore",
-    url: "https://novastore-omega.vercel.app",
-  },
-  {
-    id: "booking",
-    name: "拓脈預約",
-    url: "https://taiwanbiz.vercel.app",
-  },
-];
+function loadSites() {
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
+  const list = [];
+  if (manifest.hub) {
+    list.push({
+      id: manifest.hub.id,
+      name: `${manifest.hub.name}（主站）`,
+      url: manifest.hub.url,
+    });
+  }
+  for (const s of manifest.sites || []) {
+    list.push({ id: s.id, name: s.name, url: s.url });
+  }
+  return list;
+}
+
+const SITES = loadSites();
 
 const VIEWPORTS = [
   {
