@@ -24,6 +24,7 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     tagline: "代購／團購獨立賣場與自動對帳",
     audience: "代購主、團購主、IG／LINE 微型賣家",
     highlights: [
+      "獨立賣場頁一鍵分享，買家自助瀏覽與下單",
       "ATM 末五碼對帳與一鍵標記",
       "運費／滿額免運與外部導流（賣貨便／蝦皮）",
       "LINE 每日帳務彙整通知",
