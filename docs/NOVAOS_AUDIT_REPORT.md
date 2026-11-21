@@ -11,10 +11,10 @@
 |---|------|----------|--------|------------|--------|--------|
 | 1 | 拓新雲端 NovaOS | https://paycheck.com.de | `archer0965/novaos` | `/agent/paycheck-tw` | `novaos` | ✅ |
 | 2 | NovaStore | https://novastore-omega.vercel.app | `archer0965/novastore` | `/agent/repos/novastore` | `novastore` | ✅ |
-| 3 | 拓脈預約 | https://taiwanbiz.vercel.app | — | — | `taiwanbiz`（Git Not connected） | ❌ |
+| 3 | 拓脈預約 | https://taiwanbiz.vercel.app | `archer0965/taiwanbiz` | `/agent/repos/taiwanbiz` | `taiwanbiz` | ✅ |
 | 4 | Nova AI Doc（repo: DocMate） | https://docmate-ai-one.vercel.app | `archer0965/docmate-ai` | `/agent/repos/docmate-ai` | `docmate-ai` | ✅ |
-| 5 | 訂閱管家 | https://temporary-speedy-reef-cy4xhhu.vercel.app | — | — | `temporary-speedy-reef-cy4xhhu` | ❌ |
-| 6 | 拓維空間 NovaDimension | https://novadimension.vercel.app | — | — | `novadimension` | ❌ |
+| 5 | 訂閱管家 | https://temporary-speedy-reef-cy4xhhu.vercel.app | `archer0965/subkeeper` | `/agent/repos/subkeeper` | `temporary-speedy-reef-cy4xhhu` | ✅ |
+| 6 | 拓維空間 NovaDimension | https://novadimension.vercel.app | `archer0965/novadimension` | `/agent/repos/novadimension` | `novadimension` | ✅ |
 
 **命名約定（本次）：** 對外產品名「訂閱管家」；技術 id 可暫留 `subkeeper`。文件助理對外「Nova AI Doc」，repo／Vercel 仍可為 `docmate-ai`。
 

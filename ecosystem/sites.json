@@ -37,20 +37,20 @@
       "name": "拓脈預約",
       "url": "https://taiwanbiz.vercel.app",
       "vercelProject": "taiwanbiz",
-      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/taiwanbiz",
+      "repo": "https://github.com/archer0965/taiwanbiz",
       "role": "product",
-      "notes": "原始碼已納入 novaos monorepo ecosystem/products/taiwanbiz；獨立 GitHub repo 待建立。早鳥 15 組；年繳以 hub 權威。",
-      "localFallback": "ecosystem/products/taiwanbiz"
+      "notes": "GitHub archer0965/taiwanbiz 已串 Vercel taiwanbiz；早鳥 15；年繳以 hub 權威；登入／註冊導主站。",
+      "localFallback": "../repos/taiwanbiz"
     },
     {
       "id": "subkeeper",
       "name": "訂閱管家",
       "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
       "vercelProject": "temporary-speedy-reef-cy4xhhu",
-      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/subkeeper",
+      "repo": "https://github.com/archer0965/subkeeper",
       "role": "product",
-      "notes": "需登入；登入統一導向主站。原始碼在 ecosystem/products/subkeeper。",
-      "localFallback": "ecosystem/products/subkeeper"
+      "notes": "GitHub archer0965/subkeeper 已串 Vercel temporary-speedy-reef；需登入並統一導主站。",
+      "localFallback": "../repos/subkeeper"
     },
     {
       "id": "dimension",
@@ -58,10 +58,10 @@
       "nameEn": "NovaDimension AI",
       "url": "https://novadimension.vercel.app",
       "vercelProject": "novadimension",
-      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/novadimension",
+      "repo": "https://github.com/archer0965/novadimension",
       "role": "product",
-      "notes": "原始碼在 ecosystem/products/novadimension；登入導向主站。",
-      "localFallback": "ecosystem/products/novadimension"
+      "notes": "GitHub archer0965/novadimension 已串 Vercel novadimension；登入／註冊導主站。",
+      "localFallback": "../repos/novadimension"
     }
   ]
 }
