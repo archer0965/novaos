@@ -6,10 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { GlobalDrawer } from "@/components/global-nav/global-drawer";
+import { UserAccountMenu } from "@/components/global-nav/user-account-menu";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
 import { moduleTitle, resolveNavMode, type NavMode } from "@/lib/nav-config";
+import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 import { cn } from "@/lib/utils";
 
 export type GlobalNavbarProps = {
@@ -23,30 +25,38 @@ export type GlobalNavbarProps = {
   className?: string;
 };
 
-const QUICK_DESKTOP: { id: NovaModuleId | "hub"; href: string; label: string }[] =
-  [
-    { id: "hub", href: "/dashboard", label: "總控台" },
-    {
-      id: "booking",
-      href: NOVA_MODULES.booking.href,
-      label: NOVA_MODULES.booking.name,
-    },
-    {
-      id: "store",
-      href: NOVA_MODULES.store.href,
-      label: NOVA_MODULES.store.name,
-    },
-    {
-      id: "ai_doc",
-      href: NOVA_MODULES.ai_doc.href,
-      label: NOVA_MODULES.ai_doc.name,
-    },
-    {
-      id: "pass",
-      href: NOVA_MODULES.pass.href,
-      label: NOVA_MODULES.pass.name,
-    },
-  ];
+const QUICK_DESKTOP: {
+  id: NovaModuleId | "hub" | "subkeeper";
+  href: string;
+  label: string;
+}[] = [
+  { id: "hub", href: "/dashboard", label: "總控台" },
+  {
+    id: "booking",
+    href: NOVA_MODULES.booking.href,
+    label: NOVA_MODULES.booking.name,
+  },
+  {
+    id: "store",
+    href: NOVA_MODULES.store.href,
+    label: NOVA_MODULES.store.name,
+  },
+  {
+    id: "ai_doc",
+    href: NOVA_MODULES.ai_doc.href,
+    label: NOVA_MODULES.ai_doc.name,
+  },
+  {
+    id: "pass",
+    href: NOVA_MODULES.pass.href,
+    label: NOVA_MODULES.pass.name,
+  },
+  {
+    id: "subkeeper",
+    href: SUBKEEPER_PRODUCT.href,
+    label: SUBKEEPER_PRODUCT.name,
+  },
+];
 
 export function GlobalNavbar({
   variant = "app",
@@ -107,11 +117,16 @@ export function GlobalNavbar({
                   const active =
                     item.id === "hub"
                       ? pathname === "/dashboard"
-                      : mode === item.id;
+                      : item.id === "subkeeper"
+                        ? pathname.startsWith(SUBKEEPER_PRODUCT.href)
+                        : mode === item.id;
                   const free =
-                    item.id !== "hub" && isFreeModule(item.id as NovaModuleId);
+                    item.id === "hub" ||
+                    item.id === "subkeeper" ||
+                    isFreeModule(item.id as NovaModuleId);
                   const locked =
                     item.id !== "hub" &&
+                    item.id !== "subkeeper" &&
                     !free &&
                     !unlocked.has(item.id as NovaModuleId);
                   return (
@@ -126,11 +141,13 @@ export function GlobalNavbar({
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                       )}
                       title={
-                        free
-                          ? "永久免費"
-                          : locked
-                            ? "尚未啟用 — 免費試用"
-                            : undefined
+                        item.id === "subkeeper"
+                          ? "需登入 · 永久免費"
+                          : free
+                            ? "永久免費"
+                            : locked
+                              ? "尚未啟用 — 免費試用"
+                              : undefined
                       }
                     >
                       {item.label}
@@ -144,6 +161,8 @@ export function GlobalNavbar({
                 })}
               </nav>
             ) : null}
+
+            {!showAuthLinks ? <UserAccountMenu /> : null}
 
             {showAuthLinks ? (
               <>

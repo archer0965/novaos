@@ -1,17 +1,22 @@
-/** 訂閱管家 — personal subscription tracker (NovaOS auth required). */
+/** 訂閱管家 — personal subscription tracker (NovaOS Auth required). */
 
 export const SUBKEEPER_PRODUCT = {
   id: "subkeeper",
   name: "訂閱管家",
   nameEn: "Subscription Keeper",
-  /** Canonical in-hub path (login required). */
+  /** Public entry (shows NovaOS login gate when anonymous). */
+  publicHref: "/subkeeper",
+  /** Authenticated workspace. */
   href: "/dashboard/subkeeper",
-  /** Marketing entry: force unified NovaOS login first. */
+  /** Marketing / gate: unified NovaOS login. */
   loginHref: "/login?next=%2Fdashboard%2Fsubkeeper",
   signupHref: "/signup?next=%2Fdashboard%2Fsubkeeper",
   tagline: "個人訂閱費用管理與扣款提醒",
-  /** Legacy standalone URL (no longer the primary entry; requires hub login). */
+  hubUrl: "https://paycheck.com.de",
+  /** Legacy standalone URL (localStorage era). */
   legacyUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+  /** Exact key used by old SubKeeper web app. */
+  legacyStorageKey: "subkeeper-subscriptions-v1",
 } as const;
 
 export type PersonalBillingCycle = "monthly" | "yearly" | "weekly" | "custom";
@@ -27,8 +32,20 @@ export type PersonalSubscription = {
   category: string | null;
   notes: string | null;
   is_active: boolean;
+  legacy_client_id?: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Shape stored by legacy SubKeeper in localStorage. */
+export type LegacySubkeeperItem = {
+  id: string;
+  name: string;
+  amount: number;
+  cycle?: string;
+  billingDay?: number;
+  status?: string;
+  accent?: string;
 };
 
 export const PERSONAL_CYCLE_LABELS: Record<PersonalBillingCycle, string> = {
@@ -45,4 +62,71 @@ export function monthlyEquivalent(
   if (cycle === "yearly") return Math.round(amount / 12);
   if (cycle === "weekly") return Math.round((amount * 52) / 12);
   return amount;
+}
+
+export function normalizeLegacyCycle(raw: unknown): PersonalBillingCycle {
+  const v = String(raw || "monthly").toLowerCase();
+  if (v === "yearly" || v === "year" || v === "annual") return "yearly";
+  if (v === "weekly" || v === "week") return "weekly";
+  if (v === "custom" || v === "other") return "custom";
+  return "monthly";
+}
+
+/** Next billing date (YYYY-MM-DD) from a day-of-month in Asia/Taipei. */
+export function nextBillingFromDay(billingDay: number, now = new Date()): string {
+  const day = Math.min(31, Math.max(1, Math.floor(billingDay) || 1));
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = Object.fromEntries(
+    fmt.formatToParts(now).map((p) => [p.type, p.value])
+  );
+  let y = Number(parts.year);
+  let m = Number(parts.month);
+  const today = Number(parts.day);
+  if (day < today) {
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  // Clamp day to month length
+  const dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const d = Math.min(day, dim);
+  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+export function readLegacyLocalSubscriptions(): LegacySubkeeperItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SUBKEEPER_PRODUCT.legacyStorageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (e): e is LegacySubkeeperItem =>
+        Boolean(
+          e &&
+            typeof e === "object" &&
+            typeof e.id === "string" &&
+            typeof e.name === "string" &&
+            typeof e.amount === "number"
+        )
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function clearLegacyLocalSubscriptions() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(SUBKEEPER_PRODUCT.legacyStorageKey);
+  } catch {
+    /* ignore */
+  }
 }

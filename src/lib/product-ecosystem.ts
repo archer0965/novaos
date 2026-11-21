@@ -101,7 +101,7 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     ],
     advantage: "登入即用、跨裝置同步，開銷紀錄綁定你的拓新雲端帳號",
     ctaLabel: `進入${SUBKEEPER_PRODUCT.name}`,
-    href: SUBKEEPER_PRODUCT.signupHref,
+    href: SUBKEEPER_PRODUCT.publicHref,
     badge: "永久免費｜需登入",
     accent: "emerald",
   },

@@ -65,6 +65,10 @@ export function AuthForm({
           password,
         });
         if (error) throw error;
+        // Touch NovaOS profile / last_login_at (best-effort)
+        await fetch("/api/subkeeper/session", { method: "POST" }).catch(
+          () => null
+        );
         toast.success("登入成功");
         router.push(safeNext);
         router.refresh();

@@ -92,6 +92,8 @@ export interface Profile {
   line_pay_channel_secret?: string | null;
   monthly_usage_count: number;
   usage_month: string;
+  /** Last product login / session touch (訂閱管家等) */
+  last_login_at?: string | null;
   created_at: string;
 }
 

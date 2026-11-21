@@ -245,7 +245,7 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
   {
     product_id: "subkeeper",
     product_name: "訂閱管家",
-    product_url: "https://paycheck.com.de/dashboard/subkeeper",
+    product_url: "https://paycheck.com.de/subkeeper",
     plan_id: "free",
     plan_name: "免費（需登入）",
     monthly_price: 0,
@@ -253,11 +253,11 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     yearly_price: 0,
     trial_days: 0,
     usage_limits: { storage: "cloud" },
-    feature_list: ["拓新雲端統一登入", "雲端保存訂閱清單"],
+    feature_list: ["拓新雲端統一登入", "雲端保存訂閱清單", "本機舊資料可一鍵匯入"],
     discount_rules: "無",
     product_status: "active",
     authority: "local-free",
-    notes: "入口 /dashboard/subkeeper；與 NovaStore／Nova AI Doc 共用 Auth",
+    notes: "公開入口 /subkeeper → 登入後 /dashboard/subkeeper；需 migration 028+029",
   },
 ];
 

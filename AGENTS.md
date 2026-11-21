@@ -11,7 +11,7 @@
 | NovaStore | https://novastore-omega.vercel.app | `novastore`（`ecosystem/sites.json`） |
 | Nova AI Doc | https://docmate-ai-one.vercel.app | `docmate-ai` |
 | 拓脈預約 | https://taiwanbiz.vercel.app | 獨立站（repo 待綁） |
-| 訂閱管家 | https://paycheck.com.de/dashboard/subkeeper | 主站內建（需登入） |
+| 訂閱管家 | https://paycheck.com.de/subkeeper | 主站內建（NovaOS 統一登入） |
 
 ## 一次改多站 vs 只改一站
 
