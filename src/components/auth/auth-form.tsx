@@ -94,12 +94,18 @@ export function AuthForm({
         <BrandLogo className="mb-8 justify-center" />
         <div className="rounded-2xl border border-border/80 bg-card/90 p-6 shadow-sm">
           <h1 className="font-display text-2xl font-semibold">
-            {mode === "login" ? "登入 NovaStore" : "免費建立賣場"}
+            {mode === "login" ? "登入拓新雲端 NovaOS" : safeNext.includes("subkeeper")
+              ? "建立拓新雲端帳號"
+              : "免費建立賣場"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "login"
-              ? "進入賣家控制台管理賣場、訂單與自動對帳"
-              : "3 分鐘建立 IG 專屬獨立賣場，粉絲自己下單結帳"}
+              ? safeNext.includes("subkeeper")
+                ? "使用統一帳號進入訂閱管家與其他 NovaOS 產品"
+                : "進入賣家控制台管理賣場、訂單與自動對帳"
+              : safeNext.includes("subkeeper")
+                ? "註冊後即可雲端保存訂閱資料，並與其他產品共用登入"
+                : "3 分鐘建立 IG 專屬獨立賣場，粉絲自己下單結帳"}
           </p>
           {mode === "signup" && signupHint ? (
             <p className="mt-3 rounded-md border border-accent/35 bg-accent/10 px-3 py-2 text-sm font-medium text-accent-foreground">
