@@ -1,8 +1,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { BrandLogo } from "@/components/brand-logo";
 import { LandingHeroBanner } from "@/components/landing-hero-banner";
-import { LandingNavMenu } from "@/components/landing-nav-menu";
+import { GlobalNavbar } from "@/components/global-nav";
 import { PwaBootRedirect } from "@/components/pwa-boot-redirect";
 import { Button } from "@/components/ui/button";
 import { getAllModuleEarlyBirdStatuses } from "@/lib/module-activation";
@@ -112,40 +111,12 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <header className="relative z-50 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:absolute md:inset-x-0 md:top-0 md:mx-auto md:w-full md:max-w-6xl md:py-5">
-        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-          <BrandLogo size="md" className="text-sky-50" />
-        </div>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <LandingNavMenu />
-          <Button
-            asChild
-            variant="ghost"
-            className="hidden text-sky-50 hover:bg-white/10 hover:text-white sm:inline-flex"
-          >
-            <Link href="/login" prefetch>
-              登入
-            </Link>
-          </Button>
-          <Button
-            asChild
-            className="hidden bg-accent text-accent-foreground hover:bg-accent/90 sm:inline-flex"
-          >
-            <Link href="/signup" prefetch>
-              免費建立賣場
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="sm"
-            className="bg-accent text-accent-foreground hover:bg-accent/90 sm:hidden"
-          >
-            <Link href="/login" prefetch>
-              登入
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <GlobalNavbar
+        variant="marketing"
+        mode="hub"
+        showAuthLinks
+        unlockedModules={[]}
+      />
 
       <main id="main-content">
         <LandingHeroBanner trialLine={trialLine} />
