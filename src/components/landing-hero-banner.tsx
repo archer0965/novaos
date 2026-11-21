@@ -14,7 +14,7 @@ export function LandingHeroBanner({
 }) {
   return (
     <section
-      aria-label="NovaStore 品牌介紹"
+      aria-label="拓新雲端 NovaOS 品牌介紹"
       className="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-[#0B132B] md:min-h-[min(92svh,880px)]"
     >
       <div className="absolute inset-0 -z-20" aria-hidden>
@@ -49,20 +49,19 @@ export function LandingHeroBanner({
         <div className="animate-fade-up">
           <BrandLogo
             size="lg"
-            className="justify-center text-sky-50 [&_span]:tracking-tight"
+            className="justify-center text-sky-50 [&_span]:tracking-tight [&_span]:text-sky-100/80"
           />
         </div>
         <p className="animate-fade-up delay-100 mt-5 text-xs font-semibold tracking-[0.18em] text-sky-300/90">
-          一站式獨立開店 × 自動對帳
+          拓脈預約 · NovaStore · AI Doc · 拓管
         </p>
 
         <h1 className="animate-fade-up delay-100 mt-5 max-w-4xl text-balance font-display text-3xl font-bold leading-snug tracking-tight text-white md:text-5xl md:leading-[1.15]">
-          3分鐘建立你的 IG 專屬獨立賣場：免手動對帳、免私訊收單，讓粉絲自己下單結帳！
+          企業級微型營運中台，四大模組一次到位
         </h1>
 
         <p className="animate-fade-up delay-200 mt-6 max-w-3xl text-pretty text-base leading-relaxed text-sky-100/90 md:mt-8 md:text-lg md:leading-relaxed">
-          專為台灣代購、團購主、微商打造的極速開店工具。支援多規格選購、超商取貨、團購達標進度，買家匯款後
-          NovaStore 系統自動對帳、LINE 秒收通知，告別 Excel 與截圖地獄！
+          美業預約防撞、IG／LINE 賣場自動對帳、合約免責生成、訂閱與同業裂變推薦——統一結算採現場付／手動轉帳（金流模組審核中）。
         </p>
 
         <div className="animate-fade-up delay-300 mt-10 flex flex-wrap items-center justify-center gap-3 md:mt-12">
@@ -72,7 +71,7 @@ export function LandingHeroBanner({
             className="h-12 bg-sky-400 px-6 text-base font-semibold text-slate-950 hover:bg-sky-300"
           >
             <Link href="/signup" prefetch>
-              免費建立獨立賣場
+              免費開始使用 NovaOS
             </Link>
           </Button>
           <Button

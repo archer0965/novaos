@@ -1,0 +1,52 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { cn } from "@/lib/utils";
+
+const ORDER: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
+
+export function ModuleTabs({
+  unlocked,
+}: {
+  unlocked: NovaModuleId[];
+}) {
+  const pathname = usePathname();
+  const unlockedSet = new Set(unlocked);
+
+  return (
+    <div className="mb-6 overflow-x-auto">
+      <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border/80 bg-secondary/40 p-1 sm:min-w-0">
+        {ORDER.map((id) => {
+          const mod = NOVA_MODULES[id];
+          const active =
+            pathname === mod.href || pathname.startsWith(`${mod.href}/`);
+          const locked = !unlockedSet.has(id);
+          return (
+            <Link
+              key={id}
+              href={locked ? "/dashboard/pass#upgrade" : mod.href}
+              prefetch
+              className={cn(
+                "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : locked
+                    ? "text-muted-foreground/70 hover:bg-background/60"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground"
+              )}
+              title={locked ? "方案未包含此模組 — 前往拓管升級" : mod.blurb}
+            >
+              <span aria-hidden>{mod.emoji}</span>
+              <span className="font-medium">{mod.name}</span>
+              {locked ? (
+                <span className="text-[10px] opacity-70">鎖</span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

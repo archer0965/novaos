@@ -59,6 +59,23 @@ export interface Profile {
   discount_tier?: DiscountTier | string | null;
   /** 註冊早鳥：前 15 名限量 14 天試用 */
   signup_early_bird?: boolean | null;
+  /** NovaOS active modules (booking/store/ai_doc/pass) */
+  active_modules?: string[] | null;
+  /** Public referral code for 同業裂變 */
+  referral_code?: string | null;
+  /** Who referred this account (profiles.id) */
+  referred_by?: string | null;
+  /** Whether first paid checkout referral discount was used */
+  referral_discount_used?: boolean | null;
+  /** Accumulated NT$ credit from successful referrals */
+  referral_credit_balance?: number | null;
+  /** Reserved: deposit / gateway (Coming Soon) */
+  deposit_enabled?: boolean | null;
+  ecpay_merchant_id?: string | null;
+  ecpay_hash_key?: string | null;
+  ecpay_hash_iv?: string | null;
+  line_pay_channel_id?: string | null;
+  line_pay_channel_secret?: string | null;
   monthly_usage_count: number;
   usage_month: string;
   created_at: string;
@@ -203,6 +220,12 @@ export interface ShopPublic {
   bank_account: string;
 }
 
+/**
+ * NovaOS plans (DB ids kept for compatibility):
+ * - starter = 單模組／基礎版
+ * - pro = legacy mid-tier → treated as starter in UI
+ * - unlimited = NovaOS 旗艦全家桶
+ */
 export type PaidPlanKey = "starter" | "pro" | "unlimited";
 
 export type CyclePrice = {
@@ -220,6 +243,9 @@ export type PlanDefinition = {
   blurb: string;
   features: string[];
   prices: Record<BillingCycle, CyclePrice>;
+  /** true = unlock all four NovaOS modules */
+  isBundle?: boolean;
+  listPriceMonthly?: number;
 };
 
 export type CycleDefinition = {
@@ -230,30 +256,23 @@ export type CycleDefinition = {
   months: number;
 };
 
-/** 價格與方案單一來源（對齊產品 pricingConfig） */
+/** 價格與方案單一來源 — 拓新雲端 NovaOS */
 export const PRICING_CONFIG = {
   currency: "NTD",
   freeTrial: {
     enabled: true,
     durationDays: 7,
-    description: "新註冊享有 7 天 NovaStore 全功能免費試用",
+    description: "新註冊享有 7 天 NovaOS 全模組免費試用",
   },
-  /** 註冊早鳥：限量前 N 名用戶 14 天試用（與特約店家分開） */
   signupEarlyBird: {
     maxUsers: 15,
     trialDays: 14,
     label: "早鳥優惠",
     description: "限量前 15 名用戶享 14 天免費試用",
   },
-  /** 特約店家（DB／程式仍使用 is_early_bird + lifetime_special） */
   earlyBird: {
-    /** null = 不限量 */
     maxSeats: null as number | null,
     trialDays: 14,
-    /**
-     * lifetime_special：終身依週期折扣（續約同樣套用）
-     * 月繳 8 折 / 半年繳 75 折 / 年繳 7 折
-     */
     cycleMultipliers: {
       monthly: 0.8,
       half_yearly: 0.75,
@@ -264,16 +283,15 @@ export const PRICING_CONFIG = {
     applyLabel: "申請特約店家",
     pitchTitle: "誠徵特約店家",
     pitch:
-      "進單、出貨穩定即可申請，私訊官方 LINE 並出示賣場連結，我們審核通過後即享特約店家專屬優惠！",
+      "進單、出貨穩定即可申請，私訊官方 LINE 並出示賣場連結，審核通過後即享特約優惠！",
     description:
-      "審核通過後由管理員開通；贈 14 天全功能試用，之後每次續約終身享月繳 8 折、半年繳 75 折、年繳 7 折。不限名額。",
+      "審核通過後由管理員開通；贈 14 天全功能試用，之後每次續約終身享週期折扣。",
     termsTitle: "特約店家合作條款",
     terms: [
-      "申請人須能證明近 1～3 個月進單、出貨量穩定，並依官方要求提供賣場連結或其他可查核資料供審核。",
-      "審核通過成為特約店家後，同意協助推廣 NovaStore 本網站（含但不限於社群、賣場簡介或買家常見路徑之合理曝光）。",
-      "日後官方舉辦行銷或合作活動時，特約店家應於合理範圍內配合推廣；若長期未配合或進單／出貨明顯不符特約標準，官方得調整或取消特約資格與專屬優惠。",
-      "特約專屬費率（月繳 8 折、半年繳 75 折、年繳 7 折）為終身續約優惠，僅適用通過審核並維持特約資格之帳號；資格異動以官方通知為準。",
-      "本條款得依營運需要更新；重大變更將透過官方 LINE 或站內公告告知。繼續使用特約權益即視為同意更新後條款。",
+      "申請人須能證明進單、出貨量穩定，並提供賣場連結供審核。",
+      "成為特約店家後，同意於合理範圍協助推廣拓新雲端 NovaOS。",
+      "長期未配合或明顯不符標準，官方得調整或取消特約資格。",
+      "特約費率僅適用維持特約資格之帳號；資格異動以官方通知為準。",
     ],
   },
   billingCycles: {
@@ -285,32 +303,34 @@ export const PRICING_CONFIG = {
     },
     half_yearly: {
       id: "half_yearly" as const,
-      label: "半年繳 (省 10%)",
+      label: "半年繳",
       discount: 0.9,
       badge: "省 10%",
       months: 6,
     },
     yearly: {
       id: "yearly" as const,
-      label: "年繳 (省 17%)",
-      discount: 0.83,
-      badge: "省 17%（買 10 個月送 2 個月）",
+      label: "年繳（送 2 個月）",
+      discount: 10 / 12,
+      badge: "買 10 送 2",
       months: 12,
     },
   } satisfies Record<BillingCycle, CycleDefinition>,
   defaultCycle: "monthly" as BillingCycle,
+  /** Primary paid plans shown in marketing / upgrade UI */
+  primaryPaidPlans: ["starter", "unlimited"] as const satisfies readonly PaidPlanKey[],
   plans: {
     free: {
       id: "free",
       name: "免費體驗版",
       monthlyQuota: 5,
       isPopular: false,
-      blurb: "先體驗 NovaStore 賣場與自動對帳",
+      blurb: "先體驗 NovaOS 核心流程",
       features: [
-        "每月最高 5 筆訂單",
-        "NovaStore 專屬個人賣場",
-        "代購／團購雙模式",
-        "LINE 自動對帳通知",
+        "每月最高 5 筆 NovaStore 訂單",
+        "試用期間可體驗四大模組",
+        "手動轉帳對帳",
+        "現場付／免訂金預約",
       ],
       prices: {
         monthly: { total: 0, avgMonthly: 0 },
@@ -320,59 +340,60 @@ export const PRICING_CONFIG = {
     },
     starter: {
       id: "starter",
-      name: "新手起步版",
-      monthlyQuota: 30,
-      isPopular: false,
-      blurb: "剛起步、少量多樣的小賣場",
-      features: [
-        "每月最高 30 筆訂單",
-        "NovaStore 專屬個人賣場",
-        "代購／團購雙模式",
-        "超商取貨與多規格選購",
-        "LINE 自動對帳通知（全方案標配）",
-      ],
-      prices: {
-        monthly: { total: 149, avgMonthly: 149 },
-        half_yearly: { total: 799, avgMonthly: 133 },
-        yearly: { total: 1490, avgMonthly: 124 },
-      },
-    },
-    pro: {
-      id: "pro",
-      name: "熱銷成長版",
+      name: "單模組／基礎版",
       monthlyQuota: 100,
-      isPopular: true,
-      popularBadge: "最受歡迎",
-      blurb: "穩定出單、頻繁開團的專職賣場",
+      isPopular: false,
+      blurb: "任選單一核心模組，適合專注經營",
+      isBundle: false,
       features: [
-        "每月最高 100 筆訂單",
-        "NovaStore 專屬個人賣場",
-        "代購／團購雙模式",
-        "超商取貨與多規格選購",
-        "LINE 自動對帳通知（全方案標配）",
+        "任選 1 個核心模組（拓脈／NovaStore／AI Doc／拓管）",
+        "NovaStore 訂單額度每月 100 筆",
+        "手動轉帳對帳與現場付預約",
+        "同業推薦碼（被推薦現折 $50）",
       ],
       prices: {
         monthly: { total: 299, avgMonthly: 299 },
-        half_yearly: { total: 1610, avgMonthly: 268 },
+        half_yearly: { total: 1615, avgMonthly: 269 },
+        yearly: { total: 2990, avgMonthly: 249 },
+      },
+    },
+    /** Legacy mid-tier — kept for old rows; priced as 基礎版 */
+    pro: {
+      id: "pro",
+      name: "單模組／基礎版",
+      monthlyQuota: 100,
+      isPopular: false,
+      blurb: "任選單一核心模組",
+      isBundle: false,
+      features: [
+        "任選 1 個核心模組",
+        "NovaStore 訂單額度每月 100 筆",
+        "手動轉帳對帳與現場付預約",
+      ],
+      prices: {
+        monthly: { total: 299, avgMonthly: 299 },
+        half_yearly: { total: 1615, avgMonthly: 269 },
         yearly: { total: 2990, avgMonthly: 249 },
       },
     },
     unlimited: {
       id: "unlimited",
-      name: "旗艦無限版",
+      name: "NovaOS 旗艦全家桶",
       monthlyQuota: -1,
-      isPopular: false,
-      blurb: "熱門團媽、直播主與中大型團隊",
+      isPopular: true,
+      popularBadge: "原 $599 特惠中",
+      listPriceMonthly: 599,
+      isBundle: true,
+      blurb: "解鎖全套四核心模組，一次到位",
       features: [
-        "每月訂單處理數無上限",
-        "NovaStore 專屬個人賣場",
-        "代購／團購雙模式",
-        "超商取貨與多規格選購",
-        "LINE 自動對帳通知（全方案標配）",
+        "拓脈預約 + NovaStore + Nova AI Doc + 拓管",
+        "NovaStore 訂單處理無上限",
+        "同業裂變推薦碼與續費扣抵",
+        "手動轉帳對帳／現場付（金流審核中）",
       ],
       prices: {
         monthly: { total: 499, avgMonthly: 499 },
-        half_yearly: { total: 2690, avgMonthly: 448 },
+        half_yearly: { total: 2695, avgMonthly: 449 },
         yearly: { total: 4990, avgMonthly: 415 },
       },
     },
@@ -385,6 +406,8 @@ export const SIGNUP_EARLY_BIRD = PRICING_CONFIG.signupEarlyBird;
 export const EARLY_BIRD = PRICING_CONFIG.earlyBird;
 export const PLAN_CATALOG = PRICING_CONFIG.plans;
 export const PAID_PLAN_KEYS: PaidPlanKey[] = ["starter", "pro", "unlimited"];
+/** Plans shown on pricing / upgrade (hide legacy pro duplicate) */
+export const PRIMARY_PAID_PLAN_KEYS: PaidPlanKey[] = ["starter", "unlimited"];
 
 export const FREE_PLAN_LIMIT = PLAN_CATALOG.free.monthlyQuota;
 export const STARTER_PLAN_LIMIT = PLAN_CATALOG.starter.monthlyQuota;
@@ -396,8 +419,8 @@ export const PLUS_PLAN_LIMIT = STARTER_PLAN_LIMIT;
 export const PLAN_RANK: Record<PlanType, number> = {
   free: 0,
   starter: 1,
-  pro: 2,
-  unlimited: 3,
+  pro: 1,
+  unlimited: 2,
 };
 
 export function normalizeBillingCycle(
@@ -483,16 +506,27 @@ export function getCheckoutAmount(
   options?: {
     discountTier?: string | null;
     isEarlyBird?: boolean | null;
+    /** 被推薦人首次付款現折 NT$50 */
+    referralFirstDiscount?: boolean | null;
+    /** 推薦人續費扣抵額度（單次上限 100） */
+    applyCredit?: number | null;
   }
 ): number {
   const normalized = normalizeBillingCycle(cycle);
-  const base = PLAN_CATALOG[plan].prices[normalized].total;
+  let amount = PLAN_CATALOG[plan].prices[normalized].total;
   if (
     hasLifetimeSpecialDiscount(options?.discountTier, options?.isEarlyBird)
   ) {
-    return Math.max(1, Math.round(base * getEarlyBirdMultiplier(normalized)));
+    amount = Math.max(1, Math.round(amount * getEarlyBirdMultiplier(normalized)));
   }
-  return base;
+  if (options?.referralFirstDiscount) {
+    amount = Math.max(1, amount - 50);
+  }
+  const credit = Math.max(0, Math.min(100, Math.floor(Number(options?.applyCredit) || 0)));
+  if (credit > 0) {
+    amount = Math.max(1, amount - credit);
+  }
+  return amount;
 }
 
 export function getCycleAvgMonthly(

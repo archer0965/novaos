@@ -162,7 +162,7 @@ export function SubscriptionCard({
                     : ""
                 )}
               >
-                <Link href="/dashboard/settings#upgrade">
+                <Link href="/dashboard/pass#upgrade">
                   <RefreshCw className="h-4 w-4" />
                   立即續費
                 </Link>
@@ -170,7 +170,7 @@ export function SubscriptionCard({
             ) : null}
             {showUpgrade ? (
               <Button asChild variant="outline" className="h-11 gap-1.5">
-                <Link href="/dashboard/settings#upgrade">
+                <Link href="/dashboard/pass#upgrade">
                   <ArrowUpRight className="h-4 w-4" />
                   升級方案
                 </Link>

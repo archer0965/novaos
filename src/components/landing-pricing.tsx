@@ -4,22 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NOVA_MODULES, REFERRAL_CONFIG } from "@/lib/novaos";
 import {
   BILLING_CYCLES,
-  PAID_PLAN_KEYS,
+  PRIMARY_PAID_PLAN_KEYS,
   PLAN_CATALOG,
   type BillingCycle,
-  type PaidPlanKey,
 } from "@/types/database";
 import { cn } from "@/lib/utils";
 
-const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
-
-const PLAN_BLURB: Record<PaidPlanKey, string> = {
-  starter: "適用：剛起步、少量多樣的小賣場",
-  pro: "適用：穩定出單、頻繁開團的專職賣場",
-  unlimited: "適用：熱門團媽、直播主與中大型團隊",
-};
+const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "yearly"];
 
 export function LandingPricing() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
@@ -28,10 +22,11 @@ export function LandingPricing() {
     <section id="pricing" className="relative z-10 scroll-mt-20 py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          價格方案
+          NovaOS 方案價格
         </h2>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          以每月處理訂單筆數分級；所有方案皆享自動對帳與 LINE 通知。預設月繳，也可選半年繳／年繳更省。
+          單模組專注經營，或一次解鎖拓脈預約／NovaStore／AI Doc／拓管。年繳相當於免費贈送
+          2 個月。被推薦人首次付款現折 NT${REFERRAL_CONFIG.refereeFirstDiscount}。
         </p>
 
         <div className="mt-6 inline-flex flex-wrap rounded-xl bg-secondary p-1">
@@ -55,16 +50,15 @@ export function LandingPricing() {
           })}
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {PAID_PLAN_KEYS.map((key) => {
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {PRIMARY_PAID_PLAN_KEYS.map((key) => {
             const plan = PLAN_CATALOG[key];
             const price = plan.prices[cycle];
-            const period =
-              cycle === "yearly"
-                ? "年"
-                : cycle === "half_yearly"
-                  ? "半年"
-                  : "月";
+            const period = cycle === "yearly" ? "年" : "月";
+            const firstMonth =
+              cycle === "monthly"
+                ? Math.max(1, price.total - REFERRAL_CONFIG.refereeFirstDiscount)
+                : null;
 
             return (
               <div
@@ -78,7 +72,7 @@ export function LandingPricing() {
               >
                 {plan.isPopular ? (
                   <p className="absolute right-4 top-4 text-xs font-semibold text-accent">
-                    {plan.popularBadge || "最受歡迎"}
+                    {plan.popularBadge || "特惠中"}
                   </p>
                 ) : null}
                 <p
@@ -92,6 +86,20 @@ export function LandingPricing() {
                   {plan.name}
                 </p>
                 <p className="mt-3 font-display text-4xl font-bold tracking-tight">
+                  {"listPriceMonthly" in plan &&
+                  plan.listPriceMonthly &&
+                  cycle === "monthly" ? (
+                    <span
+                      className={cn(
+                        "mr-2 text-lg font-medium line-through",
+                        plan.isPopular
+                          ? "text-primary-foreground/55"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      ${plan.listPriceMonthly}
+                    </span>
+                  ) : null}
                   NT${price.total.toLocaleString("zh-TW")}
                   <span
                     className={cn(
@@ -113,9 +121,19 @@ export function LandingPricing() {
                       : "text-muted-foreground"
                   )}
                 >
-                  {PLAN_BLURB[key]}
+                  {plan.blurb}
                 </p>
-                {cycle !== "monthly" ? (
+                {firstMonth ? (
+                  <p
+                    className={cn(
+                      "mt-1 text-xs font-medium",
+                      plan.isPopular ? "text-accent" : "text-amber-700"
+                    )}
+                  >
+                    推薦碼首月 NT${firstMonth}
+                  </p>
+                ) : null}
+                {cycle === "yearly" ? (
                   <p
                     className={cn(
                       "mt-1 text-xs",
@@ -160,6 +178,20 @@ export function LandingPricing() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Object.values(NOVA_MODULES).map((m) => (
+            <div
+              key={m.id}
+              className="rounded-2xl border border-border/70 bg-background/60 px-4 py-4"
+            >
+              <p className="font-medium">
+                {m.emoji} {m.name}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{m.blurb}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

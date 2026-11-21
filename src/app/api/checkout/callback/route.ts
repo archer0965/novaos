@@ -174,6 +174,15 @@ export async function POST(request: Request) {
       });
     }
 
+    const fieldParts = (params.CustomField2 || "").split(":");
+    const usedReferralFlag = fieldParts.includes("ref");
+    const creditToken = fieldParts.find((p) => /^c\d+$/.test(p));
+    const creditUsed = creditToken ? Number(creditToken.slice(1)) : 0;
+
+    if (usedReferralFlag) {
+      update.referral_discount_used = true;
+    }
+
     const { error } = await admin
       .from("profiles")
       .update(update)
@@ -183,6 +192,54 @@ export async function POST(request: Request) {
       console.error("[ecpay/callback] upgrade failed", error);
       await releaseTradeClaim();
       return new NextResponse("0|UpgradeFailed", { status: 500 });
+    }
+
+    // Referral rewards / credit consumption (best-effort)
+    try {
+      const { data: paidProfile } = await admin
+        .from("profiles")
+        .select("id, referred_by, referral_credit_balance, referral_discount_used")
+        .eq("id", sellerId)
+        .maybeSingle();
+
+      if (creditUsed > 0) {
+        const bal = Math.max(
+          0,
+          Number(paidProfile?.referral_credit_balance || 0) - creditUsed
+        );
+        await admin
+          .from("profiles")
+          .update({ referral_credit_balance: bal })
+          .eq("id", sellerId);
+      }
+
+      if (paidProfile?.referred_by && usedReferralFlag) {
+        const { error: refErr } = await admin.from("referral_events").insert({
+          referrer_id: paidProfile.referred_by,
+          referee_id: sellerId,
+          credit_amount: 100,
+        });
+        if (!refErr || refErr.code === "23505") {
+          if (!refErr) {
+            const { data: referrer } = await admin
+              .from("profiles")
+              .select("referral_credit_balance")
+              .eq("id", paidProfile.referred_by)
+              .maybeSingle();
+            await admin
+              .from("profiles")
+              .update({
+                referral_credit_balance:
+                  Number(referrer?.referral_credit_balance || 0) + 100,
+              })
+              .eq("id", paidProfile.referred_by);
+          }
+        } else {
+          console.warn("[ecpay/callback] referral ledger", refErr);
+        }
+      }
+    } catch (refError) {
+      console.error("[ecpay/callback] referral reward failed", refError);
     }
 
     console.info(

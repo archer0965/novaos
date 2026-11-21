@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { buildAutoSubmitHtml, buildCheckoutParams } from "@/lib/ecpay";
+import { isNovaModuleId, NOVA_MODULE_IDS, REFERRAL_CONFIG } from "@/lib/novaos";
 import { getSiteUrl } from "@/lib/site";
 import {
   PLAN_CATALOG,
@@ -18,6 +20,8 @@ const bodySchema = z.object({
   cycle: z
     .enum(["monthly", "half_yearly", "yearly", "halfYearly"])
     .default("monthly"),
+  module: z.string().optional(),
+  referralCode: z.string().trim().max(24).optional(),
 });
 
 export async function POST(request: Request) {
@@ -46,7 +50,9 @@ export async function POST(request: Request) {
         ? "starter"
         : planRaw === "premium"
           ? "unlimited"
-          : (planRaw as PaidPlanKey);
+          : planRaw === "pro"
+            ? "starter"
+            : (planRaw as PaidPlanKey);
 
     if (!isPaidPlan(plan)) {
       return NextResponse.json({ error: "無效的付費方案" }, { status: 400 });
@@ -56,21 +62,71 @@ export async function POST(request: Request) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_early_bird, discount_tier")
+      .select(
+        "is_early_bird, discount_tier, referral_discount_used, referral_credit_balance, referred_by"
+      )
       .eq("id", user.id)
       .maybeSingle();
+
+    let referrerId: string | null = null;
+    const code = (parsed.data.referralCode || "").trim().toUpperCase();
+    const canUseReferral =
+      Boolean(code) && !profile?.referral_discount_used && !profile?.referred_by;
+
+    if (canUseReferral) {
+      const admin = createAdminClient();
+      const { data: referrer } = await admin
+        .from("profiles")
+        .select("id, referral_code")
+        .eq("referral_code", code)
+        .maybeSingle();
+      if (referrer && referrer.id !== user.id) {
+        referrerId = referrer.id;
+        await admin
+          .from("profiles")
+          .update({ referred_by: referrer.id })
+          .eq("id", user.id)
+          .is("referred_by", null);
+      }
+    }
+
+    const applyCredit =
+      cycle === "monthly"
+        ? Math.min(
+            REFERRAL_CONFIG.maxCreditPerRenewal,
+            Number(profile?.referral_credit_balance) || 0
+          )
+        : 0;
 
     const amount = getCheckoutAmount(plan, cycle, {
       discountTier: profile?.discount_tier,
       isEarlyBird: profile?.is_early_bird,
+      referralFirstDiscount: Boolean(referrerId),
+      applyCredit,
     });
+
+    // Persist selected module for basic plan
+    if (plan === "starter") {
+      const mod = isNovaModuleId(parsed.data.module || "")
+        ? parsed.data.module!
+        : "store";
+      await supabase
+        .from("profiles")
+        .update({ active_modules: [mod] })
+        .eq("id", user.id);
+    } else if (plan === "unlimited") {
+      await supabase
+        .from("profiles")
+        .update({ active_modules: [...NOVA_MODULE_IDS] })
+        .eq("id", user.id);
+    }
+
     const catalog = PLAN_CATALOG[plan];
     const cycleLabel = getCycleLabel(cycle);
     const earlyBird =
       profile?.discount_tier === "lifetime_special" || profile?.is_early_bird;
 
     const baseUrl = getSiteUrl();
-
     const stamp = Date.now().toString(36).toUpperCase();
     const uid = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
     const merchantTradeNo = `PCP${uid}${stamp}`.slice(0, 20);
@@ -78,16 +134,16 @@ export async function POST(request: Request) {
     const { paymentUrl, params } = buildCheckoutParams({
       merchantTradeNo,
       totalAmount: amount,
-      tradeDesc: `PayCheck ${catalog.name} ${cycleLabel}${
-        earlyBird ? " 特約" : ""
+      tradeDesc: `NovaOS ${catalog.name} ${cycleLabel}${
+        earlyBird ? " special" : ""
       }`,
-      itemName: `NovaStore ${catalog.name}（${cycleLabel}${
-        earlyBird ? "·特約店家" : ""
-      }）`,
+      itemName: `NovaOS ${catalog.name} ${cycleLabel}`,
       returnURL: `${baseUrl}/api/checkout/callback`,
-      clientBackURL: `${baseUrl}/dashboard/settings?upgraded=pending`,
+      clientBackURL: `${baseUrl}/dashboard/pass?upgraded=pending`,
       customField1: user.id,
-      customField2: `${plan}:${cycle}`,
+      customField2: `${plan}:${cycle}${referrerId ? `:ref` : ""}${
+        applyCredit ? `:c${applyCredit}` : ""
+      }`,
     });
 
     const html = buildAutoSubmitHtml(paymentUrl, params);

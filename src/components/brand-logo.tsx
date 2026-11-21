@@ -8,7 +8,7 @@ const MARK_SIZES = {
   lg: 52,
 } as const;
 
-/** NovaStore circular brand mark (transparent PNG). */
+/** NovaOS circular brand mark (transparent PNG). */
 export function NovaMark({
   className,
   size = 28,
@@ -57,9 +57,14 @@ export function BrandLogo({
     >
       <NovaMark size={markPx} />
       {markOnly ? (
-        <span className="sr-only">NovaStore</span>
+        <span className="sr-only">拓新雲端 NovaOS</span>
       ) : (
-        <span>NovaStore</span>
+        <span className="leading-none">
+          <span className="block text-[0.65em] font-semibold tracking-wide text-muted-foreground">
+            拓新雲端
+          </span>
+          <span>NovaOS</span>
+        </span>
       )}
     </Link>
   );

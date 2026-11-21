@@ -4,11 +4,15 @@ import { useState } from "react";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { isSubscriptionExpired } from "@/lib/subscription";
+import type { UpgradeProrationQuote } from "@/lib/subscription";
 import {
   BILLING_CYCLES,
-  EARLY_BIRD,
   FREE_TRIAL,
-  PAID_PLAN_KEYS,
+  PRIMARY_PAID_PLAN_KEYS,
   PLAN_CATALOG,
   PLAN_RANK,
   formatDiscountFold,
@@ -27,11 +31,10 @@ import {
   type PaidPlanKey,
   type Profile,
 } from "@/types/database";
-import { isSubscriptionExpired } from "@/lib/subscription";
-import type { UpgradeProrationQuote } from "@/lib/subscription";
 import { cn } from "@/lib/utils";
 
-const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
+const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "yearly"];
+const MODULE_PICK: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
 
 function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
   const current = normalizePlan(profile.plan_type);
@@ -48,11 +51,17 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
     profile.is_early_bird
   );
   const [cycle, setCycle] = useState<BillingCycle>(
-    normalizeBillingCycle(profile.billing_cycle)
+    normalizeBillingCycle(profile.billing_cycle) === "half_yearly"
+      ? "monthly"
+      : normalizeBillingCycle(profile.billing_cycle)
   );
   const [loadingPlan, setLoadingPlan] = useState<PaidPlanKey | null>(null);
   const [quote, setQuote] = useState<UpgradeProrationQuote | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<NovaModuleId>(
+    (profile.active_modules?.[0] as NovaModuleId) || "store"
+  );
+  const [referralCode, setReferralCode] = useState("");
 
   async function submitHtmlCheckout(
     url: string,
@@ -79,8 +88,6 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
     }
     if (contentType.includes("text/html")) {
       const html = await res.text();
-      // Submit the ECPay form from this origin (avoid blob: pages — some
-      // gateways reject or mishandle posts that start from blob URLs).
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
       const srcForm = doc.querySelector("form");
@@ -109,7 +116,12 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
   async function checkoutFull(plan: PaidPlanKey) {
     setLoadingPlan(plan);
     try {
-      await submitHtmlCheckout("/api/checkout", { plan, cycle });
+      await submitHtmlCheckout("/api/checkout", {
+        plan,
+        cycle,
+        module: plan === "starter" ? selectedModule : undefined,
+        referralCode: referralCode.trim() || undefined,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "升級失敗");
       setLoadingPlan(null);
@@ -128,7 +140,6 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "無法計算差價");
         if (!json.quote?.eligible) {
-          // Fall back to full purchase
           await checkoutFull(plan);
           return;
         }
@@ -167,6 +178,8 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
           minute: "2-digit",
         })
       : null;
+
+  const firstDiscountEligible = !profile.referral_discount_used;
 
   return (
     <section
@@ -210,20 +223,68 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {PAID_PLAN_KEYS.map((key) => {
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="referral-code">推薦碼（選填）</Label>
+          <Input
+            id="referral-code"
+            value={referralCode}
+            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+            placeholder="好友的 NVXXXX"
+            disabled={!firstDiscountEligible}
+          />
+          <p className="text-xs text-muted-foreground">
+            {firstDiscountEligible
+              ? "首次付款輸入推薦碼現折 NT$50"
+              : "此帳號已使用過推薦現折"}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>基礎版選擇模組</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {MODULE_PICK.map((id) => {
+              const mod = NOVA_MODULES[id];
+              const active = selectedModule === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSelectedModule(id)}
+                  className={cn(
+                    "rounded-lg border px-2.5 py-1.5 text-xs",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground"
+                  )}
+                >
+                  {mod.emoji} {mod.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {PRIMARY_PAID_PLAN_KEYS.map((key) => {
           const plan = PLAN_CATALOG[key];
           const listPrice = getCheckoutAmount(key, cycle);
           const price = getCheckoutAmount(key, cycle, {
             discountTier: profile.discount_tier,
             isEarlyBird: profile.is_early_bird,
+            referralFirstDiscount:
+              firstDiscountEligible && Boolean(referralCode.trim()),
+            applyCredit:
+              cycle === "monthly"
+                ? Math.min(100, Number(profile.referral_credit_balance) || 0)
+                : 0,
           });
           const avg = getCycleAvgMonthly(key, cycle, {
             discountTier: profile.discount_tier,
             isEarlyBird: profile.is_early_bird,
           });
           const fold = formatDiscountFold(getEarlyBirdMultiplier(cycle));
-          const isCurrent = current === key;
+          const isCurrent = current === key || (current === "pro" && key === "starter");
           const downgrade = isDowngrade(current, key);
           const prorate = canProrateUpgrade(profile, key);
 
@@ -240,8 +301,8 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
               <div className="flex items-center gap-2">
                 <p className="font-display text-lg font-semibold">{plan.name}</p>
                 {plan.isPopular ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-                    {plan.popularBadge || "🔥 性價比之王"}
+                  <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
+                    {plan.popularBadge || "特惠"}
                   </span>
                 ) : null}
               </div>
@@ -259,24 +320,18 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
                 ${price}
                 <span className="text-base font-medium opacity-80">
                   {" "}
-                  /{" "}
-                  {cycle === "yearly"
-                    ? "年"
-                    : cycle === "half_yearly"
-                      ? "半年"
-                      : "月"}
+                  / {cycle === "yearly" ? "年" : "月"}
                 </span>
               </p>
-              {earlyBird && price < listPrice ? (
+              {price < listPrice ? (
                 <p
                   className={cn(
                     "mt-1 text-xs font-medium",
-                    plan.isPopular
-                      ? "text-accent"
-                      : "text-amber-700"
+                    plan.isPopular ? "text-accent" : "text-amber-700"
                   )}
                 >
-                  {EARLY_BIRD.label} {fold}（原價 ${listPrice}，終身）
+                  已套用折扣（原價 ${listPrice}
+                  {earlyBird ? ` · 特約 ${fold}` : ""}）
                 </p>
               ) : null}
               {cycle !== "monthly" ? (
@@ -289,18 +344,6 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
                   )}
                 >
                   約每月 ${avg}
-                </p>
-              ) : null}
-              {prorate ? (
-                <p
-                  className={cn(
-                    "mt-2 text-xs font-medium",
-                    plan.isPopular
-                      ? "text-accent"
-                      : "text-primary"
-                  )}
-                >
-                  有效期內升級可折抵剩餘天數差價
                 </p>
               ) : null}
               <ul className="mt-4 space-y-2 text-sm">
@@ -346,46 +389,19 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 sm:items-center"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="upgrade-proration-title"
           onClick={() => !confirming && setQuote(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl animate-fade-in"
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h3
-                  id="upgrade-proration-title"
-                  className="font-display text-lg font-semibold"
-                >
-                  升級差價折抵
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/90">
-                  {quote.message}
-                </p>
+                <h3 className="font-display text-lg font-semibold">升級差價折抵</h3>
+                <p className="mt-2 text-sm leading-relaxed">{quote.message}</p>
               </div>
             </div>
-            <ul className="mt-4 space-y-2 rounded-xl bg-secondary/60 px-4 py-3 text-sm">
-              <li className="flex justify-between gap-3">
-                <span className="text-muted-foreground">剩餘天數</span>
-                <span className="font-medium">{quote.remainingDays} 天</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-muted-foreground">折抵金額</span>
-                <span className="font-medium">NT${quote.creditAmount}</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-muted-foreground">應付補差價</span>
-                <span className="font-semibold text-primary">
-                  NT${quote.topUpAmount}
-                </span>
-              </li>
-              <li className="text-xs text-muted-foreground">
-                升級後到期日維持不變，剩餘天數不會歸零。
-              </li>
-            </ul>
             <div className="mt-5 flex gap-2">
               <Button
                 type="button"
@@ -398,13 +414,11 @@ export function PlanUpgrade({ profile }: { profile: Profile }) {
               </Button>
               <Button
                 type="button"
-                className="h-11 flex-[1.4] gap-1.5"
+                className="h-11 flex-[1.4]"
                 disabled={confirming}
                 onClick={confirmProration}
               >
-                {confirming ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
+                {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 確認補差價 NT${quote.topUpAmount}
               </Button>
             </div>

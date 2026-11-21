@@ -1,5 +1,7 @@
 /** Public contact / compliance config (safe for client via NEXT_PUBLIC_*). */
 
+import { NOVA_BRAND } from "@/lib/novaos";
+
 /** Permanent production host — never change without owner approval. */
 export const PRODUCTION_HOST = "paycheck.com.de";
 export const PRODUCTION_URL = `https://${PRODUCTION_HOST}`;
@@ -12,9 +14,10 @@ export function getSiteUrl(): string {
 }
 
 export const siteConfig = {
-  name: "NovaStore",
-  legalName: "NovaStore",
-  tagline: "專為台灣代購、團購主打造的一站式獨立賣場與自動對帳平台",
+  name: NOVA_BRAND.displayName,
+  shortName: NOVA_BRAND.shortName,
+  legalName: NOVA_BRAND.legalName,
+  tagline: NOVA_BRAND.tagline,
   url: PRODUCTION_URL,
   supportEmail:
     process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "archer0965@gmail.com",

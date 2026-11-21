@@ -26,34 +26,33 @@ const Toaster = dynamic(
   { ssr: false }
 );
 
-const siteTitle =
-  "NovaStore ｜ 3分鐘建立 IG 專屬獨立賣場與自動對帳";
+const siteTitle = "拓新雲端 NovaOS｜美業與微型賣家營運中台";
 const siteDescription =
-  "專為台灣代購、團購主、微商打造。3分鐘建立獨立賣場，支援多規格、超商取貨與團購進度；買家匯款後自動對帳，LINE 秒收通知。";
+  "拓脈預約、NovaStore 賣場對帳、Nova AI Doc、拓管訂閱——四大模組一站整合。現場付／手動轉帳，同業推薦現折。";
 const twitterDescription =
-  "3分鐘建立 IG 專屬獨立賣場：免私訊收單、免手動對帳，LINE 秒收入帳通知。";
+  "拓新雲端 NovaOS：預約 · 賣場 · AI 文件 · 訂閱對帳，企業級微型營運中台。";
 
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_URL),
   title: {
     default: siteTitle,
-    template: "%s｜NovaStore",
+    template: "%s｜拓新雲端 NovaOS",
   },
   description: siteDescription,
-  applicationName: "NovaStore",
+  applicationName: "NovaOS",
   manifest: "/manifest.json",
   keywords: [
+    "NovaOS",
+    "拓新雲端",
+    "拓脈預約",
     "NovaStore",
+    "美業預約",
+    "自動對帳",
     "代購",
     "團購",
-    "獨立賣場",
-    "自動對帳",
-    "超商取貨",
-    "IG賣家",
-    "末五碼",
   ],
-  authors: [{ name: "NovaStore" }],
-  creator: "NovaStore",
+  authors: [{ name: "拓新雲端 NovaOS" }],
+  creator: "拓新雲端 NovaOS",
   alternates: {
     canonical: "/",
   },
@@ -61,7 +60,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "zh_TW",
     url: PRODUCTION_URL,
-    siteName: "NovaStore",
+    siteName: "拓新雲端 NovaOS",
     title: siteTitle,
     description: siteDescription,
     images: [
@@ -69,7 +68,7 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "NovaStore Preview Image",
+        alt: "拓新雲端 NovaOS",
       },
     ],
   },
@@ -81,7 +80,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "NovaStore",
+    title: "NovaOS",
     statusBarStyle: "black-translucent",
   },
   icons: {
