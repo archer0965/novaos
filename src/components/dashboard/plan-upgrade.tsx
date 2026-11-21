@@ -306,7 +306,7 @@ export function PlanUpgrade({
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>選擇產品線（拓管永久免費）</Label>
+          <Label>選擇產品線（訂閱中控為帳號中心）</Label>
           <div className="flex flex-wrap gap-1.5">
             {MODULE_PICK.map((id) => {
               const mod = NOVA_MODULES[id];

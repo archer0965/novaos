@@ -1,4 +1,4 @@
-/** 訂閱管家 — personal subscription tracker (NovaOS Auth required). */
+/** 訂閱管家 — personal subscription tracker（正式產品為免登入本機站；hub 另有可選雲端實驗）。 */
 
 export const SUBKEEPER_PRODUCT = {
   id: "subkeeper",

@@ -150,7 +150,7 @@ export function GlobalNavbar({
                         item.id === "subkeeper"
                           ? "開啟訂閱管家（獨立站）"
                           : free
-                            ? "永久免費"
+                            ? "帳號中心・免費"
                             : locked
                               ? "尚未啟用 — 免費試用"
                               : undefined

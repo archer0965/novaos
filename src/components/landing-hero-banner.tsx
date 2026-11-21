@@ -54,15 +54,15 @@ export function LandingHeroBanner({
           />
         </div>
         <p className="animate-fade-up delay-100 mt-5 text-xs font-semibold tracking-[0.18em] text-sky-300/90">
-          拓脈預約 · NovaStore · Nova AI Doc · 訂閱管家（免費）
+          拓脈預約 · NovaStore · Nova AI Doc · 訂閱管家 · 拓維空間
         </p>
 
         <h1 className="animate-fade-up delay-100 mt-5 max-w-4xl text-balance font-display text-3xl font-bold leading-snug tracking-tight text-white md:text-5xl md:leading-[1.15]">
-          企業級微型營運中台，拓管永久免費
+          拓新雲端 NovaOS — 台灣微型 SaaS 生態系
         </h1>
 
         <p className="animate-fade-up delay-200 mt-6 max-w-3xl text-pretty text-base leading-relaxed text-sky-100/90 md:mt-8 md:text-lg md:leading-relaxed">
-          美業預約防撞、IG／LINE 賣場自動對帳、合約免責生成、訂閱與同業裂變推薦——付費升級統一走綠界 ECPay 線上付款。
+          美業預約、代購賣場、AI 文件助理、個人訂閱管理與空間改造——一個帳號入口、清楚方案、付費升級統一走綠界 ECPay。
         </p>
 
         <div className="animate-fade-up delay-300 mt-10 flex flex-wrap items-center justify-center gap-3 md:mt-12">

@@ -72,9 +72,9 @@ export default async function PassPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           <span className="mr-2 rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">
-            永久免費
+            帳號中心・免費
           </span>
-          訂閱中控不需訂閱、不佔早鳥名額。個人訂閱開銷請用{" "}
+          訂閱中控為帳號與付費中樞，不佔早鳥名額。個人訂閱開銷請用{" "}
           <a
             href="https://temporary-speedy-reef-cy4xhhu.vercel.app"
             target="_blank"

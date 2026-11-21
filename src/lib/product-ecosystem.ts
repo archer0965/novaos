@@ -103,7 +103,7 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     ctaLabel: `進入${SUBKEEPER_PRODUCT.name}`,
     href: SUBKEEPER_PRODUCT.siteUrl,
     external: true,
-    badge: "永久免費",
+    badge: "個人工具",
     accent: "emerald",
   },
 ];

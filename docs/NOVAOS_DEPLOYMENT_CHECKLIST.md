@@ -1,82 +1,62 @@
 # NovaOS 正式部署檢查清單
 
-日期：2026-11-22（Asia/Taipei）  
-**狀態：依指示「不可未經同意直接部署正式環境」——本輪未部署 hub／NovaStore 新變更；DocMate signup 修復為前一輪已上線。**
+**更新：** 2026-11-22（Asia/Taipei）
 
----
+## 可部署條件（須全部成立）
 
-## A. 部署前必填（需你確認）
+- [ ] Build 通過  
+- [ ] 核心測試通過（或標明未測項目）  
+- [ ] 無已知重大未緩解 P0  
+- [ ] 環境變數完整（Vercel／本機）  
+- [ ] 無未經授權正式資料變更  
+- [ ] 無擅自更改正式價格／收費規則  
+- [ ] Git commit 可回復  
 
-- [ ] 批准部署哪些專案：`novaos` / `docmate-ai` / `novastore`  
-- [ ] 批准套用 DB migration `026_profiles_lock_billing_columns.sql`（建議先 staging）  
-- [ ] 確認 `ECPAY_STAGE` 正式值  
-- [ ] 確認 Supabase project 對照表  
-- [ ] 拓脈／SubKeeper 是否暫緩（無 Git）  
-- [ ] 誤建專案 `vbiz` 是否刪除  
+## 有碼站部署狀態
 
----
+| 站 | Vercel 專案 | 建議 | 備註 |
+|----|-------------|------|------|
+| hub | `novaos` → paycheck.com.de | 本輪 build ✅；文案／redirect 後部署 | |
+| NovaStore | `novastore` | 本輪 build ✅；`/legal` 後部署 | |
+| DocMate | `docmate-ai` | 本輪 build ✅；法律頁後部署 | |
+| 拓脈 | `taiwanbiz` | **不可部署碼** | Git Not connected |
+| 訂閱管家 | `temporary-speedy-reef-cy4xhhu` | **不可部署碼** | 無 Git |
+| 拓維 | `novadimension` | **不可部署碼** | 無 Git |
 
-## B. 各站 Build／品質
+## 部署前每站檢查
 
-| 檢查 | Hub | DocMate | NovaStore | 拓脈 | SubKeeper |
-|------|-----|---------|-----------|------|-----------|
-| `tsc` / build | 待跑後勾 | 待跑 | 待跑 | ⛔ | ⛔ |
-| ESLint | 待跑 | 待跑 | 待跑 | ⛔ | ⛔ |
-| 依賴鎖定 | package-lock 有 | 有 | 有 | ⛔ | ⛔ |
-| 環境變數齊全 | 見下 | 見下 | 見下 | ⛔ | ⛔ |
+1. `npm ci`／install  
+2. `npm run build`  
+3. TypeScript／ESLint  
+4. 單元／E2E（有則跑）  
+5. env：`NEXT_PUBLIC_SUPABASE_*`、server keys、ECPay、AI keys  
+6. 確認無 `SERVICE_ROLE` 進 `NEXT_PUBLIC_*`  
+7. sitemap／robots／OG／404  
+8. DNS／SSL（主站已有）  
 
-### Hub 必要 env（名稱 only）
+## 部署後抽查
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ECPAY_*`, `LINE_*`, `CRON_SECRET`, `ADMIN_EMAILS`, `NEXT_PUBLIC_BASE_URL`, 可選 `RESEND_*`, `NEXT_PUBLIC_COMPANY_*`
+- 正式網址 `/`、`/login`、產品矩陣連結  
+- 訂閱管家 → temporary-speedy-reef…  
+- Nova AI Doc → docmate-ai-one…  
+- 升級按鈕仍導 hub Pass（Store／DocMate）  
 
-### DocMate
+## 失敗時
 
-`NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, 可選 `NEXT_PUBLIC_NOVAOS_URL`, `BILLING_TEST_SECRET`（正式建議關閉測試路徑）
+- 立刻停止後續站部署  
+- `vercel rollback`／前一 Git SHA  
+- 記錄於 BUG／TEST 報告  
 
-### NovaStore
+## 需你處理（我無法代做）
 
-與 Hub 類似之 Supabase／ECPay／LINE 組
+1. Supabase 正式套用 migration **026–029**  
+2. 將 taiwanbiz／訂閱管家／novadimension **接上 Git**  
+3. 刪除空專案 `vbiz`  
+4. 確認早鳥名額規則  
+5. 公司統編／金流帳號變更（若需要）  
+6. Auth／ECPay redirect 白名單對齊  
 
----
+## 本輪授權邊界
 
-## C. 連線與 SEO
-
-| 項目 | Hub | 其他 |
-|------|-----|------|
-| 正式網域 | paycheck.com.de | *.vercel.app 或自訂 |
-| SSL | Vercel 預設 | 同 |
-| Sitemap | `/sitemap.xml` 含 legal | DocMate／Store 各自確認 |
-| robots | 已允許 legal 路徑 | 各自確認 |
-| OG／Metadata | Hub layout 有 | 各自 |
-| 404／error | Hub 有 not-found | DocMate 有 |
-
----
-
-## D. 部署手順（批准後執行）
-
-1. Staging 套用 `026` → 驗證無法自助改 plan  
-2. `npm run build` 各 repo  
-3. `vercel deploy --prod` **僅在你回覆同意後**  
-4. Smoke：首頁、登入頁、`/legal`、DocMate `/signup`  
-5. 回寫 `NOVAOS_TEST_REPORT.md`
-
----
-
-## E. 回滾
-
-- Vercel 上一版 Instant Rollback  
-- DB trigger：保留 `DROP TRIGGER ...` 回滾腳本（套用前備妥）  
-- **禁止**用正式資料做破壞性回滾測試
-
----
-
-## F. 本輪部署狀態（2026-11-22 續）
-
-| 專案 | 動作 |
-|------|------|
-| Hub | ✅ 已 production 部署（ECPay 解鎖時機、SubKeeper 命名、法律中心、central-plans） |
-| DocMate | ✅ main 合併並 production（signup／forgot／reset／cancel harden） |
-| NovaStore | ✅ 原始碼已推送 GitHub `archer0965/novastore` main；站點先前已上線 |
-| novaos GitHub repo | ❌ 建立仍 Rate Limit／FORBIDDEN — 已排程重試；請你也可手動建空 repo |
-| DB migrations 026/027 | ⚠️ 檔案在 repo，**尚未套用正式 Supabase**（需你在 Dashboard／CLI 執行） |
-| 拓脈／SubKeeper | ❌ 無 Git 原始碼，無法部署程式變更 |
+依你的授權：低風險、build 通過、未改價／未動正式資料 → 可部署有碼站。  
+**價格、金鑰、正式資料、不可逆操作 → 必須先問你。**
