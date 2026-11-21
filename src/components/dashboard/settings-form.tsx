@@ -569,7 +569,7 @@ export function SettingsForm({
         <p className="text-sm text-muted-foreground">
           方案升級與推薦碼請至{" "}
           <a href="/dashboard/pass#upgrade" className="text-primary hover:underline">
-            拓管 Nova Pass
+            訂閱中控
           </a>
           。
         </p>

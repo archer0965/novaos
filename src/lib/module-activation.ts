@@ -134,7 +134,7 @@ export async function activateModule(options: {
   const now = options.now ?? new Date();
   const moduleId = options.moduleId;
 
-  // 拓管 Nova Pass is completely free — no early-bird seat, no trial countdown
+  // Billing hub (pass) is completely free — no early-bird seat, no trial countdown
   if (isFreeModule(moduleId)) {
     const freeRow: ModuleActivationRow = {
       id: `free-${moduleId}`,
