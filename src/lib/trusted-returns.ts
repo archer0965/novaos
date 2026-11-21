@@ -8,6 +8,9 @@ export const TRUSTED_PRODUCT_ORIGINS = [
   "https://taiwanbiz.vercel.app",
   "https://temporary-speedy-reef-cy4xhhu.vercel.app",
   "https://novadimension.vercel.app",
+  // Preview aliases occasionally used in docs / bookmarks
+  "https://novastore.vercel.app",
+  "https://docmate-ai.vercel.app",
 ] as const;
 
 const LOCAL_DEV_ORIGINS = [

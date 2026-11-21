@@ -35,5 +35,6 @@ export const config = {
     "/login",
     "/signup",
     "/auth/:path*",
+    "/auth/handoff",
   ],
 };

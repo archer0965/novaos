@@ -41,7 +41,10 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       if (isAbsoluteTrustedReturn(next)) {
-        return NextResponse.redirect(next);
+        // Browser must attach hash tokens — send through handoff page.
+        const handoff = new URL("/auth/handoff", origin);
+        handoff.searchParams.set("next", next);
+        return NextResponse.redirect(handoff);
       }
       return NextResponse.redirect(new URL(next, origin));
     }

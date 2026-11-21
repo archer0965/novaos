@@ -10,19 +10,12 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { handoffAssignUrl } from "@/lib/auth-handoff";
 import {
   isAbsoluteTrustedReturn,
   resolveAuthNext,
 } from "@/lib/trusted-returns";
 import { createClient } from "@/lib/supabase/client";
-
-function toProductReceiveUrl(absoluteReturn: string): string {
-  const u = new URL(absoluteReturn);
-  const nextPath = `${u.pathname || "/"}${u.search || ""}` || "/";
-  const receive = new URL("/auth/receive", u.origin);
-  receive.searchParams.set("next", nextPath);
-  return receive.toString();
-}
 
 async function finishAuthRedirect(
   router: ReturnType<typeof useRouter>,
@@ -37,19 +30,12 @@ async function finishAuthRedirect(
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session?.access_token || !session.refresh_token) {
-    router.push(safeNext);
+  const assign = handoffAssignUrl(safeNext, session);
+  if (assign) {
+    window.location.assign(assign);
     return;
   }
-  const target = toProductReceiveUrl(safeNext);
-  const hash = new URLSearchParams({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-    expires_in: String(session.expires_in ?? 3600),
-    token_type: "bearer",
-    type: "recovery",
-  });
-  window.location.assign(`${target}#${hash.toString()}`);
+  window.location.assign(safeNext);
 }
 
 export function AuthForm({
