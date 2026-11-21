@@ -7,8 +7,6 @@ import { Download, Menu, Share, X } from "lucide-react";
 import { usePwaInstall } from "@/components/pwa-install-provider";
 import { isIosSafari } from "@/lib/pwa-install";
 import { cn } from "@/lib/utils";
-import { EARLY_BIRD } from "@/types/database";
-
 const SECTIONS = [
   {
     title: "探索產品",
@@ -24,7 +22,7 @@ const SECTIONS = [
   },
   {
     title: "合作與安裝",
-    items: [{ href: "#partner", label: EARLY_BIRD.applyLabel }],
+    items: [{ href: "#partner", label: "特約店家／推廣大使" }],
   },
 ] as const;
 

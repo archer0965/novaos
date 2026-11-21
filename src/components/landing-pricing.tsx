@@ -20,7 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
-const TIER_OPTIONS: PricingTierId[] = ["early_bird", "general", "vip"];
+/** Public tiers only; VIP (特約／大使) is manual-review via LINE. */
+const TIER_OPTIONS: PricingTierId[] = ["early_bird", "general"];
 
 export function LandingPricing() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
