@@ -42,8 +42,8 @@ export const TIER_META: Record<
 > = {
   early_bird: {
     id: "early_bird",
-    label: "早鳥優惠（前 15 名啟用）",
-    trialDays: 14,
+    label: "早鳥優惠（前 15 名於各產品站後台開始試用時占用）",
+    trialDays: 7,
     multipliers: { monthly: 0.9, half_yearly: 0.85, yearly: 0.8 },
     foldLabels: { monthly: "9 折", half_yearly: "85 折", yearly: "8 折" },
   },
