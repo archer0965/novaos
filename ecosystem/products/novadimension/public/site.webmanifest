@@ -1,0 +1,22 @@
+{
+  "name": "拓維空間NovaDimension",
+  "short_name": "拓維空間",
+  "description": "全 AI 自動軟裝空間改造與靈感分析平台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdfbf7",
+  "theme_color": "#fdfbf7",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-icon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}

@@ -37,18 +37,20 @@
       "name": "拓脈預約",
       "url": "https://taiwanbiz.vercel.app",
       "vercelProject": "taiwanbiz",
-      "repo": null,
+      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/taiwanbiz",
       "role": "product",
-      "notes": "獨立站；Vercel 專案未連接 Git，無法在此環境同步／稽核原始碼。"
+      "notes": "原始碼已納入 novaos monorepo ecosystem/products/taiwanbiz；獨立 GitHub repo 待建立。早鳥 15 組；年繳以 hub 權威。",
+      "localFallback": "ecosystem/products/taiwanbiz"
     },
     {
       "id": "subkeeper",
       "name": "訂閱管家",
       "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
       "vercelProject": "temporary-speedy-reef-cy4xhhu",
-      "repo": null,
+      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/subkeeper",
       "role": "product",
-      "notes": "訂閱管家正式網址；Vercel 未連接 Git。"
+      "notes": "需登入；登入統一導向主站。原始碼在 ecosystem/products/subkeeper。",
+      "localFallback": "ecosystem/products/subkeeper"
     },
     {
       "id": "dimension",
@@ -56,9 +58,10 @@
       "nameEn": "NovaDimension AI",
       "url": "https://novadimension.vercel.app",
       "vercelProject": "novadimension",
-      "repo": null,
+      "repo": "https://github.com/archer0965/novaos/tree/main/ecosystem/products/novadimension",
       "role": "product",
-      "notes": "AI 軟裝空間改造；Vercel 未連接 Git。價目以該站為準。"
+      "notes": "原始碼在 ecosystem/products/novadimension；登入導向主站。",
+      "localFallback": "ecosystem/products/novadimension"
     }
   ]
 }

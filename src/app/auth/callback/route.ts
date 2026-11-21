@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { sanitizeNextPath } from "@/lib/safe-next";
 import { getSiteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import {
+  isAbsoluteTrustedReturn,
+  resolveAuthNext,
+} from "@/lib/trusted-returns";
 
 /**
  * Prefer the public production host over request.url origin when proxies
@@ -30,13 +33,16 @@ function resolveAppOrigin(request: Request): string {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = sanitizeNextPath(searchParams.get("next"));
+  const next = resolveAuthNext(searchParams.get("next"));
   const origin = resolveAppOrigin(request);
 
   if (code) {
     const supabase = createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      if (isAbsoluteTrustedReturn(next)) {
+        return NextResponse.redirect(next);
+      }
       return NextResponse.redirect(new URL(next, origin));
     }
   }
