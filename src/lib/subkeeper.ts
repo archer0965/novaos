@@ -13,7 +13,7 @@ export const SUBKEEPER_PRODUCT = {
   /** Marketing / gate: unified NovaOS login then open product. */
   loginHref: "/login?next=%2Fdashboard%2Fsubkeeper",
   signupHref: "/signup?next=%2Fdashboard%2Fsubkeeper",
-  tagline: "個人訂閱費用管理與扣款提醒",
+  tagline: "永久免費・個人訂閱費用管理與扣款提醒",
   hubUrl: "https://paycheck.com.de",
   /** Alias of siteUrl (historical localStorage-era standalone). */
   legacyUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",

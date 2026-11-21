@@ -312,9 +312,11 @@ export const PRICING_CONFIG = {
     termsTitle: "特約店家合作條款",
     terms: [
       "申請人須能證明進單、出貨量穩定，並提供賣場連結供審核。",
-      "特約優惠適用 NovaStore 與拓脈預約，兩者規則連動同步。",
+      "特約優惠適用 NovaStore 與拓脈預約，兩者規則連動同步；折扣以拓新雲端主站定價為權威（月繳 9 折／半年繳 82 折／年繳 75 折）。",
+      "特約不含訂閱管家（訂閱管家永久免費）與拓維空間獨立 Credit 方案。",
       "成為特約店家後，同意於合理範圍協助推廣拓新雲端 NovaOS。",
       "長期未配合或明顯不符標準，官方得調整或取消特約資格。",
+      "子站顯示之特約文案須與本條款及主站定價一致；若有衝突以主站為準。",
     ],
   },
   /** Tier 3：推廣大使（Nova AI Doc） */
@@ -328,7 +330,7 @@ export const PRICING_CONFIG = {
     discountTier: "ambassador" as const,
     label: "推廣大使專屬優惠",
     description:
-      "適用 Nova AI Doc；啟用時 14 天試用，續約享月 9 折／半年 82 折／年 75 折。",
+      "適用 Nova AI Doc；啟用時 14 天試用，續約享月 9 折／半年 82 折／年 75 折（與主站定價一致；子站衝突以主站為準）。",
   },
   billingCycles: {
     monthly: {
@@ -412,12 +414,15 @@ export const PRICING_CONFIG = {
       name: "NovaOS 旗艦全家桶",
       monthlyQuota: -1,
       isPopular: true,
-      popularBadge: "三模組全開",
+      popularBadge: "全家桶",
       isBundle: true,
-      blurb: "解鎖拓脈＋NovaStore＋Nova AI Doc；帳號內建訂閱中控",
+      blurb: "一次解鎖核心產品；訂閱管家維持免費",
       features: [
-        "拓脈預約 + NovaStore + Nova AI Doc 全開",
-        "帳號內建訂閱中控（不含額外產品授權）",
+        "包含：拓脈預約",
+        "包含：NovaStore",
+        "包含：Nova AI Doc（商業版額度）",
+        "包含：訂閱中控",
+        "訂閱管家（個人工具）永久免費，不佔全家桶名額",
         "NovaStore 訂單處理無上限",
         "依資格套用早鳥／一般／特約／大使折扣",
         "推薦碼首月現折 $50",

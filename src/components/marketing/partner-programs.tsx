@@ -8,7 +8,7 @@ const PROGRAMS = [
     eyebrow: "PARTNER STORE",
     title: "特約店家",
     blurb:
-      "適用 NovaStore 與拓脈預約。進單、出貨穩定即可申請，人工審核通過後開通專屬折扣。",
+      "適用 NovaStore 與拓脈預約（規則連動）。審核通過後：14 天試用，續約月繳 9 折／半年 82 折／年 75 折。不含訂閱管家（永久免費）與拓維空間。",
     cta: "LINE 申請特約店家",
   },
   {
@@ -17,7 +17,7 @@ const PROGRAMS = [
     eyebrow: "AMBASSADOR",
     title: "推廣大使",
     blurb:
-      "適用 Nova AI Doc。協助推廣文件助理，人工審核通過後享大使試用與續約折扣。",
+      "適用 Nova AI Doc。審核通過後：14 天試用，續約月繳 9 折／半年 82 折／年 75 折。折扣以主站定價為準。",
     cta: "LINE 申請推廣大使",
   },
 ] as const;
