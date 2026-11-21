@@ -10,7 +10,7 @@ export function MarketingFooter() {
     <footer className="border-t border-white/10 bg-[#04060c]">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
         <div>
-          <BrandLogo size="sm" className="text-sky-50" />
+          <BrandLogo size="sm" variant="light" />
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
             拓新雲端 NovaOS——專業雲端工具與軟體解決方案開發商，打造可擴張的微型營運產品矩陣。
           </p>

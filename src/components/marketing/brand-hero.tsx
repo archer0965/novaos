@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { NOVA_BRAND } from "@/lib/novaos";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function BrandHero() {
   return (
@@ -40,11 +40,9 @@ export function BrandHero() {
       </div>
 
       <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-center px-4 pb-20 pt-28 sm:px-6 lg:px-8">
-        <p className="font-display motion-safe:animate-fade-up text-sm font-semibold tracking-[0.22em] text-cyan-300/90 sm:text-base">
-          {NOVA_BRAND.masterName}
-          <span className="mx-2 text-white/30">·</span>
-          {NOVA_BRAND.masterNameEn}
-        </p>
+        <div className="motion-safe:animate-fade-up">
+          <BrandLogo size="lg" href="/" variant="light" />
+        </div>
 
         <h1 className="font-display motion-safe:animate-fade-up delay-100 mt-5 max-w-2xl text-4xl font-bold leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-[3.35rem]">
           把繁瑣營運

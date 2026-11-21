@@ -8,7 +8,7 @@ const MARK_SIZES = {
   lg: 52,
 } as const;
 
-/** NovaOS circular brand mark (transparent PNG). */
+/** 拓新雲端 NovaOS brand mark（雲＋勾選漸層圖騰） */
 export function NovaMark({
   className,
   size = 28,
@@ -22,7 +22,7 @@ export function NovaMark({
       alt=""
       width={size}
       height={size}
-      className={cn("shrink-0 rounded-full", className)}
+      className={cn("shrink-0 object-contain", className)}
       priority={size >= 36}
     />
   );
@@ -33,11 +33,14 @@ export function BrandLogo({
   href = "/",
   size = "md",
   markOnly = false,
+  /** 行銷深色底時用較亮的文字 */
+  variant = "auto",
 }: {
   className?: string;
   href?: string;
   size?: "sm" | "md" | "lg";
   markOnly?: boolean;
+  variant?: "auto" | "light" | "dark";
 }) {
   const textSizes = {
     sm: "text-lg",
@@ -45,13 +48,26 @@ export function BrandLogo({
     lg: "text-3xl md:text-5xl",
   };
   const markPx = MARK_SIZES[size];
+  const titleClass =
+    variant === "light"
+      ? "text-white"
+      : variant === "dark"
+        ? "text-slate-900"
+        : "text-inherit";
+  const subClass =
+    variant === "light"
+      ? "text-white/70"
+      : variant === "dark"
+        ? "text-slate-500"
+        : "text-muted-foreground";
 
   return (
     <Link
       href={href}
       className={cn(
-        "font-display inline-flex items-center gap-2 font-bold tracking-tight text-primary",
+        "font-display inline-flex items-center gap-2.5 font-bold tracking-tight",
         textSizes[size],
+        titleClass,
         className
       )}
     >
@@ -60,10 +76,15 @@ export function BrandLogo({
         <span className="sr-only">拓新雲端 NovaOS</span>
       ) : (
         <span className="leading-none">
-          <span className="block text-[0.65em] font-semibold tracking-wide text-muted-foreground">
+          <span
+            className={cn(
+              "block text-[0.62em] font-semibold tracking-[0.12em]",
+              subClass
+            )}
+          >
             拓新雲端
           </span>
-          <span>NovaOS</span>
+          <span className="tracking-tight">NovaOS</span>
         </span>
       )}
     </Link>

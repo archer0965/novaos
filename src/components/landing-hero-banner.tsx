@@ -49,7 +49,8 @@ export function LandingHeroBanner({
         <div className="animate-fade-up">
           <BrandLogo
             size="lg"
-            className="justify-center text-sky-50 [&_span]:tracking-tight [&_span]:text-sky-100/80"
+            variant="light"
+            className="justify-center"
           />
         </div>
         <p className="animate-fade-up delay-100 mt-5 text-xs font-semibold tracking-[0.18em] text-sky-300/90">
