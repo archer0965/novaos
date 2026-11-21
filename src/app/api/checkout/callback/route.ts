@@ -246,6 +246,18 @@ export async function POST(request: Request) {
       update.referral_discount_used = true;
     }
 
+    // Unlock paid modules only after successful payment (not at checkout start).
+    const fieldPartsForModules = (params.CustomField2 || "").split(":");
+    const moduleToken = fieldPartsForModules.find((p) => /^m[a-z_]+$/.test(p));
+    const starterModuleFromField = moduleToken
+      ? moduleToken.slice(1)
+      : "store";
+    if (plan === "starter" || plan === "pro") {
+      update.active_modules = [starterModuleFromField, "pass"];
+    } else if (plan === "unlimited") {
+      update.active_modules = ["booking", "store", "ai_doc", "pass"];
+    }
+
     const { error } = await admin
       .from("profiles")
       .update(update)

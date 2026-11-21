@@ -84,6 +84,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "預約失敗" }, { status: 500 });
     }
 
+    // Post-insert recheck: close TOCTOU race if another booking landed in the same window.
+    const { data: afterConflicts } = await admin
+      .from("booking_appointments")
+      .select("id")
+      .eq("seller_id", parsed.data.seller_id)
+      .eq("status", "booked")
+      .lt("starts_at", ends.toISOString())
+      .gt("ends_at", starts.toISOString());
+
+    if ((afterConflicts?.length || 0) > 1) {
+      await admin.from("booking_appointments").delete().eq("id", data.id);
+      return NextResponse.json(
+        { error: "此時段剛被預約，請改選其他時間" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       appointment: data,

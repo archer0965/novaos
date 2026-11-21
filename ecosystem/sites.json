@@ -21,7 +21,7 @@
       "repo": "https://github.com/archer0965/novastore",
       "localFallback": "../repos/novastore",
       "role": "product",
-      "notes": "今日以前抽出的獨立賣場專案；單一修改請在 novastore 專案進行。"
+      "notes": "GitHub main 已推送；單一修改請在 novastore 專案進行。"
     },
     {
       "id": "docmate",

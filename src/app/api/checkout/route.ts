@@ -9,7 +9,6 @@ import {
 } from "@/lib/module-activation";
 import {
   isNovaModuleId,
-  PAID_MODULE_IDS,
   REFERRAL_CONFIG,
   type NovaModuleId,
 } from "@/lib/novaos";
@@ -139,14 +138,7 @@ export async function POST(request: Request) {
         applyCredit,
       });
 
-      const existing = Array.isArray(profile?.active_modules)
-        ? (profile!.active_modules as string[])
-        : [];
-      const nextModules = Array.from(new Set([...existing, "ai_doc", "pass"]));
-      await supabase
-        .from("profiles")
-        .update({ active_modules: nextModules })
-        .eq("id", user.id);
+      // Do NOT unlock modules before ECPay success — callback grants access.
 
       const planLabel = aiPlan === "business" ? "AI Doc 商業版" : "AI Doc 專業版";
       const cycleLabel = getCycleLabel(cycle);
@@ -211,18 +203,10 @@ export async function POST(request: Request) {
       applyCredit,
     });
 
-    if (plan === "starter") {
-      const mod = selectedModule || "store";
-      await supabase
-        .from("profiles")
-        .update({ active_modules: [mod] })
-        .eq("id", user.id);
-    } else if (plan === "unlimited") {
-      await supabase
-        .from("profiles")
-        .update({ active_modules: [...PAID_MODULE_IDS] })
-        .eq("id", user.id);
-    }
+    // Do NOT unlock modules before ECPay success — callback grants access.
+    // Encode selected module in CustomField2 so callback can apply it.
+    const starterModule =
+      plan === "starter" ? selectedModule || "store" : null;
 
     const catalogPlan = PLAN_CATALOG[plan];
     const cycleLabel = getCycleLabel(cycle);
@@ -234,9 +218,9 @@ export async function POST(request: Request) {
       returnURL: `${baseUrl}/api/checkout/callback`,
       clientBackURL: `${baseUrl}/dashboard/pass?upgraded=pending`,
       customField1: user.id,
-      customField2: `${plan}:${cycle}:t${tier}${referrerId ? `:ref` : ""}${
-        applyCredit ? `:c${applyCredit}` : ""
-      }`,
+      customField2: `${plan}:${cycle}:t${tier}${
+        starterModule ? `:m${starterModule}` : ""
+      }${referrerId ? `:ref` : ""}${applyCredit ? `:c${applyCredit}` : ""}`,
     });
 
     const html = buildAutoSubmitHtml(paymentUrl, params);
