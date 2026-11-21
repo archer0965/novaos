@@ -1,10 +1,10 @@
 /**
  * Central plan catalog for NovaOS ecosystem.
  *
- * Authority (owner 2026-11-22):
- * - NovaStore + 拓脈預約 → follow NovaOS hub prices
- * - Nova AI Doc → follow Nova AI Doc site prices
- * - SubKeeper → free / local (no paid plans confirmed)
+ * Authority (owner 2026-11-22; path policy same day):
+ * - Payment path: paid upgrades → NovaOS hub ECPay (when source available)
+ * - Prices: NovaStore + 拓脈 follow hub catalog; Nova AI Doc / 拓維 keep site prices
+ * - SubKeeper → free / local (no paid plans)
  */
 
 export type CentralProductId =
