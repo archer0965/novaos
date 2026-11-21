@@ -71,7 +71,10 @@ export default async function PassPage() {
           訂閱、對帳與同業裂變
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          註冊不會開始試用；請至各模組頁點擊啟用。金流狀態：
+          <span className="mr-2 rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">
+            永久免費
+          </span>
+          拓管不需訂閱、不佔早鳥名額。付費模組請至各頁啟用試用。金流狀態：
           <span className="ml-1 font-medium text-amber-800">
             {PAYMENT_GATEWAY_STATUS.label}
           </span>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ModuleActivationRow } from "@/lib/module-activation";
-import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { NOVA_MODULES, PAID_MODULE_IDS, type NovaModuleId } from "@/lib/novaos";
 import {
   buildCheckoutQuote,
   resolvePricingTier,
@@ -38,7 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
-const MODULE_PICK: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
+const MODULE_PICK: NovaModuleId[] = [...PAID_MODULE_IDS];
 
 function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
   const current = normalizePlan(profile.plan_type);
@@ -284,7 +284,7 @@ export function PlanUpgrade({
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>基礎版選擇模組（影響資格判定）</Label>
+          <Label>基礎版選擇付費模組（拓管永久免費）</Label>
           <div className="flex flex-wrap gap-1.5">
             {MODULE_PICK.map((id) => {
               const mod = NOVA_MODULES[id];

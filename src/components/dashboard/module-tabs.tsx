@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
 import { cn } from "@/lib/utils";
 
 const ORDER: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
@@ -22,7 +22,8 @@ export function ModuleTabs({
           const mod = NOVA_MODULES[id];
           const active =
             pathname === mod.href || pathname.startsWith(`${mod.href}/`);
-          const locked = !unlockedSet.has(id);
+          const free = isFreeModule(id);
+          const locked = !free && !unlockedSet.has(id);
           return (
             <Link
               key={id}
@@ -36,11 +37,19 @@ export function ModuleTabs({
                     ? "text-muted-foreground/70 hover:bg-background/60"
                     : "text-muted-foreground hover:bg-background hover:text-foreground"
               )}
-              title={locked ? "尚未啟用 — 點擊前往啟用試用" : mod.blurb}
+              title={
+                free
+                  ? "拓管永久免費"
+                  : locked
+                    ? "尚未啟用 — 點擊前往啟用試用"
+                    : mod.blurb
+              }
             >
               <span aria-hidden>{mod.emoji}</span>
               <span className="font-medium">{mod.name}</span>
-              {locked ? (
+              {free ? (
+                <span className="text-[10px] opacity-80">免費</span>
+              ) : locked ? (
                 <span className="text-[10px] opacity-70">啟用</span>
               ) : null}
             </Link>

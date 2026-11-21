@@ -6,8 +6,9 @@ import {
 } from "@/lib/module-activation";
 import {
   hasModuleAccess,
+  isFreeModule,
   normalizeModules,
-  NOVA_MODULE_IDS,
+  PAID_MODULE_IDS,
   type NovaModuleId,
 } from "@/lib/novaos";
 import {
@@ -52,8 +53,7 @@ export function resolveUnlockedModules(
   }
 
   const map = activationMap(options?.activations || []);
-  for (const id of NOVA_MODULE_IDS) {
-    if (id === "pass") continue;
+  for (const id of PAID_MODULE_IDS) {
     const row = map[id];
     if (row && isModuleTrialActive(row.trial_ends_at)) {
       unlocked.add(id);
@@ -75,7 +75,7 @@ export function canOpenModule(
   }
 ): boolean {
   if (options?.isAdmin) return true;
-  if (moduleId === "pass") return true;
+  if (isFreeModule(moduleId)) return true;
 
   const map = activationMap(options?.activations || []);
   if (

@@ -52,11 +52,25 @@ export const NOVA_MODULES: Record<NovaModuleId, NovaModuleDef> = {
     nameEn: "Nova Pass",
     emoji: "⚙️",
     href: "/dashboard/pass",
-    blurb: "SaaS 訂閱續費、對帳管理與同業裂變推薦碼",
+    blurb: "訂閱續費、對帳管理與同業裂變推薦碼（完全免費）",
   },
 };
 
 export const NOVA_MODULE_IDS = Object.keys(NOVA_MODULES) as NovaModuleId[];
+
+/** Paid product modules — 拓管 is free forever and never sold alone. */
+export const PAID_MODULE_IDS: NovaModuleId[] = ["booking", "store", "ai_doc"];
+
+/** Always unlocked for every registered account — no trial, no early-bird seat. */
+export const FREE_MODULE_IDS: NovaModuleId[] = ["pass"];
+
+export function isFreeModule(id: NovaModuleId | string | null | undefined): boolean {
+  return id === "pass";
+}
+
+export function isPaidModule(id: NovaModuleId | string | null | undefined): id is NovaModuleId {
+  return id === "booking" || id === "store" || id === "ai_doc";
+}
 
 export const REFERRAL_CONFIG = {
   /** 被推薦人首次付款現折 */
@@ -89,9 +103,15 @@ export function normalizeModules(
   raw: unknown,
   options?: { bundle?: boolean; fallback?: NovaModuleId[] }
 ): NovaModuleId[] {
-  if (options?.bundle) return [...NOVA_MODULE_IDS];
+  if (options?.bundle) {
+    // Bundle unlocks all paid modules; Pass is always free on top
+    return Array.from(new Set<NovaModuleId>([...PAID_MODULE_IDS, ...FREE_MODULE_IDS]));
+  }
   if (!Array.isArray(raw)) return options?.fallback ? [...options.fallback] : ["store"];
-  const ids = raw.filter((v): v is NovaModuleId => typeof v === "string" && isNovaModuleId(v));
+  const ids = raw.filter(
+    (v): v is NovaModuleId =>
+      typeof v === "string" && isNovaModuleId(v) && !isFreeModule(v)
+  );
   return ids.length ? Array.from(new Set(ids)) : options?.fallback ? [...options.fallback] : ["store"];
 }
 
@@ -100,6 +120,7 @@ export function hasModuleAccess(
   moduleId: NovaModuleId,
   options?: { isAdmin?: boolean; isBundle?: boolean; trial?: boolean }
 ): boolean {
+  if (isFreeModule(moduleId)) return true;
   if (options?.isAdmin || options?.isBundle || options?.trial) return true;
   return (modules || []).includes(moduleId);
 }

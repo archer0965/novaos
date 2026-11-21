@@ -214,7 +214,9 @@ export function LandingPricing() {
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{m.blurb}</p>
               <p className="mt-2 text-[11px] text-amber-800">
-                早鳥名額各自 15 名，啟用時才佔用
+                {m.id === "pass"
+                  ? "永久免費・不佔早鳥名額"
+                  : "早鳥名額各自 15 名，啟用時才佔用"}
               </p>
             </div>
           ))}

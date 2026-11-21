@@ -7,8 +7,9 @@ import {
   type PricingTierId,
 } from "@/lib/pricing-tiers";
 import {
+  isFreeModule,
   isNovaModuleId,
-  NOVA_MODULE_IDS,
+  PAID_MODULE_IDS,
   type NovaModuleId,
 } from "@/lib/novaos";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -133,6 +134,25 @@ export async function activateModule(options: {
   const now = options.now ?? new Date();
   const moduleId = options.moduleId;
 
+  // 拓管 Nova Pass is completely free — no early-bird seat, no trial countdown
+  if (isFreeModule(moduleId)) {
+    const freeRow: ModuleActivationRow = {
+      id: `free-${moduleId}`,
+      seller_id: options.sellerId,
+      module_id: moduleId,
+      activated_at: now.toISOString(),
+      is_module_early_bird: false,
+      trial_ends_at: null,
+    };
+    return {
+      activation: freeRow,
+      created: false,
+      tier: "general",
+      trialDays: 0,
+      earlyBird: false,
+    };
+  }
+
   const { data: existing } = await admin
     .from("module_activations")
     .select("id, seller_id, module_id, activated_at, is_module_early_bird, trial_ends_at")
@@ -161,8 +181,7 @@ export async function activateModule(options: {
   const ambassador = Boolean(options.profile.is_ambassador);
   const vipForModule =
     (PARTNER_STORE_MODULES.includes(moduleId) && partner) ||
-    (moduleId === AMBASSADOR_MODULE && ambassador) ||
-    (moduleId === "pass" && (partner || ambassador));
+    (moduleId === AMBASSADOR_MODULE && ambassador);
 
   let earlyBird = false;
   let trialDays = TIER_META.general.trialDays;
@@ -294,7 +313,7 @@ export function canAccessModuleNow(options: {
 
 export async function getAllModuleEarlyBirdStatuses() {
   const out = [] as Awaited<ReturnType<typeof getModuleEarlyBirdStatus>>[];
-  for (const id of NOVA_MODULE_IDS) {
+  for (const id of PAID_MODULE_IDS) {
     out.push(await getModuleEarlyBirdStatus(id));
   }
   return out;

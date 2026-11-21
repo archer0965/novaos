@@ -9,7 +9,7 @@ import {
 } from "@/lib/module-activation";
 import {
   isNovaModuleId,
-  NOVA_MODULE_IDS,
+  PAID_MODULE_IDS,
   REFERRAL_CONFIG,
   type NovaModuleId,
 } from "@/lib/novaos";
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     } else if (plan === "unlimited") {
       await supabase
         .from("profiles")
-        .update({ active_modules: [...NOVA_MODULE_IDS] })
+        .update({ active_modules: [...PAID_MODULE_IDS] })
         .eq("id", user.id);
     }
 

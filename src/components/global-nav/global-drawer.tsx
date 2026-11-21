@@ -4,7 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { NOVA_MODULES, NOVA_MODULE_IDS, type NovaModuleId } from "@/lib/novaos";
+import {
+  isFreeModule,
+  NOVA_MODULES,
+  NOVA_MODULE_IDS,
+  type NovaModuleId,
+} from "@/lib/novaos";
 import {
   HUB_MASTER_MENU,
   MODULE_FEATURE_MENUS,
@@ -183,7 +188,10 @@ export function GlobalDrawer({
                     const modId = NOVA_MODULE_IDS.find(
                       (id) => NOVA_MODULES[id].href === item.href
                     );
-                    const locked = Boolean(modId && !unlocked.has(modId));
+                    const free = Boolean(modId && isFreeModule(modId));
+                    const locked = Boolean(
+                      modId && !free && !unlocked.has(modId)
+                    );
                     return (
                       <li key={item.href + item.label}>
                         <DrawerLink
@@ -193,7 +201,13 @@ export function GlobalDrawer({
                           description={item.description}
                           active={isNavItemActive(pathname, item)}
                           badge={
-                            isModule && locked ? "免費試用" : null
+                            isModule
+                              ? free
+                                ? "免費"
+                                : locked
+                                  ? "免費試用"
+                                  : null
+                              : null
                           }
                           onClick={onClose}
                         />
@@ -234,7 +248,8 @@ export function GlobalDrawer({
                 {NOVA_MODULE_IDS.map((id) => {
                   const mod = NOVA_MODULES[id];
                   const active = mode === id;
-                  const locked = !unlocked.has(id);
+                  const free = isFreeModule(id);
+                  const locked = !free && !unlocked.has(id);
                   return (
                     <li key={id}>
                       <DrawerLink
@@ -243,7 +258,7 @@ export function GlobalDrawer({
                         emoji={mod.emoji}
                         description={mod.blurb}
                         active={active}
-                        badge={locked ? "免費試用" : null}
+                        badge={free ? "免費" : locked ? "免費試用" : null}
                         onClick={onClose}
                       />
                     </li>

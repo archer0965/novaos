@@ -37,10 +37,12 @@ export const HUB_MASTER_MENU: {
     ],
   },
   {
-    title: "四大子模組",
+    title: "子模組（拓管永久免費）",
     items: NOVA_MODULE_IDS.map((id) => ({
       href: NOVA_MODULES[id].href,
-      label: `${NOVA_MODULES[id].emoji} ${NOVA_MODULES[id].name}`,
+      label: `${NOVA_MODULES[id].emoji} ${NOVA_MODULES[id].name}${
+        id === "pass" ? "｜免費" : ""
+      }`,
       description: NOVA_MODULES[id].blurb,
       match: "prefix" as const,
     })),

@@ -8,7 +8,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { GlobalDrawer } from "@/components/global-nav/global-drawer";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
+import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
 import { moduleTitle, resolveNavMode, type NavMode } from "@/lib/nav-config";
 import { cn } from "@/lib/utils";
 
@@ -108,8 +108,12 @@ export function GlobalNavbar({
                     item.id === "hub"
                       ? pathname === "/dashboard"
                       : mode === item.id;
+                  const free =
+                    item.id !== "hub" && isFreeModule(item.id as NovaModuleId);
                   const locked =
-                    item.id !== "hub" && !unlocked.has(item.id as NovaModuleId);
+                    item.id !== "hub" &&
+                    !free &&
+                    !unlocked.has(item.id as NovaModuleId);
                   return (
                     <Link
                       key={item.id}
@@ -121,10 +125,18 @@ export function GlobalNavbar({
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                       )}
-                      title={locked ? "尚未啟用 — 免費試用" : undefined}
+                      title={
+                        free
+                          ? "永久免費"
+                          : locked
+                            ? "尚未啟用 — 免費試用"
+                            : undefined
+                      }
                     >
                       {item.label}
-                      {locked ? (
+                      {free ? (
+                        <span className="text-[9px] opacity-80">免費</span>
+                      ) : locked ? (
                         <span className="text-[9px] opacity-80">試用</span>
                       ) : null}
                     </Link>

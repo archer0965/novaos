@@ -360,9 +360,9 @@ export const PRICING_CONFIG = {
       isPopular: false,
       blurb: "註冊後請啟用子模組開始試用",
       features: [
+        "拓管 Nova Pass 永久免費",
         "註冊不扣早鳥名額、不開始試用倒數",
-        "點擊啟用子模組後才開始試用",
-        "各模組早鳥名額各自 15 名",
+        "付費模組點擊啟用後才開始試用",
       ],
       prices: {
         monthly: { total: 0, avgMonthly: 0 },
@@ -378,7 +378,8 @@ export const PRICING_CONFIG = {
       blurb: "任選單一核心模組，適合專注經營",
       isBundle: false,
       features: [
-        "任選 1 個核心模組（拓脈／NovaStore／AI Doc／拓管）",
+        "任選 1 個付費模組（拓脈／NovaStore／AI Doc）",
+        "拓管 Nova Pass 永久免費附贈",
         "NovaStore 訂單額度每月 100 筆",
         "依資格套用早鳥／一般／特約／大使折扣",
         "推薦碼首月現折 $50",
@@ -408,11 +409,12 @@ export const PRICING_CONFIG = {
       name: "NovaOS 旗艦全家桶",
       monthlyQuota: -1,
       isPopular: true,
-      popularBadge: "四模組全開",
+      popularBadge: "三模組全開",
       isBundle: true,
-      blurb: "解鎖全套四核心模組，一次到位",
+      blurb: "解鎖拓脈＋NovaStore＋AI Doc；拓管永久免費",
       features: [
-        "拓脈預約 + NovaStore + Nova AI Doc + 拓管",
+        "拓脈預約 + NovaStore + Nova AI Doc 全開",
+        "拓管 Nova Pass 永久免費附贈",
         "NovaStore 訂單處理無上限",
         "依資格套用早鳥／一般／特約／大使折扣",
         "推薦碼首月現折 $50",

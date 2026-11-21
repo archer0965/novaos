@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { activateModule } from "@/lib/module-activation";
-import { isNovaModuleId, NOVA_MODULES } from "@/lib/novaos";
+import { isFreeModule, isNovaModuleId, NOVA_MODULES } from "@/lib/novaos";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
@@ -34,6 +34,19 @@ export async function POST(request: Request) {
         { error: "請先完成帳戶設定" },
         { status: 400 }
       );
+    }
+
+    if (isFreeModule(parsed.data.moduleId)) {
+      const mod = NOVA_MODULES[parsed.data.moduleId];
+      return NextResponse.json({
+        ok: true,
+        created: false,
+        earlyBird: false,
+        trialDays: 0,
+        tier: "general",
+        free: true,
+        message: `${mod.emoji} ${mod.name} 永久免費，無需啟用試用`,
+      });
     }
 
     const result = await activateModule({
