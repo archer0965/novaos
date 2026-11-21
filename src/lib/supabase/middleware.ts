@@ -39,8 +39,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = path === "/login" || path === "/signup";
 
   if (isDashboard && !user) {
+    // Relative redirect only — never rewrite Host (avoids 421 / misdirected hosts).
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
@@ -53,7 +55,11 @@ export async function updateSession(request: NextRequest) {
       isAuthPage
         ? sanitizeNextPath(request.nextUrl.searchParams.get("next"))
         : "/dashboard";
-    return NextResponse.redirect(new URL(dest, request.nextUrl.origin));
+    const url = request.nextUrl.clone();
+    url.pathname = dest;
+    url.search = "";
+    // Keep the original request host/scheme; do not rebuild from a possibly-wrong origin.
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;
