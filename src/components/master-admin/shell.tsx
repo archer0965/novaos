@@ -19,7 +19,12 @@ import {
 import { useMemo, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
-import { ADMIN_NAV, ADMIN_SITES, siteFromPath } from "@/lib/master-admin/nav";
+import {
+  ADMIN_NAV,
+  ADMIN_SITES,
+  PRODUCT_WORKSPACES,
+  siteFromPath,
+} from "@/lib/master-admin/nav";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +96,24 @@ export function MasterAdminShell({
           </Link>
         );
       })}
+      <div className="mt-3 border-t border-white/10 pt-3">
+        <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          功能工作台（前台產品）
+        </p>
+        {PRODUCT_WORKSPACES.map((ws) => (
+          <a
+            key={ws.id}
+            href={ws.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-teal-200/90 hover:bg-teal-500/10 hover:text-teal-100"
+          >
+            <span>{ws.label}</span>
+            <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+          </a>
+        ))}
+      </div>
     </nav>
   );
 
@@ -168,12 +191,26 @@ export function MasterAdminShell({
                 ) : null}
               </div>
 
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                {currentSite.externalUrl ? (
+                  <a
+                    href={
+                      PRODUCT_WORKSPACES.find((p) => p.id === currentSite.id)
+                        ?.href || currentSite.externalUrl
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-teal-400/30 bg-teal-500/10 px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-500/20"
+                  >
+                    前往功能工作台
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
                 <Link
                   href="/dashboard"
-                  className="hidden text-sm text-slate-400 hover:text-white sm:inline"
+                  className="hidden rounded-xl border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white sm:inline"
                 >
-                  返回賣家後台
+                  NovaOS 產品總控台
                 </Link>
                 <Button
                   variant="ghost"

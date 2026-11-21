@@ -53,6 +53,7 @@ export const ADMIN_SITES: Array<{
     label: "訂閱管家",
     short: "訂閱管家",
     href: "/admin/subkeeper",
+    externalUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app/app",
   },
   {
     id: "dimension",
@@ -60,6 +61,39 @@ export const ADMIN_SITES: Array<{
     short: "拓維空間",
     href: "/admin/dashboard?site=dimension",
     externalUrl: "https://novadimension.vercel.app",
+  },
+];
+
+/** Product workspace URLs for admin dual-mode switching (not /admin analytics). */
+export const PRODUCT_WORKSPACES: Array<{
+  id: AdminSiteId;
+  label: string;
+  href: string;
+}> = [
+  {
+    id: "novastore",
+    label: "NovaStore 功能工作台",
+    href: "https://novastore-omega.vercel.app/dashboard",
+  },
+  {
+    id: "booking",
+    label: "拓脈預約 功能工作台",
+    href: "https://taiwanbiz.vercel.app/dashboard",
+  },
+  {
+    id: "aidoc",
+    label: "Nova AI Doc 功能工作台",
+    href: "https://docmate-ai-one.vercel.app/dashboard",
+  },
+  {
+    id: "subkeeper",
+    label: "訂閱管家 功能工作台",
+    href: "https://temporary-speedy-reef-cy4xhhu.vercel.app/app",
+  },
+  {
+    id: "dimension",
+    label: "拓維空間 前台首頁",
+    href: "https://novadimension.vercel.app",
   },
 ];
 
