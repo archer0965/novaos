@@ -225,7 +225,7 @@ export function PricingMatrix() {
                 <Link
                   href={
                     key === "free"
-                      ? "https://docmate-ai-one.vercel.app/signup"
+                      ? "https://docmate-ai-one.vercel.app"
                       : "/signup?next=/dashboard/pass#upgrade"
                   }
                   className={cn(

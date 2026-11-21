@@ -20,31 +20,30 @@ export function ModuleTabs({
       <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border/80 bg-secondary/40 p-1 sm:min-w-0">
         {ORDER.map((id) => {
           const mod = NOVA_MODULES[id];
-          const active =
-            pathname === mod.href || pathname.startsWith(`${mod.href}/`);
+          const externalHref =
+            id === "ai_doc" ? "https://docmate-ai-one.vercel.app" : null;
+          const active = externalHref
+            ? false
+            : pathname === mod.href || pathname.startsWith(`${mod.href}/`);
           const free = isFreeModule(id);
-          const locked = !free && !unlockedSet.has(id);
-          return (
-            <Link
-              key={id}
-              href={mod.href}
-              prefetch
-              className={cn(
-                "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : locked
-                    ? "text-muted-foreground/70 hover:bg-background/60"
-                    : "text-muted-foreground hover:bg-background hover:text-foreground"
-              )}
-              title={
-                free
-                  ? "訂閱中控永久免費"
-                  : locked
-                    ? "尚未啟用 — 點擊前往啟用試用"
-                    : mod.blurb
-              }
-            >
+          const locked = !free && !unlockedSet.has(id) && !externalHref;
+          const className = cn(
+            "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
+            active
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : locked
+                ? "text-muted-foreground/70 hover:bg-background/60"
+                : "text-muted-foreground hover:bg-background hover:text-foreground"
+          );
+          const title = externalHref
+            ? "開啟 Nova AI Doc（獨立站）"
+            : free
+              ? "訂閱中控永久免費"
+              : locked
+                ? "尚未啟用 — 點擊前往啟用試用"
+                : mod.blurb;
+          const inner = (
+            <>
               <span aria-hidden>{mod.emoji}</span>
               <span className="font-medium">{mod.name}</span>
               {free ? (
@@ -52,6 +51,31 @@ export function ModuleTabs({
               ) : locked ? (
                 <span className="text-[10px] opacity-70">啟用</span>
               ) : null}
+            </>
+          );
+          if (externalHref) {
+            return (
+              <a
+                key={id}
+                href={externalHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+                title={title}
+              >
+                {inner}
+              </a>
+            );
+          }
+          return (
+            <Link
+              key={id}
+              href={mod.href}
+              prefetch
+              className={className}
+              title={title}
+            >
+              {inner}
             </Link>
           );
         })}
