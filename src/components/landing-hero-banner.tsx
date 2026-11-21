@@ -61,7 +61,7 @@ export function LandingHeroBanner({
         </h1>
 
         <p className="animate-fade-up delay-200 mt-6 max-w-3xl text-pretty text-base leading-relaxed text-sky-100/90 md:mt-8 md:text-lg md:leading-relaxed">
-          美業預約防撞、IG／LINE 賣場自動對帳、合約免責生成、訂閱與同業裂變推薦——統一結算採現場付／手動轉帳（金流模組審核中）。
+          美業預約防撞、IG／LINE 賣場自動對帳、合約免責生成、訂閱與同業裂變推薦——付費升級統一走綠界 ECPay 線上付款。
         </p>
 
         <div className="animate-fade-up delay-300 mt-10 flex flex-wrap items-center justify-center gap-3 md:mt-12">

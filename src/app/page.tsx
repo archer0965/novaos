@@ -2,6 +2,7 @@ import { BrandHero } from "@/components/marketing/brand-hero";
 import { ContactCta } from "@/components/marketing/contact-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
+import { PricingMatrix } from "@/components/marketing/pricing-matrix";
 import { ProductMatrix } from "@/components/marketing/product-matrix";
 import { WhyChooseUs } from "@/components/marketing/why-choose-us";
 import { PwaBootRedirect } from "@/components/pwa-boot-redirect";
@@ -39,6 +40,7 @@ export default function BrandHomePage() {
         <BrandHero />
         <div className="relative bg-[#070b14]">
           <ProductMatrix />
+          <PricingMatrix />
           <WhyChooseUs />
           <ContactCta />
         </div>

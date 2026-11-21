@@ -51,8 +51,8 @@ export default async function PublicBookingPage({
         {seller.shop_bio ? (
           <p className="mt-2 text-sm text-muted-foreground">{seller.shop_bio}</p>
         ) : null}
-        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          {PAYMENT_GATEWAY_STATUS.activeLabel} · {PAYMENT_GATEWAY_STATUS.label}
+        <p className="mt-3 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-900">
+          現場服務結算依店家公告；訂閱升級採 {PAYMENT_GATEWAY_STATUS.activeLabel}
         </p>
       </div>
 

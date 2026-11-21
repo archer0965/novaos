@@ -8,3 +8,4 @@ public/sw.js
 public/swe-worker-*.js
 tsconfig.tsbuildinfo
 *.log
+.env*

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "#products", label: "產品矩陣" },
+  { href: "#pricing", label: "定價方案" },
   { href: "#why-us", label: "企業優勢" },
   { href: "#contact", label: "聯絡諮詢" },
 ] as const;

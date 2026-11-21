@@ -194,3 +194,125 @@ export const PARTNER_STORE_MODULES: NovaModuleId[] = ["booking", "store"];
 
 /** Module that uses 推廣大使優惠 */
 export const AMBASSADOR_MODULE: NovaModuleId = "ai_doc";
+
+/** AI 文件助理獨立方案（與拓脈／NovaStore 價格結構分開） */
+export type AiDocPaidPlanKey = "pro" | "business";
+
+export const AI_DOC_BASE_PRICES = {
+  pro: {
+    monthly: 199,
+    half_yearly: 1194,
+    yearly: 2388,
+  },
+  business: {
+    monthly: 499,
+    half_yearly: 2994,
+    yearly: 5988,
+  },
+} as const;
+
+/** Same tier multipliers as NovaOS module pricing */
+export const AI_DOC_TIER_CHECKOUT_TOTALS: Record<
+  PricingTierId,
+  Record<AiDocPaidPlanKey, Record<TierBillingCycle, number>>
+> = {
+  early_bird: {
+    pro: { monthly: 179, half_yearly: 1015, yearly: 1910 },
+    business: { monthly: 449, half_yearly: 2545, yearly: 4790 },
+  },
+  general: {
+    pro: { monthly: 199, half_yearly: 1075, yearly: 2030 },
+    business: { monthly: 499, half_yearly: 2695, yearly: 5090 },
+  },
+  vip: {
+    pro: { monthly: 179, half_yearly: 979, yearly: 1791 },
+    business: { monthly: 449, half_yearly: 2455, yearly: 4491 },
+  },
+};
+
+export const AI_DOC_PLAN_META: Record<
+  AiDocPaidPlanKey | "free",
+  {
+    id: AiDocPaidPlanKey | "free";
+    name: string;
+    priceMonthly: number;
+    isPopular?: boolean;
+    popularBadge?: string;
+    blurb: string;
+    features: string[];
+  }
+> = {
+  free: {
+    id: "free",
+    name: "免費版",
+    priceMonthly: 0,
+    blurb: "適合體驗",
+    features: ["每月 3 份文件", "每月 20 次提問", "基礎摘要", "基礎 AI 問答"],
+  },
+  pro: {
+    id: "pro",
+    name: "專業版",
+    priceMonthly: 199,
+    isPopular: true,
+    popularBadge: "主推方案",
+    blurb: "個人高效文件工作流",
+    features: [
+      "每月 50 份文件",
+      "每月 500 次提問",
+      "AI 考題與筆記",
+      "完整文件管理",
+    ],
+  },
+  business: {
+    id: "business",
+    name: "商業版",
+    priceMonthly: 499,
+    blurb: "進階分析與優先處理",
+    features: [
+      "每月 200 份文件",
+      "每月 2,000 次提問",
+      "進階文件分析",
+      "優先處理",
+      "團隊功能（後續開發）",
+    ],
+  },
+};
+
+export type AiDocCheckoutQuote = Omit<CheckoutQuote, "plan"> & {
+  plan: AiDocPaidPlanKey;
+  catalog: "ai_doc";
+};
+
+export function buildAiDocCheckoutQuote(options: {
+  plan: AiDocPaidPlanKey;
+  cycle: TierBillingCycle;
+  tier: PricingTierId;
+  referralFirstDiscount?: boolean | null;
+  applyCredit?: number | null;
+}): AiDocCheckoutQuote {
+  const { plan, cycle, tier } = options;
+  const meta = TIER_META[tier];
+  const baseAmount = AI_DOC_BASE_PRICES[plan][cycle];
+  const tierAmount = AI_DOC_TIER_CHECKOUT_TOTALS[tier][plan][cycle];
+  const referralDiscount = options.referralFirstDiscount ? 50 : 0;
+  const creditApplied = Math.max(
+    0,
+    Math.min(100, Math.floor(Number(options.applyCredit) || 0))
+  );
+  const finalAmount = Math.max(1, tierAmount - referralDiscount - creditApplied);
+  return {
+    catalog: "ai_doc",
+    plan,
+    cycle,
+    tier,
+    tierLabel: meta.label,
+    foldLabel: meta.foldLabels[cycle],
+    multiplier: meta.multipliers[cycle],
+    baseAmount,
+    tierAmount,
+    referralDiscount,
+    creditApplied,
+    savingsVsBase: Math.max(0, baseAmount - finalAmount),
+    finalAmount,
+  };
+}

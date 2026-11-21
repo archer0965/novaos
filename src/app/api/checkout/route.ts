@@ -13,7 +13,11 @@ import {
   REFERRAL_CONFIG,
   type NovaModuleId,
 } from "@/lib/novaos";
-import { buildCheckoutQuote } from "@/lib/pricing-tiers";
+import {
+  buildAiDocCheckoutQuote,
+  buildCheckoutQuote,
+  type AiDocPaidPlanKey,
+} from "@/lib/pricing-tiers";
 import { getSiteUrl } from "@/lib/site";
 import {
   PLAN_CATALOG,
@@ -25,11 +29,20 @@ import {
 } from "@/types/database";
 
 const bodySchema = z.object({
-  plan: z.enum(["starter", "pro", "unlimited", "plus", "premium"]),
+  plan: z.enum([
+    "starter",
+    "pro",
+    "unlimited",
+    "plus",
+    "premium",
+    "business",
+  ]),
   cycle: z
     .enum(["monthly", "half_yearly", "yearly", "halfYearly"])
     .default("monthly"),
   module: z.string().optional(),
+  /** ai_doc catalog uses independent FREE/PRO/BUSINESS pricing */
+  catalog: z.enum(["novaos", "ai_doc"]).optional(),
   referralCode: z.string().trim().max(24).optional(),
 });
 
@@ -53,30 +66,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const planRaw = parsed.data.plan;
-    const plan: PaidPlanKey =
-      planRaw === "plus"
-        ? "starter"
-        : planRaw === "premium"
-          ? "unlimited"
-          : planRaw === "pro"
-            ? "starter"
-            : (planRaw as PaidPlanKey);
-
-    if (!isPaidPlan(plan)) {
-      return NextResponse.json({ error: "無效的付費方案" }, { status: 400 });
-    }
-
-    const cycle = normalizeBillingCycle(parsed.data.cycle) as BillingCycle;
     const moduleRaw = parsed.data.module || "";
     const selectedModule: NovaModuleId | null = isNovaModuleId(moduleRaw)
       ? moduleRaw
       : null;
 
+    const catalog =
+      parsed.data.catalog === "ai_doc" || selectedModule === "ai_doc"
+        ? "ai_doc"
+        : "novaos";
+
+    const cycle = normalizeBillingCycle(parsed.data.cycle) as BillingCycle;
+    const planRaw = parsed.data.plan;
+
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "is_early_bird, discount_tier, is_ambassador, referral_discount_used, referral_credit_balance, referred_by"
+        "is_early_bird, discount_tier, is_ambassador, referral_discount_used, referral_credit_balance, referred_by, active_modules"
       )
       .eq("id", user.id)
       .maybeSingle();
@@ -88,16 +94,16 @@ export async function POST(request: Request) {
 
     if (canUseReferral) {
       const admin = createAdminClient();
-      const { data: referrer } = await admin
+      const { data: byCode } = await admin
         .from("profiles")
         .select("id, referral_code")
         .eq("referral_code", code)
         .maybeSingle();
-      if (referrer && referrer.id !== user.id) {
-        referrerId = referrer.id;
+      if (byCode && byCode.id !== user.id) {
+        referrerId = byCode.id;
         await admin
           .from("profiles")
-          .update({ referred_by: referrer.id })
+          .update({ referred_by: byCode.id })
           .eq("id", user.id)
           .is("referred_by", null);
       }
@@ -112,6 +118,85 @@ export async function POST(request: Request) {
         : 0;
 
     const activations = await listActivationsForSeller(user.id);
+    const baseUrl = getSiteUrl();
+    const stamp = Date.now().toString(36).toUpperCase();
+    const uid = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+    const merchantTradeNo = `PCP${uid}${stamp}`.slice(0, 20);
+
+    if (catalog === "ai_doc") {
+      const aiPlan: AiDocPaidPlanKey =
+        planRaw === "business" ? "business" : "pro";
+      const tier = resolveSellerPricingTier({
+        profile: profile || {},
+        activations,
+        moduleId: "ai_doc",
+      });
+      const quote = buildAiDocCheckoutQuote({
+        plan: aiPlan,
+        cycle,
+        tier,
+        referralFirstDiscount: Boolean(referrerId),
+        applyCredit,
+      });
+
+      const existing = Array.isArray(profile?.active_modules)
+        ? (profile!.active_modules as string[])
+        : [];
+      const nextModules = Array.from(new Set([...existing, "ai_doc", "pass"]));
+      await supabase
+        .from("profiles")
+        .update({ active_modules: nextModules })
+        .eq("id", user.id);
+
+      const planLabel = aiPlan === "business" ? "AI Doc 商業版" : "AI Doc 專業版";
+      const cycleLabel = getCycleLabel(cycle);
+      const { paymentUrl, params } = buildCheckoutParams({
+        merchantTradeNo,
+        totalAmount: quote.finalAmount,
+        tradeDesc: `NovaOS ${planLabel} ${cycleLabel} ${tier}`,
+        itemName: `NovaOS ${planLabel} ${cycleLabel}`,
+        returnURL: `${baseUrl}/api/checkout/callback`,
+        clientBackURL: `${baseUrl}/dashboard/ai-doc?upgraded=pending`,
+        customField1: user.id,
+        customField2: `ai:${aiPlan}:${cycle}:t${tier}${
+          referrerId ? `:ref` : ""
+        }${applyCredit ? `:c${applyCredit}` : ""}`,
+      });
+
+      const html = buildAutoSubmitHtml(paymentUrl, params);
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+          "X-NovaOS-Quote": JSON.stringify({
+            catalog: "ai_doc",
+            baseAmount: quote.baseAmount,
+            tierAmount: quote.tierAmount,
+            finalAmount: quote.finalAmount,
+            tier: quote.tier,
+            foldLabel: quote.foldLabel,
+          }),
+        },
+      });
+    }
+
+    // NovaOS 拓脈／NovaStore（及旗艦全家桶）— 價格結構不變
+    const plan: PaidPlanKey =
+      planRaw === "plus"
+        ? "starter"
+        : planRaw === "premium"
+          ? "unlimited"
+          : planRaw === "pro"
+            ? "starter"
+            : planRaw === "business"
+              ? "unlimited"
+              : (planRaw as PaidPlanKey);
+
+    if (!isPaidPlan(plan)) {
+      return NextResponse.json({ error: "無效的付費方案" }, { status: 400 });
+    }
+
     const tier = resolveSellerPricingTier({
       profile: profile || {},
       activations,
@@ -125,7 +210,6 @@ export async function POST(request: Request) {
       referralFirstDiscount: Boolean(referrerId),
       applyCredit,
     });
-    const amount = quote.finalAmount;
 
     if (plan === "starter") {
       const mod = selectedModule || "store";
@@ -140,19 +224,13 @@ export async function POST(request: Request) {
         .eq("id", user.id);
     }
 
-    const catalog = PLAN_CATALOG[plan];
+    const catalogPlan = PLAN_CATALOG[plan];
     const cycleLabel = getCycleLabel(cycle);
-
-    const baseUrl = getSiteUrl();
-    const stamp = Date.now().toString(36).toUpperCase();
-    const uid = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
-    const merchantTradeNo = `PCP${uid}${stamp}`.slice(0, 20);
-
     const { paymentUrl, params } = buildCheckoutParams({
       merchantTradeNo,
-      totalAmount: amount,
-      tradeDesc: `NovaOS ${catalog.name} ${cycleLabel} ${tier}`,
-      itemName: `NovaOS ${catalog.name} ${cycleLabel}`,
+      totalAmount: quote.finalAmount,
+      tradeDesc: `NovaOS ${catalogPlan.name} ${cycleLabel} ${tier}`,
+      itemName: `NovaOS ${catalogPlan.name} ${cycleLabel}`,
       returnURL: `${baseUrl}/api/checkout/callback`,
       clientBackURL: `${baseUrl}/dashboard/pass?upgraded=pending`,
       customField1: user.id,
@@ -168,6 +246,7 @@ export async function POST(request: Request) {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
         "X-NovaOS-Quote": JSON.stringify({
+          catalog: "novaos",
           baseAmount: quote.baseAmount,
           tierAmount: quote.tierAmount,
           finalAmount: quote.finalAmount,

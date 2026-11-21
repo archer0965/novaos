@@ -40,7 +40,7 @@ export default async function BookingDashboardPage() {
             <p className="text-sm text-muted-foreground">📅 拓脈預約 · Nova Booking</p>
             <h1 className="mt-1 font-display text-2xl font-semibold">美業極速預約中台</h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              10 秒預約、防撞緩衝、離峰折扣。結算採
+              10 秒預約、防撞緩衝、離峰折扣。方案升級採
               {PAYMENT_GATEWAY_STATUS.activeLabel}。
             </p>
           </div>
@@ -60,9 +60,6 @@ export default async function BookingDashboardPage() {
                 開啟
               </a>
             </Button>
-            <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
-              {PAYMENT_GATEWAY_STATUS.label}
-            </span>
           </div>
         </div>
       </section>

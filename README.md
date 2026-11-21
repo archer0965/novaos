@@ -42,7 +42,7 @@ npm run dev
 | `/dashboard/admin` | 管理者營運統計（僅白名單 Email） |
 | `/dashboard/settings` | 店名／銀行／LINE／升級 Pro |
 | `/p/[sellerId]` | 買家公開回報頁（`/pay/[sellerId]` 同義轉址） |
-| `/terms` `/privacy` `/contact` | 金流審核／個資／客服頁 |
+| `/terms` `/privacy` `/contact` | 條款／個資／客服頁 |
 | `/api/report/submit` | 買家提交對帳（寫入 DB + LINE） |
 | `/api/keep-alive` | Supabase keep-alive（Vercel Cron 每 3 天） |
 | `/api/cron/expiry-reminders` | 方案到期前 3／1 天提醒（每日 Cron） |

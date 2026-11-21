@@ -39,20 +39,33 @@ async function parseBody(request: Request): Promise<Record<string, string>> {
 
 function parsePlanField(raw: string): {
   mode: "purchase" | "upgrade";
-  plan: PaidPlanKey;
+  catalog: "novaos" | "ai_doc";
+  plan: PaidPlanKey | "pro" | "business";
+  aiPlan?: "pro" | "business";
   cycle: BillingCycle;
 } {
   const parts = (raw || "pro:monthly").split(":");
+  if (parts[0] === "ai") {
+    const aiPlan = parts[1] === "business" ? "business" : "pro";
+    const cycle = normalizeBillingCycle(parts[2]);
+    return {
+      mode: "purchase",
+      catalog: "ai_doc",
+      plan: aiPlan,
+      aiPlan,
+      cycle,
+    };
+  }
   if (parts[0] === "upgrade") {
     const plan = normalizePlan(parts[1]);
     const paid: PaidPlanKey = isPaidPlan(plan) ? plan : "pro";
     const cycle = normalizeBillingCycle(parts[2]);
-    return { mode: "upgrade", plan: paid, cycle };
+    return { mode: "upgrade", catalog: "novaos", plan: paid, cycle };
   }
   const plan = normalizePlan(parts[0]);
   const paid: PaidPlanKey = isPaidPlan(plan) ? plan : "pro";
   const cycle = normalizeBillingCycle(parts[1]);
-  return { mode: "purchase", plan: paid, cycle };
+  return { mode: "purchase", catalog: "novaos", plan: paid, cycle };
 }
 
 export async function POST(request: Request) {
@@ -67,7 +80,8 @@ export async function POST(request: Request) {
     const rtnCode = params.RtnCode;
     const sellerId = params.CustomField1;
     const tradeNo = params.MerchantTradeNo;
-    const { mode, plan, cycle } = parsePlanField(params.CustomField2 || "");
+    const parsedPlan = parsePlanField(params.CustomField2 || "");
+    const { mode, cycle, catalog } = parsedPlan;
 
     if (rtnCode !== "1") {
       console.warn("[ecpay/callback] payment not success", rtnCode, tradeNo);
@@ -80,6 +94,55 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
+
+    // AI Doc 獨立訂閱：更新 docmate_profiles（共用 Auth）
+    if (catalog === "ai_doc" && parsedPlan.aiPlan) {
+      const aiPlan = parsedPlan.aiPlan;
+      const period = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "2-digit",
+      }).format(new Date());
+
+      const { error: aiErr } = await admin.from("docmate_profiles").upsert(
+        {
+          id: sellerId,
+          plan: aiPlan,
+          usage_period: period,
+        },
+        { onConflict: "id" }
+      );
+      if (aiErr) {
+        console.error("[ecpay/callback] docmate_profiles update failed", aiErr);
+        return new NextResponse("0|AiDocUpdateFailed", { status: 500 });
+      }
+
+      // Ensure module unlocked on NovaOS side
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("active_modules")
+        .eq("id", sellerId)
+        .maybeSingle();
+      const mods = Array.isArray(prof?.active_modules)
+        ? (prof!.active_modules as string[])
+        : [];
+      await admin
+        .from("profiles")
+        .update({
+          active_modules: Array.from(new Set([...mods, "ai_doc", "pass"])),
+        })
+        .eq("id", sellerId);
+
+      console.info("[ecpay/callback] ai_doc", sellerId, aiPlan, cycle, tradeNo);
+      return new NextResponse("1|OK", {
+        status: 200,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
+
+    const plan: PaidPlanKey = isPaidPlan(parsedPlan.plan)
+      ? (parsedPlan.plan as PaidPlanKey)
+      : "starter";
 
     // Claim this MerchantTradeNo first so concurrent ECPay retries don't double-apply.
     // If profile update fails below, we delete the claim so ECPay can safely retry.

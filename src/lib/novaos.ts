@@ -81,18 +81,17 @@ export const REFERRAL_CONFIG = {
   maxCreditPerRenewal: 100,
 } as const;
 
-/** 金流模組（ECPay / LINE Pay）— UI 暫 Disabled */
+/** 金流模組 — 訂閱升級統一走綠界 ECPay */
 export const PAYMENT_GATEWAY_STATUS = {
-  enabled: false,
-  label: "金流模組審核中 (Coming Soon)",
+  enabled: true,
+  label: "綠界 ECPay 線上付款",
   modes: {
     deposit: false,
-    ecpay: false,
+    ecpay: true,
     linePay: false,
-    /** 現行統一結算 */
-    active: "manual_transfer_or_pay_at_store" as const,
+    active: "ecpay" as const,
   },
-  activeLabel: "免訂金（現場付）／手動轉帳對帳",
+  activeLabel: "綠界 ECPay 線上付款（升級／續費即時結帳）",
 } as const;
 
 export function isNovaModuleId(value: string | null | undefined): value is NovaModuleId {

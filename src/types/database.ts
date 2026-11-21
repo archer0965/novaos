@@ -83,7 +83,7 @@ export interface Profile {
   referral_discount_used?: boolean | null;
   /** Accumulated NT$ credit from successful referrals */
   referral_credit_balance?: number | null;
-  /** Reserved: deposit / gateway (Coming Soon) */
+  /** Reserved: deposit / gateway flags */
   deposit_enabled?: boolean | null;
   ecpay_merchant_id?: string | null;
   ecpay_hash_key?: string | null;
@@ -375,14 +375,15 @@ export const PRICING_CONFIG = {
       name: "單模組／基礎版",
       monthlyQuota: 100,
       isPopular: false,
-      blurb: "任選單一核心模組，適合專注經營",
+      blurb: "任選拓脈或 NovaStore，適合專注經營",
       isBundle: false,
       features: [
-        "任選 1 個付費模組（拓脈／NovaStore／AI Doc）",
+        "任選 1 個付費模組（拓脈預約／NovaStore）",
         "拓管 Nova Pass 永久免費附贈",
         "NovaStore 訂單額度每月 100 筆",
-        "依資格套用早鳥／一般／特約／大使折扣",
+        "依資格套用早鳥／一般／特約折扣",
         "推薦碼首月現折 $50",
+        "AI Doc 另有獨立方案（Pro NT$199／Business NT$499）",
       ],
       prices: {
         monthly: { total: 299, avgMonthly: 299 },

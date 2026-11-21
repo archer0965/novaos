@@ -74,10 +74,11 @@ export default async function PassPage() {
           <span className="mr-2 rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">
             永久免費
           </span>
-          拓管不需訂閱、不佔早鳥名額。付費模組請至各頁啟用試用。金流狀態：
-          <span className="ml-1 font-medium text-amber-800">
+          拓管不需訂閱、不佔早鳥名額。付費升級統一走
+          <span className="ml-1 font-medium text-emerald-800">
             {PAYMENT_GATEWAY_STATUS.label}
           </span>
+          。
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {typedProfile.is_early_bird ? (
@@ -141,20 +142,13 @@ export default async function PassPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-dashed border-amber-300 bg-amber-50/50 p-5">
-        <h2 className="font-display text-lg font-semibold text-amber-950">
-          金流模組（預留）
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+        <h2 className="font-display text-lg font-semibold text-emerald-950">
+          線上付款
         </h2>
-        <p className="mt-1 text-sm text-amber-900/80">
-          {PAYMENT_GATEWAY_STATUS.label} — 後台欄位已預留
-          deposit_enabled／ecpay_merchant_id／LINE Pay，UI 暫 Disabled。
+        <p className="mt-1 text-sm text-emerald-900/80">
+          {PAYMENT_GATEWAY_STATUS.activeLabel}。選擇方案後將導向綠界安全結帳頁完成付款。
         </p>
-        <ul className="mt-3 space-y-1 text-sm text-amber-950/80">
-          <li>訂金收款：Disabled</li>
-          <li>綠界 ECPay 商店金流：Disabled</li>
-          <li>LINE Pay：Disabled</li>
-          <li>現行結算：{PAYMENT_GATEWAY_STATUS.activeLabel}</li>
-        </ul>
       </section>
 
       <section id="upgrade">
