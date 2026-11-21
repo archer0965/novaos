@@ -68,10 +68,10 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "拓新雲端 NovaOS",
+        url: "/og-image.jpg?v=20261122-og",
+        width: 2848,
+        height: 1504,
+        alt: "拓新雲端 NovaOS｜智慧雲端工具矩陣",
       },
     ],
   },
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: twitterDescription,
-    images: ["/og-image.jpg"],
+    images: ["/og-image.jpg?v=20261122-og"],
   },
   appleWebApp: {
     capable: true,
