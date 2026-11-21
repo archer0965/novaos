@@ -45,7 +45,7 @@ export function PricingMatrix() {
             定價方案
           </h2>
           <p className="mt-4 text-base leading-relaxed text-slate-400 sm:text-lg">
-            拓脈與 NovaStore 維持原統一方案；AI 文件助理採獨立規格，並套用相同早鳥／一般折扣。特約店家／推廣大使需人工審核，請至{" "}
+            拓脈與 NovaStore 維持原統一方案；Nova AI Doc 採獨立規格，並套用相同早鳥／一般折扣。特約店家／推廣大使需人工審核，請至{" "}
             <a href="#partner" className="text-emerald-300 underline-offset-4 hover:underline">
               合作申請
             </a>
@@ -156,7 +156,7 @@ export function PricingMatrix() {
         </div>
 
         <h3 className="font-display mt-14 text-xl font-semibold text-white">
-          AI 文件助理（獨立方案）
+          Nova AI Doc（獨立方案）
         </h3>
         <p className="mt-1 text-sm text-slate-500">
           FREE／PRO NT$199／BUSINESS NT$499；公開顯示早鳥／一般價，特約／大使經審核後另開通

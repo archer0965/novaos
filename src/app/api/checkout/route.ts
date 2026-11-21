@@ -140,7 +140,8 @@ export async function POST(request: Request) {
 
       // Do NOT unlock modules before ECPay success — callback grants access.
 
-      const planLabel = aiPlan === "business" ? "AI Doc 商業版" : "AI Doc 專業版";
+      const planLabel =
+        aiPlan === "business" ? "Nova AI Doc 商業版" : "Nova AI Doc 專業版";
       const cycleLabel = getCycleLabel(cycle);
       const { paymentUrl, params } = buildCheckoutParams({
         merchantTradeNo,

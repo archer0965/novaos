@@ -88,7 +88,7 @@ export default async function PassPage() {
           ) : null}
           {typedProfile.is_ambassador ? (
             <span className="rounded-md bg-violet-100 px-2 py-1 text-violet-950">
-              推廣大使 · AI Doc
+              推廣大使 · Nova AI Doc
             </span>
           ) : null}
           {activations.map((a) => (

@@ -9,9 +9,9 @@
 | 產品 | 網址 | 獨立專案 |
 |------|------|----------|
 | NovaStore | https://novastore-omega.vercel.app | `novastore`（`ecosystem/sites.json`） |
-| DocMate AI | https://docmate-ai-one.vercel.app | `docmate-ai` |
+| Nova AI Doc | https://docmate-ai-one.vercel.app | `docmate-ai` |
 | 拓脈預約 | https://taiwanbiz.vercel.app | 獨立站（repo 待綁） |
-| 拓管 | https://temporary-speedy-reef-cy4xhhu.vercel.app | 獨立站（repo 待綁） |
+| SubKeeper | https://temporary-speedy-reef-cy4xhhu.vercel.app | 獨立站（repo 待綁） |
 
 ## 一次改多站 vs 只改一站
 

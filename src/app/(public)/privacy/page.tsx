@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <Section title="1. 適用範圍">
         <p>
           本政策適用於拓新雲端 NovaOS
-          總站及旗下工具（含 NovaStore、拓脈預約、DocMate AI、拓維空間
+          總站及旗下工具（含 NovaStore、拓脈預約、Nova AI Doc、拓維空間
           NovaDimension、SubKeeper 等）於提供服務過程中所蒐集之個人資料。獨立產品站若另有補充說明，應一併適用；若有衝突，以對當事人保護較有利者為優先，並以總站法律中心為統一參考。
         </p>
       </Section>

@@ -3,7 +3,7 @@
  *
  * Authority (owner 2026-11-22):
  * - NovaStore + 拓脈預約 → follow NovaOS hub prices
- * - DocMate AI → follow DocMate site prices
+ * - Nova AI Doc → follow Nova AI Doc site prices
  * - SubKeeper → free / local (no paid plans confirmed)
  */
 
@@ -131,7 +131,7 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
   },
   {
     product_id: "docmate",
-    product_name: "DocMate AI",
+    product_name: "Nova AI Doc",
     product_url: "https://docmate-ai-one.vercel.app",
     plan_id: "free",
     plan_name: "FREE",
@@ -147,7 +147,7 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
   },
   {
     product_id: "docmate",
-    product_name: "DocMate AI",
+    product_name: "Nova AI Doc",
     product_url: "https://docmate-ai-one.vercel.app",
     plan_id: "pro",
     plan_name: "PRO",
@@ -157,13 +157,13 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     trial_days: 0,
     usage_limits: { documents: 50, questions: 500 },
     feature_list: ["進階摘要", "問答"],
-    discount_rules: "早鳥／一般／大使（規則可與全站折扣對齊，價目以 DocMate 為準）",
+    discount_rules: "早鳥／一般／大使（規則可與全站折扣對齊，價目以 Nova AI Doc 為準）",
     product_status: "active",
     authority: "docmate-site",
   },
   {
     product_id: "docmate",
-    product_name: "DocMate AI",
+    product_name: "Nova AI Doc",
     product_url: "https://docmate-ai-one.vercel.app",
     plan_id: "business",
     plan_name: "BUSINESS",
@@ -237,7 +237,7 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     yearly_price: HUB_FLAGSHIP.yearly,
     trial_days: 7,
     usage_limits: { modules: "booking+store+ai_doc" },
-    feature_list: ["拓脈＋NovaStore＋DocMate", "訂閱中控免費"],
+    feature_list: ["拓脈＋NovaStore＋Nova AI Doc", "訂閱中控免費"],
     discount_rules: "早鳥／一般／特約／大使",
     product_status: "active",
     authority: "novaos-hub",

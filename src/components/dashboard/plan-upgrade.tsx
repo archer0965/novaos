@@ -330,7 +330,7 @@ export function PlanUpgrade({
           </div>
           <p className="text-xs text-muted-foreground">
             {isAiDocMode
-              ? `AI Doc 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）· 折扣規則與全站一致`
+              ? `Nova AI Doc 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）· 折扣規則與全站一致`
               : `拓脈／NovaStore 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：${TIER_META[tierForBundle].label}`}
           </p>
         </div>

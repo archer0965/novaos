@@ -418,7 +418,7 @@ export async function assignAmbassador(options: {
   refreshPartnerSurfaces(user.id);
   return {
     success: true,
-    message: "已開通推廣大使（AI Doc 14 天試用＋大使折扣）",
+    message: "已開通推廣大使（Nova AI Doc 14 天試用＋大使折扣）",
     userId: user.id,
     email,
     trialEndsAt: trialEnds.toISOString(),
