@@ -2,13 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+/** Cache-bust when swapping official brand assets */
+const BRAND_ASSET_V = "20261122";
+
 const MARK_SIZES = {
   sm: 28,
   md: 36,
-  lg: 52,
+  lg: 56,
 } as const;
 
-/** 拓新雲端 NovaOS brand mark（雲＋勾選漸層圖騰） */
+/** 拓新雲端圓形品牌圖騰（雲＋勾選） */
 export function NovaMark({
   className,
   size = 28,
@@ -18,11 +21,11 @@ export function NovaMark({
 }) {
   return (
     <Image
-      src="/brand-mark.png"
+      src={`/brand-mark-circle.png?v=${BRAND_ASSET_V}`}
       alt=""
       width={size}
       height={size}
-      className={cn("shrink-0 object-contain", className)}
+      className={cn("shrink-0 rounded-full object-cover", className)}
       priority={size >= 36}
     />
   );

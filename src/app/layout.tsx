@@ -85,17 +85,27 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/pwa-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/pwa-icon-512.png", sizes: "512x512", type: "image/png" },
-      { url: "/pwa-icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico?v=20261122", sizes: "any" },
+      { url: "/favicon-16.png?v=20261122", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png?v=20261122", sizes: "32x32", type: "image/png" },
+      {
+        url: "/pwa-icon-192.png?v=20261122",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/pwa-icon-512.png?v=20261122",
+        sizes: "512x512",
+        type: "image/png",
+      },
+      { url: "/pwa-icon.png?v=20261122", sizes: "512x512", type: "image/png" },
     ],
-    shortcut: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    shortcut: [
+      { url: "/favicon-32.png?v=20261122", sizes: "32x32", type: "image/png" },
+    ],
     apple: [
       {
-        url: "/pwa-apple-touch-icon.png",
+        url: "/pwa-apple-touch-icon.png?v=20261122",
         sizes: "180x180",
         type: "image/png",
       },
@@ -107,7 +117,7 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-title": "NovaStore",
+    "apple-mobile-web-app-title": "NovaOS",
   },
 };
 
@@ -131,21 +141,24 @@ export default function RootLayout({
       <head>
         <link rel="dns-prefetch" href="https://api.line.me" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/pwa-apple-touch-icon.png" />
+        <link
+          rel="apple-touch-icon"
+          href="/pwa-apple-touch-icon.png?v=20261122"
+        />
         <link
           rel="icon"
           type="image/png"
           sizes="192x192"
-          href="/pwa-icon-192.png"
+          href="/pwa-icon-192.png?v=20261122"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="512x512"
-          href="/pwa-icon-512.png"
+          href="/pwa-icon-512.png?v=20261122"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="NovaStore" />
+        <meta name="apple-mobile-web-app-title" content="NovaOS" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
