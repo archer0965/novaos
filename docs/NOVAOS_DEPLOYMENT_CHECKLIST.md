@@ -70,11 +70,13 @@
 
 ---
 
-## F. 本輪部署狀態
+## F. 本輪部署狀態（2026-11-22 續）
 
 | 專案 | 動作 |
 |------|------|
-| Hub 命名／法律／migration 檔 | **已 commit 待你批准部署** |
-| DocMate signup | 前一輪已 production |
-| NovaStore | 無本輪必部變更 |
-| 拓脈／SubKeeper | 無法部署原始碼變更 |
+| Hub | ✅ 已 production 部署（ECPay 解鎖時機、SubKeeper 命名、法律中心、central-plans） |
+| DocMate | ✅ main 合併並 production（signup／forgot／reset／cancel harden） |
+| NovaStore | ✅ 原始碼已推送 GitHub `archer0965/novastore` main；站點先前已上線 |
+| novaos GitHub repo | ❌ 建立仍 Rate Limit／FORBIDDEN — 已排程重試；請你也可手動建空 repo |
+| DB migrations 026/027 | ⚠️ 檔案在 repo，**尚未套用正式 Supabase**（需你在 Dashboard／CLI 執行） |
+| 拓脈／SubKeeper | ❌ 無 Git 原始碼，無法部署程式變更 |
