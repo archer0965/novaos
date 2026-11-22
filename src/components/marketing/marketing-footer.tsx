@@ -13,7 +13,7 @@ export function MarketingFooter() {
         <div className="lg:col-span-1">
           <BrandLogo size="sm" variant="light" />
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
-            拓新雲端 NovaOS——專業雲端工具與軟體解決方案開發商，打造可擴張的微型營運產品矩陣。
+            拓新雲端 NovaOS——專為新創與社群商家打造的智慧雲端工具矩陣。
           </p>
         </div>
 
