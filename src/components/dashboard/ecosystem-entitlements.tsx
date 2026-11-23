@@ -39,13 +39,13 @@ export function EcosystemEntitlements({
       id="member-center"
       className="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/80 via-background to-emerald-50/40 p-5 md:p-6"
     >
-      <p className="text-sm text-muted-foreground">01 統一會員中心</p>
+      <p className="text-sm text-muted-foreground">01 統一會員中心（訂閱中控）</p>
       <h2 className="mt-1 font-display text-xl font-semibold">
         一個 NovaOS 帳號 · 六個產品權益
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        登入、會員資料、訂閱狀態與權益以本頁為中樞。付款成功後由後端回調更新權益；客服統一走官方
-        LINE。
+        本頁是 NovaOS 會員中心：管理登入、訂閱與跨產品權益。與「訂閱管家」（個人訂閱費用追蹤工具）不同；旗艦全家桶為拓脈＋NovaStore＋Nova
+        AI Doc 三模組，不含拓維空間。付款成功後由後端回調更新權益；客服統一走官方 LINE。
       </p>
 
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

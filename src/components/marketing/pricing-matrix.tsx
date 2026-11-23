@@ -65,7 +65,12 @@ export function PricingMatrix() {
               <tr>
                 <th className="px-4 py-3 font-medium">項目</th>
                 <th className="px-4 py-3 font-medium">基礎版</th>
-                <th className="px-4 py-3 font-medium text-cyan-200">旗艦全家桶</th>
+                <th className="px-4 py-3 font-medium text-cyan-200">
+                  旗艦全家桶
+                  <span className="mt-0.5 block text-[11px] font-normal text-cyan-200/80">
+                    三模組方案
+                  </span>
+                </th>
                 <th className="px-4 py-3 font-medium text-emerald-200">
                   {SUBKEEPER_PRODUCT.name}
                 </th>
@@ -97,15 +102,31 @@ export function PricingMatrix() {
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
-                <td className="px-4 py-3 text-slate-400">訂閱中控</td>
+                <td className="px-4 py-3 text-slate-400">
+                  訂閱中控
+                  <span className="mt-0.5 block text-[11px] text-slate-500">
+                    NovaOS 會員中心
+                  </span>
+                </td>
                 <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
-                <td className="px-4 py-3 text-slate-400">{SUBKEEPER_PRODUCT.name}</td>
+                <td className="px-4 py-3 text-slate-400">拓維空間</td>
+                <td className="px-4 py-3 text-slate-500">獨立 Credit</td>
+                <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
+                <td className="px-4 py-3 text-slate-500">—</td>
+              </tr>
+              <tr className="border-t border-white/10">
+                <td className="px-4 py-3 text-slate-400">
+                  {SUBKEEPER_PRODUCT.name}
+                  <span className="mt-0.5 block text-[11px] text-slate-500">
+                    個人訂閱管理工具
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-emerald-300">免費可用</td>
-                <td className="px-4 py-3 text-emerald-300">免費可用</td>
+                <td className="px-4 py-3 text-emerald-300">免費可用（不含於方案價）</td>
                 <td className="px-4 py-3 text-emerald-300">永久免費</td>
               </tr>
             </tbody>
@@ -130,14 +151,17 @@ export function PricingMatrix() {
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-4 text-sm text-cyan-50">
-          <p className="font-semibold">旗艦全家桶包含項目</p>
+          <p className="font-semibold">旗艦全家桶＝三模組方案</p>
+          <p className="mt-1 text-xs text-cyan-100/80">
+            僅含拓脈預約、NovaStore、Nova AI Doc（加帳號內建訂閱中控）。拓維空間與
+            {SUBKEEPER_PRODUCT.name}不在方案價內。
+          </p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
             {[
-              "拓脈預約（完整模組）",
-              "NovaStore（訂單無上限）",
-              "Nova AI Doc（商業版額度）",
-              "訂閱中控",
-              `${SUBKEEPER_PRODUCT.name}（仍為免費，額外贈送可用）`,
+              "✓ 拓脈預約（完整模組）",
+              "✓ NovaStore（訂單無上限）",
+              "✓ Nova AI Doc（商業版額度）",
+              "✓ 訂閱中控（NovaOS 會員中心）",
             ].map((item) => (
               <li key={item} className="flex gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
@@ -145,9 +169,13 @@ export function PricingMatrix() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-cyan-100/70">
-            拓維空間為獨立 Credit／訂閱方案，不包含在全家桶內。
-          </p>
+          <ul className="mt-3 grid gap-1 text-xs text-cyan-100/75 sm:grid-cols-2">
+            <li>不含：拓維空間（獨立 Credit／訂閱）</li>
+            <li>
+              另提供：{SUBKEEPER_PRODUCT.name}
+              （個人訂閱管理工具，永久免費，≠ 訂閱中控）
+            </li>
+          </ul>
         </div>
 
         <button

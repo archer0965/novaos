@@ -205,8 +205,11 @@ export default async function PassPage() {
           {earlyStatuses.map((s) => (
             <li key={s.moduleId} className="text-muted-foreground">
               {NOVA_MODULES[s.moduleId].emoji} {NOVA_MODULES[s.moduleId].name}：
-              {s.used}/{s.max}
-              {s.open ? `（剩 ${s.remaining}）` : "（已滿・一般 7 天）"}
+              {s.reliable === false || s.used == null
+                ? `名額暫無法讀取（上限 ${s.max}，不顯示虛構數字）`
+                : `${s.used}/${s.max}${
+                    s.open ? `（剩 ${s.remaining}）` : "（已滿・一般 7 天）"
+                  }`}
             </li>
           ))}
         </ul>
