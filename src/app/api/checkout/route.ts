@@ -23,6 +23,12 @@ import {
 } from "@/lib/pricing-tiers";
 import { getSiteUrl } from "@/lib/site";
 import {
+  DIMENSION_PAID_PLANS,
+  DIMENSION_SITE_URL,
+  encodeDimensionPlanField,
+  isDimensionPaidPlanId,
+} from "@/lib/dimension-billing";
+import {
   PLAN_CATALOG,
   getCycleLabel,
   isPaidPlan,
@@ -39,13 +45,18 @@ const bodySchema = z.object({
     "plus",
     "premium",
     "business",
+    /** 拓維空間方案 id（catalog=dimension） */
+    "single",
+    "monthly",
+    "halfyear",
+    "yearly",
   ]),
   cycle: z
     .enum(["monthly", "half_yearly", "yearly", "halfYearly"])
     .default("monthly"),
   module: z.string().optional(),
-  /** ai_doc catalog uses independent FREE/PRO/BUSINESS pricing */
-  catalog: z.enum(["novaos", "ai_doc"]).optional(),
+  /** ai_doc / dimension catalogs use independent pricing */
+  catalog: z.enum(["novaos", "ai_doc", "dimension"]).optional(),
   referralCode: z.string().trim().max(24).optional(),
 });
 
@@ -86,13 +97,56 @@ export async function POST(request: Request) {
       ? moduleRaw
       : null;
 
+    const planRaw = parsed.data.plan;
     const catalog =
-      parsed.data.catalog === "ai_doc" || selectedModule === "ai_doc"
-        ? "ai_doc"
-        : "novaos";
+      parsed.data.catalog === "dimension" ||
+      moduleRaw === "dimension" ||
+      isDimensionPaidPlanId(planRaw)
+        ? "dimension"
+        : parsed.data.catalog === "ai_doc" || selectedModule === "ai_doc"
+          ? "ai_doc"
+          : "novaos";
 
     const cycle = normalizeBillingCycle(parsed.data.cycle) as BillingCycle;
-    const planRaw = parsed.data.plan;
+
+    const baseUrl = getSiteUrl();
+    const stamp = Date.now().toString(36).toUpperCase();
+    const uid = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+    const merchantTradeNo = `PCP${uid}${stamp}`.slice(0, 20);
+
+    // 拓維空間：固定價目，付款成功後由 callback → /api/credits/fulfill
+    if (catalog === "dimension") {
+      if (!isDimensionPaidPlanId(planRaw)) {
+        return NextResponse.json(
+          { error: "請選擇有效的拓維空間方案" },
+          { status: 400 }
+        );
+      }
+      const dim = DIMENSION_PAID_PLANS[planRaw];
+      const { paymentUrl, params } = buildCheckoutParams({
+        merchantTradeNo,
+        totalAmount: dim.amount,
+        tradeDesc: `NovaOS 拓維空間 ${dim.name}`,
+        itemName: `NovaOS Dimension ${dim.name} x1`,
+        returnURL: `${baseUrl}/api/checkout/callback`,
+        clientBackURL: `${DIMENSION_SITE_URL}/?paid=1&plan=${planRaw}#studio`,
+        customField1: user.id,
+        customField2: encodeDimensionPlanField(planRaw),
+      });
+      const html = buildAutoSubmitHtml(paymentUrl, params);
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+          "X-NovaOS-Quote": JSON.stringify({
+            catalog: "dimension",
+            planId: planRaw,
+            finalAmount: dim.amount,
+          }),
+        },
+      });
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -133,10 +187,6 @@ export async function POST(request: Request) {
         : 0;
 
     const activations = await listActivationsForSeller(user.id);
-    const baseUrl = getSiteUrl();
-    const stamp = Date.now().toString(36).toUpperCase();
-    const uid = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
-    const merchantTradeNo = `PCP${uid}${stamp}`.slice(0, 20);
 
     if (catalog === "ai_doc") {
       const aiPlan: AiDocPaidPlanKey =

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
+import { DimensionCheckout } from "@/components/dashboard/dimension-checkout";
 import { EcosystemEntitlements } from "@/components/dashboard/ecosystem-entitlements";
 import { PlanUpgrade } from "@/components/dashboard/plan-upgrade";
 import { SettingsForm } from "@/components/dashboard/settings-form";
@@ -19,7 +20,12 @@ import type { Profile } from "@/types/database";
 
 export const metadata = { title: "訂閱中控" };
 
-export default async function PassPage() {
+export default async function PassPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ plan?: string; product?: string }> | { plan?: string; product?: string };
+}) {
+  const params = await Promise.resolve(searchParams || {});
   const supabase = createClient();
   const {
     data: { user },
@@ -253,6 +259,8 @@ export default async function PassPage() {
       <section id="upgrade">
         <PlanUpgrade profile={typedProfile} activations={activations} />
       </section>
+
+      <DimensionCheckout initialPlan={params.plan || null} />
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
