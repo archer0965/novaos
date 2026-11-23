@@ -37,11 +37,11 @@ export const HUB_MASTER_MENU: {
     ],
   },
   {
-    title: "子模組（拓管永久免費）",
+    title: "產品模組",
     items: NOVA_MODULE_IDS.map((id) => ({
       href: NOVA_MODULES[id].href,
       label: `${NOVA_MODULES[id].emoji} ${NOVA_MODULES[id].name}${
-        id === "pass" ? "｜免費" : ""
+        id === "pass" ? "｜帳號中心" : ""
       }`,
       description: NOVA_MODULES[id].blurb,
       match: "prefix" as const,
@@ -145,7 +145,7 @@ export function resolveNavMode(pathname: string): NavMode {
   ) {
     return "pass";
   }
-  // /dashboard, /dashboard/admin, marketing pages → hub
+  // /dashboard, /admin, marketing pages → hub
   return "hub";
 }
 

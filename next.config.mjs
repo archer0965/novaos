@@ -38,6 +38,15 @@ const nextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/pricing",
+        destination: "/#pricing",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -38,7 +38,7 @@ export function ModuleTabs({
           const title = externalHref
             ? "開啟 Nova AI Doc（獨立站）"
             : free
-              ? "訂閱中控永久免費"
+              ? "訂閱中控（帳號中心）"
               : locked
                 ? "尚未啟用 — 點擊前往啟用試用"
                 : mod.blurb;

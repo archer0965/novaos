@@ -27,6 +27,7 @@
     "public/sw.js",
     "public/swe-worker-*.js",
     "ecosystem/sites",
+    "ecosystem/products",
     "audit-screenshots"
   ]
 }

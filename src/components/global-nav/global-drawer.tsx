@@ -305,10 +305,10 @@ export function GlobalDrawer({
           {isAdmin ? (
             <section className="mb-2">
               <DrawerLink
-                href="/dashboard/admin"
+                href="/admin/dashboard"
                 label="管理後台"
                 emoji="🛡️"
-                active={pathname.startsWith("/dashboard/admin")}
+                active={pathname.startsWith("/admin")}
                 onClick={onClose}
               />
             </section>

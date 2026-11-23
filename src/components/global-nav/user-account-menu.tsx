@@ -120,10 +120,10 @@ export function UserAccountMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={SUBKEEPER_PRODUCT.hubUrl}>返回 NovaOS 主站</Link>
+          <Link href="/dashboard">前往功能工作台／總控台</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">產品矩陣／總控台</Link>
+          <Link href="/admin/dashboard">進入管理後台</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
@@ -131,7 +131,7 @@ export function UserAccountMenu() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            訂閱管家
+            訂閱管家功能工作台
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

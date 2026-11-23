@@ -28,9 +28,9 @@ export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
     { href: "/dashboard", label: "總覽", icon: LayoutDashboard },
     { href: "/dashboard/orders", label: "訂單", icon: Package },
     { href: "/dashboard/coupons", label: "優惠", icon: Ticket },
-    { href: "/dashboard/pass", label: "拓管", icon: Settings },
+    { href: "/dashboard/pass", label: "訂閱中控", icon: Settings },
     ...(isAdmin
-      ? [{ href: "/dashboard/admin", label: "管理", icon: Shield }]
+      ? [{ href: "/admin/dashboard", label: "管理", icon: Shield }]
       : []),
   ];
 

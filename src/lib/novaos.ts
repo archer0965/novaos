@@ -52,7 +52,7 @@ export const NOVA_MODULES: Record<NovaModuleId, NovaModuleDef> = {
     nameEn: "Billing Hub",
     emoji: "⚙️",
     href: "/dashboard/pass",
-    blurb: "方案升級、付款與推薦碼中控（永久免費；個人訂閱開銷請用訂閱管家）",
+    blurb: "方案升級、付款與推薦碼中控（帳號中心；個人訂閱開銷請用訂閱管家）",
   },
 };
 

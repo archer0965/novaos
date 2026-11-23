@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         trialDays: 0,
         tier: "general",
         free: true,
-        message: `${mod.emoji} ${mod.name} 永久免費，無需啟用試用`,
+        message: `${mod.emoji} ${mod.name} 為帳號中心，無需啟用試用`,
       });
     }
 

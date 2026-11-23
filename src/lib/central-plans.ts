@@ -1,10 +1,11 @@
 /**
  * Central plan catalog for NovaOS ecosystem.
  *
- * Authority (owner 2026-11-22; path policy same day):
- * - Payment path: paid upgrades → NovaOS hub ECPay (when source available)
- * - Prices: NovaStore + 拓脈 follow hub catalog; Nova AI Doc / 拓維 keep site prices
- * - 訂閱管家 → free / local (no paid plans)
+ * Authority (unified member / pricing policy):
+ * - Payment path: paid upgrades → NovaOS hub ECPay callback (backend only)
+ * - Prices / early-bird / trial / discounts: hub is the single source of truth
+ * - Product sites may display catalog but must not diverge; sync from this file / pricing-tiers
+ * - 訂閱管家 → permanent free
  */
 
 export type CentralProductId =
@@ -143,7 +144,8 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     feature_list: ["基礎摘要", "基礎問答"],
     discount_rules: "無",
     product_status: "active",
-    authority: "docmate-site",
+    authority: "novaos-hub",
+    notes: "價目與折扣以主站為準；子站僅顯示",
   },
   {
     product_id: "docmate",
@@ -157,9 +159,9 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     trial_days: 0,
     usage_limits: { documents: 50, questions: 500 },
     feature_list: ["進階摘要", "問答"],
-    discount_rules: "早鳥／一般／大使（規則可與全站折扣對齊，價目以 Nova AI Doc 為準）",
+    discount_rules: "早鳥／一般／大使（對齊主站 pricing-tiers）",
     product_status: "active",
-    authority: "docmate-site",
+    authority: "novaos-hub",
   },
   {
     product_id: "docmate",
@@ -172,10 +174,10 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     yearly_price: 5988,
     trial_days: 0,
     usage_limits: { documents: 200, questions: 2000 },
-    feature_list: ["高額度", "優先處理"],
-    discount_rules: "早鳥／一般／大使",
+    feature_list: ["高額度", "優先處理", "團隊功能"],
+    discount_rules: "早鳥／一般／大使（對齊主站）",
     product_status: "active",
-    authority: "docmate-site",
+    authority: "novaos-hub",
   },
   {
     product_id: "dimension",
@@ -188,10 +190,11 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     yearly_price: 0,
     trial_days: 0,
     usage_limits: { credits: 1 },
-    feature_list: ["註冊送 1 次 AI 生成", "基礎空間分析"],
+    feature_list: ["登入贈 1 次 AI 擬真預覽", "基礎空間分析"],
     discount_rules: "無",
     product_status: "active",
-    authority: "dimension-site",
+    authority: "novaos-hub",
+    notes: "Credit 方案登錄於主站目錄；付款回調應由 hub 授權",
   },
   {
     product_id: "dimension",
@@ -207,8 +210,7 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     feature_list: ["1 次高清生成", "完整動線／採光報告"],
     discount_rules: "單次購買",
     product_status: "active",
-    authority: "dimension-site",
-    notes: "價目以 novadimension.vercel.app 為準",
+    authority: "novaos-hub",
   },
   {
     product_id: "dimension",
@@ -218,13 +220,13 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     plan_name: "尊榮月繳",
     monthly_price: 299,
     half_yearly_price: 1614,
-    yearly_price: null,
+    yearly_price: 3049,
     trial_days: 0,
     usage_limits: { credits: "unlimited" },
     feature_list: ["無限生成", "優先算力"],
-    discount_rules: "半年方案享 9 折（以該站為準）",
+    discount_rules: "年繳對齊主站一般資格約 85 折顯示價",
     product_status: "active",
-    authority: "dimension-site",
+    authority: "novaos-hub",
   },
   {
     product_id: "hub",

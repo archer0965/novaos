@@ -1,4 +1,4 @@
-/** 訂閱管家 — personal subscription tracker (NovaOS Auth required). */
+/** 訂閱管家 — personal subscription tracker（正式產品為免登入本機站；hub 另有可選雲端實驗）。 */
 
 export const SUBKEEPER_PRODUCT = {
   id: "subkeeper",
@@ -13,7 +13,7 @@ export const SUBKEEPER_PRODUCT = {
   /** Marketing / gate: unified NovaOS login then open product. */
   loginHref: "/login?next=%2Fdashboard%2Fsubkeeper",
   signupHref: "/signup?next=%2Fdashboard%2Fsubkeeper",
-  tagline: "個人訂閱費用管理與扣款提醒",
+  tagline: "智慧訂閱管理 × 雲端助手｜集中管理訂閱、續訂提醒與每月費用彙整",
   hubUrl: "https://paycheck.com.de",
   /** Alias of siteUrl (historical localStorage-era standalone). */
   legacyUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",

@@ -1,7 +1,7 @@
 import { AuthForm } from "@/components/auth/auth-form";
-import { sanitizeNextPath } from "@/lib/safe-next";
 import { getAllModuleEarlyBirdStatuses } from "@/lib/module-activation";
 import { NOVA_MODULES } from "@/lib/novaos";
+import { resolveAuthNext } from "@/lib/trusted-returns";
 
 export const metadata = { title: "免費註冊" };
 export const revalidate = 60;
@@ -24,7 +24,7 @@ export default async function SignupPage({
     <div className="min-h-screen">
       <AuthForm
         mode="signup"
-        nextPath={sanitizeNextPath(searchParams.next)}
+        nextPath={resolveAuthNext(searchParams.next)}
         signupHint={signupHint}
       />
     </div>

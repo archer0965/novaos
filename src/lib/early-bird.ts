@@ -11,6 +11,8 @@ import {
 function refreshPartnerSurfaces(partnerId?: string) {
   try {
     revalidatePath("/");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/settings");
     revalidatePath("/dashboard/admin");
     if (partnerId) {
       revalidatePath(`/dashboard/admin/partners/${partnerId}`);

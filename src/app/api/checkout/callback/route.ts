@@ -10,6 +10,7 @@ import {
   formatExpiresAtTaipei,
 } from "@/lib/subscription";
 import { getSiteUrl } from "@/lib/site";
+import { reportTelemetry } from "@/lib/telemetry";
 import {
   getPlanDisplayName,
   isPaidPlan,
@@ -74,6 +75,13 @@ export async function POST(request: Request) {
 
     if (!verifyCheckMacValueAuto(params)) {
       console.error("[ecpay/callback] CheckMacValue mismatch");
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "error",
+        message: "CheckMacValue mismatch",
+        product: "hub",
+      });
       return new NextResponse("0|CheckMacValueError", { status: 400 });
     }
 
@@ -85,11 +93,28 @@ export async function POST(request: Request) {
 
     if (rtnCode !== "1") {
       console.warn("[ecpay/callback] payment not success", rtnCode, tradeNo);
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "warn",
+        message: `payment_not_success rtn=${rtnCode}`,
+        product: catalog === "ai_doc" ? "docmate" : "hub",
+        userId: sellerId || null,
+        meta: { tradeNo, rtnCode },
+      });
       return new NextResponse("1|OK", { status: 200 });
     }
 
     if (!sellerId) {
       console.error("[ecpay/callback] missing CustomField1 (seller id)");
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "error",
+        message: "missing CustomField1 seller id",
+        product: "hub",
+        meta: { tradeNo },
+      });
       return new NextResponse("0|MissingSeller", { status: 400 });
     }
 
@@ -330,6 +355,16 @@ export async function POST(request: Request) {
       tradeNo
     );
 
+    await reportTelemetry({
+      source: "api/checkout/callback",
+      kind: "payment_success",
+      severity: "info",
+      message: `payment_ok ${mode} ${plan}/${cycle}`,
+      product: catalog === "ai_doc" ? "docmate" : "hub",
+      userId: sellerId,
+      meta: { tradeNo, expiresAt: update.expires_at },
+    });
+
     // Notify seller (email + optional LINE). Failures must not break ECPay ack.
     try {
       const expiresAt = String(update.expires_at || "");
@@ -345,6 +380,14 @@ export async function POST(request: Request) {
         });
         if (!mail.ok && !mail.skipped) {
           console.error("[ecpay/callback] confirm mail failed", mail.error);
+          await reportTelemetry({
+            source: "api/checkout/callback",
+            kind: "notify_failure",
+            severity: "warn",
+            message: String(mail.error || "confirm_mail_failed"),
+            product: "hub",
+            userId: sellerId,
+          });
         }
       }
 
