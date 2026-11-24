@@ -2,7 +2,7 @@ import { MasterAdminShell } from "@/components/master-admin/shell";
 import { requireAdminPage } from "@/lib/master-admin/auth";
 
 export const metadata = {
-  title: "Master Admin Console｜拓新雲端 NovaOS",
+  title: "總管理後台｜拓新雲端 NovaOS",
 };
 
 export default async function AdminLayout({

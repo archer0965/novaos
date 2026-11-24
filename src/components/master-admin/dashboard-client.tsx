@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   CartesianGrid,
@@ -11,12 +12,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { KpiCard, SectionTitle } from "@/components/master-admin/kpi-grid";
+import { ArrowRight, ExternalLink } from "lucide-react";
+import { SectionTitle } from "@/components/master-admin/kpi-grid";
+import { ADMIN_PRODUCTS } from "@/lib/master-admin/nav";
 import type {
   ActivityItem,
   ActivitySeriesPoint,
   OverviewKpis,
 } from "@/lib/master-admin/overview";
+import { cn } from "@/lib/utils";
 
 function formatTwd(n: number) {
   return `NT$ ${Math.round(n).toLocaleString("zh-TW")}`;
@@ -27,6 +31,51 @@ function formatWhen(iso: string) {
     return new Date(iso).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
   } catch {
     return iso;
+  }
+}
+
+const CARD_ACCENT: Record<string, string> = {
+  amber: "hover:border-amber-400/40",
+  cyan: "hover:border-cyan-400/40",
+  sky: "hover:border-sky-400/40",
+  emerald: "hover:border-emerald-400/40",
+  rose: "hover:border-rose-400/40",
+};
+
+function productMetric(
+  id: string,
+  kpis: OverviewKpis | null,
+  loading: boolean
+): { value: string; hint: string } {
+  if (loading || !kpis) return { value: "—", hint: "載入中" };
+  switch (id) {
+    case "novastore":
+      return {
+        value: formatTwd(kpis.novastore.gmvThisMonth),
+        hint: `待對帳 ${kpis.novastore.pendingReports} · 本月對帳 ${kpis.novastore.matchedOrdersThisMonth}`,
+      };
+    case "booking":
+      return {
+        value: String(kpis.booking.appointmentsThisMonth),
+        hint: `完工率 ${kpis.booking.completionRate}% · 完工 ${kpis.booking.completedThisMonth}`,
+      };
+    case "aidoc":
+      return {
+        value: String(kpis.aidoc.draftsThisMonth),
+        hint: `今日 ${kpis.aidoc.draftsToday} · 活躍作者 ${kpis.aidoc.activeAuthors}`,
+      };
+    case "subkeeper":
+      return {
+        value: String(kpis.subkeeper.totalActiveSubscriptions),
+        hint: `月額約 ${formatTwd(kpis.subkeeper.monthlyTrackedAmount)} · 7 日內到期 ${kpis.subkeeper.dueSoonCount}`,
+      };
+    case "dimension":
+      return {
+        value: "Credit",
+        hint: "付費與生成請至拓維管理／主站 Pass",
+      };
+    default:
+      return { value: "—", hint: "" };
   }
 }
 
@@ -68,8 +117,8 @@ export function MasterDashboardClient() {
   return (
     <div className="space-y-8">
       <SectionTitle
-        title="全域數據大廳"
-        subtitle="跨 NovaOS 產品矩陣的執行總覽 · KPI、活躍趨勢與即時動態"
+        title="總覽"
+        subtitle="六站指揮台：先看全域，再點進單一產品監看"
       />
 
       {error ? (
@@ -78,78 +127,110 @@ export function MasterDashboardClient() {
         </p>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard
-          label="全站總用戶"
-          value={loading || !kpis ? "—" : String(kpis.totalUsers)}
-          hint={
-            kpis
-              ? `本月新增 ${kpis.newUsersThisMonth}`
-              : loading
-                ? "載入中"
-                : undefined
-          }
-        />
-        <KpiCard
-          label="NovaStore 本月 GMV"
-          value={loading || !kpis ? "—" : formatTwd(kpis.novastore.gmvThisMonth)}
-          hint={
-            kpis
-              ? `對帳成功 ${kpis.novastore.matchedOrdersThisMonth} · 待對帳 ${kpis.novastore.pendingReports}`
-              : undefined
-          }
-          accent="amber"
-        />
-        <KpiCard
-          label="拓脈預約 本月"
-          value={
-            loading || !kpis ? "—" : String(kpis.booking.appointmentsThisMonth)
-          }
-          hint={
-            kpis
-              ? `完工 ${kpis.booking.completedThisMonth} · 完工率 ${kpis.booking.completionRate}%`
-              : undefined
-          }
-          accent="cyan"
-        />
-        <KpiCard
-          label="AI Doc 今日文件"
-          value={loading || !kpis ? "—" : String(kpis.aidoc.draftsToday)}
-          hint={
-            kpis
-              ? `本月 ${kpis.aidoc.draftsThisMonth} · 活躍作者 ${kpis.aidoc.activeAuthors}`
-              : undefined
-          }
-          accent="rose"
-        />
-        <KpiCard
-          label="訂閱管家 追蹤數"
-          value={
-            loading || !kpis
-              ? "—"
-              : String(kpis.subkeeper.totalActiveSubscriptions)
-          }
-          hint={
-            kpis
-              ? `月額度約 ${formatTwd(kpis.subkeeper.monthlyTrackedAmount)} · 7 日內到期 ${kpis.subkeeper.dueSoonCount}`
-              : undefined
-          }
-          accent="emerald"
-        />
+      <section className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <p className="text-xs text-slate-400">全站會員</p>
+          <p className="mt-1 font-display text-2xl font-semibold tabular-nums text-white">
+            {loading || !kpis ? "—" : kpis.totalUsers}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {kpis ? `本月新增 ${kpis.newUsersThisMonth}` : " "}
+          </p>
+        </div>
+        <Link
+          href="/admin/users"
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 transition hover:border-white/20 hover:bg-white/[0.05]"
+        >
+          <p className="text-xs text-slate-400">會員與方案</p>
+          <p className="mt-1 text-sm font-medium text-indigo-200">
+            開啟會員管理
+            <ArrowRight className="ml-1 inline h-3.5 w-3.5" />
+          </p>
+          <p className="mt-1 text-xs text-slate-500">跨站帳號、方案、模組</p>
+        </Link>
+        <Link
+          href="/admin/settings"
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 transition hover:border-white/20 hover:bg-white/[0.05]"
+        >
+          <p className="text-xs text-slate-400">系統</p>
+          <p className="mt-1 text-sm font-medium text-indigo-200">
+            早鳥／金流／權限
+            <ArrowRight className="ml-1 inline h-3.5 w-3.5" />
+          </p>
+          <p className="mt-1 text-xs text-slate-500">平台級設定，不混在產品頁</p>
+        </Link>
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-100">產品指揮台</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              點卡片進入該產品的總管理監看；日常操作走各站營運後台
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {ADMIN_PRODUCTS.map((product) => {
+            const metric = productMetric(product.id, kpis, loading);
+            return (
+              <div
+                key={product.id}
+                className={cn(
+                  "flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition",
+                  CARD_ACCENT[product.accent]
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {product.label}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">{product.blurb}</p>
+                  </div>
+                  <a
+                    href={product.opsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                    title={product.opsLabel}
+                  >
+                    營運
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <p className="mt-4 font-display text-xl font-semibold tabular-nums text-white">
+                  {metric.value}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">{metric.hint}</p>
+                <Link
+                  href={product.href}
+                  className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                >
+                  進入監看
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-5">
           <h2 className="text-sm font-semibold text-slate-200">
-            跨產品活躍趨勢（近 14 日）
+            近 14 日活躍
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            註冊 / 賣場下單 / 預約 / 文件草稿（近似 DAU 對比）
+            註冊／下單／預約／文件
           </p>
-          <div className="mt-4 h-72 w-full">
+          <div className="mt-4 h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={series}>
-                <CartesianGrid stroke="rgba(148,163,184,0.15)" strokeDasharray="3 3" />
+                <CartesianGrid
+                  stroke="rgba(148,163,184,0.15)"
+                  strokeDasharray="3 3"
+                />
                 <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} />
                 <YAxis stroke="#94a3b8" fontSize={11} allowDecimals={false} />
                 <Tooltip
@@ -198,31 +279,27 @@ export function MasterDashboardClient() {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-5">
-          <h2 className="text-sm font-semibold text-slate-200">全站即時動態牆</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            最新註冊、下單、對帳、預約、文件與訂閱追蹤
-          </p>
-          <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1">
+          <h2 className="text-sm font-semibold text-slate-200">即時動態</h2>
+          <p className="mt-1 text-xs text-slate-500">跨站最新事件</p>
+          <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto pr-1">
             {activity.length === 0 ? (
               <li className="text-sm text-slate-500">
                 {loading ? "載入中…" : "尚無動態"}
               </li>
             ) : (
-              activity.map((item) => (
+              activity.slice(0, 20).map((item) => (
                 <li
                   key={item.id}
-                  className="rounded-xl border border-white/5 bg-black/20 px-3 py-2"
+                  className="rounded-lg border border-white/5 bg-black/20 px-3 py-2"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-slate-100">
-                      {item.title}
-                    </p>
-                    <span className="text-[10px] uppercase tracking-wide text-slate-500">
+                    <p className="text-sm text-slate-100">{item.title}</p>
+                    <span className="shrink-0 text-[10px] uppercase tracking-wide text-slate-500">
                       {item.site}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">{item.detail}</p>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-0.5 text-xs text-slate-500">{item.detail}</p>
+                  <p className="mt-1 text-[11px] text-slate-600">
                     {formatWhen(item.at)}
                   </p>
                 </li>

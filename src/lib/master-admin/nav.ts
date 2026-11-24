@@ -1,156 +1,149 @@
 export type AdminSiteId =
-  | "all"
+  | "overview"
   | "novastore"
   | "booking"
   | "aidoc"
   | "subkeeper"
-  | "dimension";
+  | "dimension"
+  | "users"
+  | "settings";
 
 export type AdminNavItem = {
   href: string;
   label: string;
   icon: string;
-  site?: AdminSiteId;
-  description?: string;
+  id: AdminSiteId;
 };
 
-export const ADMIN_SITES: Array<{
-  id: AdminSiteId;
+export type AdminProductMeta = {
+  id: Exclude<
+    AdminSiteId,
+    "overview" | "users" | "settings"
+  >;
   label: string;
   short: string;
   href: string;
-  externalUrl?: string;
-}> = [
-  {
-    id: "all",
-    label: "全域總覽 (All NovaOS Sites)",
-    short: "全域總覽",
-    href: "/admin/dashboard",
-  },
+  /** Public marketing / product site */
+  publicUrl: string;
+  /** Product-native ops console (separate site admin) */
+  opsUrl: string;
+  opsLabel: string;
+  blurb: string;
+  accent: "amber" | "cyan" | "sky" | "emerald" | "rose";
+};
+
+/** Five commercial products under the NovaOS hub. */
+export const ADMIN_PRODUCTS: AdminProductMeta[] = [
   {
     id: "novastore",
-    label: "NovaStore 賣場",
-    short: "NovaStore",
+    label: "NovaStore",
+    short: "賣場",
     href: "/admin/novastore",
-    externalUrl: "https://novastore-omega.vercel.app",
+    publicUrl: "https://novastore-omega.vercel.app",
+    opsUrl: "https://novastore-omega.vercel.app/dashboard",
+    opsLabel: "賣場營運後台",
+    blurb: "對帳、訂單與賣場狀態",
+    accent: "amber",
   },
   {
     id: "booking",
     label: "拓脈預約",
-    short: "拓脈預約",
+    short: "預約",
     href: "/admin/booking",
-    externalUrl: "https://taiwanbiz.vercel.app",
+    publicUrl: "https://taiwanbiz.vercel.app",
+    opsUrl: "https://taiwanbiz.vercel.app/admin/dashboard",
+    opsLabel: "拓脈總管理",
+    blurb: "預約、服務與店家營運",
+    accent: "cyan",
   },
   {
     id: "aidoc",
     label: "Nova AI Doc",
     short: "AI Doc",
     href: "/admin/aidoc",
-    externalUrl: "https://docmate-ai-one.vercel.app",
+    publicUrl: "https://docmate-ai-one.vercel.app",
+    opsUrl: "https://docmate-ai-one.vercel.app/dashboard",
+    opsLabel: "DocMate 工作台",
+    blurb: "文件用量與作者活動",
+    accent: "sky",
   },
   {
     id: "subkeeper",
     label: "訂閱管家",
     short: "訂閱管家",
     href: "/admin/subkeeper",
-    externalUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app/app",
+    publicUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app",
+    opsUrl: "https://temporary-speedy-reef-cy4xhhu.vercel.app/app",
+    opsLabel: "訂閱管家 App",
+    blurb: "個人訂閱追蹤與提醒",
+    accent: "emerald",
   },
   {
     id: "dimension",
     label: "拓維空間",
-    short: "拓維空間",
-    href: "/admin/dashboard?site=dimension",
-    externalUrl: "https://novadimension.vercel.app",
+    short: "拓維",
+    href: "/admin/dimension",
+    publicUrl: "https://novadimension.vercel.app",
+    opsUrl: "https://novadimension.vercel.app/admin",
+    opsLabel: "拓維管理",
+    blurb: "Credit、生成與付費方案",
+    accent: "rose",
   },
 ];
 
-/** Product workspace URLs for admin dual-mode switching (not /admin analytics). */
-export const PRODUCT_WORKSPACES: Array<{
-  id: AdminSiteId;
-  label: string;
-  href: string;
-}> = [
-  {
-    id: "novastore",
-    label: "NovaStore 功能工作台",
-    href: "https://novastore-omega.vercel.app/dashboard",
-  },
-  {
-    id: "booking",
-    label: "拓脈預約 功能工作台",
-    href: "https://taiwanbiz.vercel.app/dashboard",
-  },
-  {
-    id: "aidoc",
-    label: "Nova AI Doc 功能工作台",
-    href: "https://docmate-ai-one.vercel.app/dashboard",
-  },
-  {
-    id: "subkeeper",
-    label: "訂閱管家 功能工作台",
-    href: "https://temporary-speedy-reef-cy4xhhu.vercel.app/app",
-  },
-  {
-    id: "dimension",
-    label: "拓維空間 前台首頁",
-    href: "https://novadimension.vercel.app",
-  },
-];
+export const ADMIN_NAV_OVERVIEW: AdminNavItem = {
+  id: "overview",
+  href: "/admin/dashboard",
+  label: "總覽",
+  icon: "LayoutDashboard",
+};
 
-export const ADMIN_NAV: AdminNavItem[] = [
+export const ADMIN_NAV_PRODUCTS: AdminNavItem[] = ADMIN_PRODUCTS.map((p) => ({
+  id: p.id,
+  href: p.href,
+  label: p.label,
+  icon:
+    p.id === "novastore"
+      ? "ShoppingCart"
+      : p.id === "booking"
+        ? "CalendarDays"
+        : p.id === "aidoc"
+          ? "FileText"
+          : p.id === "subkeeper"
+            ? "CreditCard"
+            : "Box",
+}));
+
+export const ADMIN_NAV_PLATFORM: AdminNavItem[] = [
   {
-    href: "/admin/dashboard",
-    label: "全域數據大廳",
-    icon: "LayoutDashboard",
-    site: "all",
-    description: "跨站 KPI 與即時動態",
-  },
-  {
-    href: "/admin/novastore",
-    label: "NovaStore 賣場管理",
-    icon: "ShoppingCart",
-    site: "novastore",
-    description: "對帳訂單與賣場狀態",
-  },
-  {
-    href: "/admin/booking",
-    label: "拓脈預約 排程與服務",
-    icon: "CalendarDays",
-    site: "booking",
-    description: "預約日曆與服務項目",
-  },
-  {
-    href: "/admin/aidoc",
-    label: "Nova AI Doc 使用與額度",
-    icon: "FileText",
-    site: "aidoc",
-    description: "文件用量與排行",
-  },
-  {
-    href: "/admin/subkeeper",
-    label: "訂閱管家 營運與提醒",
-    icon: "CreditCard",
-    site: "subkeeper",
-    description: "個人訂閱與續訂提醒",
-  },
-  {
+    id: "users",
     href: "/admin/users",
-    label: "全站會員與帳號管理",
+    label: "會員",
     icon: "Users",
-    description: "跨站帳號與方案",
   },
   {
+    id: "settings",
     href: "/admin/settings",
-    label: "全域系統與金流設定",
+    label: "系統",
     icon: "Settings",
-    description: "Admin、早鳥與金流入口",
   },
 ];
+
+export function productFromPath(pathname: string): AdminProductMeta | null {
+  return (
+    ADMIN_PRODUCTS.find(
+      (p) => pathname === p.href || pathname.startsWith(`${p.href}/`)
+    ) || null
+  );
+}
 
 export function siteFromPath(pathname: string): AdminSiteId {
   if (pathname.startsWith("/admin/novastore")) return "novastore";
   if (pathname.startsWith("/admin/booking")) return "booking";
   if (pathname.startsWith("/admin/aidoc")) return "aidoc";
   if (pathname.startsWith("/admin/subkeeper")) return "subkeeper";
-  return "all";
+  if (pathname.startsWith("/admin/dimension")) return "dimension";
+  if (pathname.startsWith("/admin/users")) return "users";
+  if (pathname.startsWith("/admin/settings")) return "settings";
+  return "overview";
 }

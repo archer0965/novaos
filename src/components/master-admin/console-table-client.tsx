@@ -89,7 +89,7 @@ export function ConsoleTableClient<T extends { id: string }>({
 
   return (
     <div className="space-y-5">
-      <SectionTitle title={title} subtitle={subtitle} />
+      {title ? <SectionTitle title={title} subtitle={subtitle} /> : null}
       <ListToolbar
         q={q}
         from={from}

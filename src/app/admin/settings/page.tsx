@@ -2,7 +2,6 @@ import Link from "next/link";
 import { AdminEarlyBirdPanel } from "@/components/dashboard/admin-early-bird";
 import { SectionTitle } from "@/components/master-admin/kpi-grid";
 import { getAdminEmails } from "@/lib/admin";
-import { PRODUCT_ECOSYSTEM } from "@/lib/product-ecosystem";
 import { requireAdminPage } from "@/lib/master-admin/auth";
 
 export default async function AdminSettingsPage() {
@@ -12,17 +11,15 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-8">
       <SectionTitle
-        title="全域系統與金流設定"
-        subtitle="Admin RBAC、特約／早鳥、產品站入口與既有營運工具"
+        title="系統"
+        subtitle="權限、早鳥特約與金流入口（平台級設定）"
       />
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <h2 className="text-sm font-semibold text-slate-100">Admin RBAC</h2>
+          <h2 className="text-sm font-semibold text-slate-100">管理員</h2>
           <p className="mt-2 text-sm text-slate-400">
-            僅 <code className="text-indigo-200">ADMIN_EMAILS</code>／內建擁有者可進入
-            <code className="mx-1 text-indigo-200">/admin/*</code> 與{" "}
-            <code className="text-indigo-200">/api/admin/console/*</code>。
+            僅下列帳號可進入 <code className="text-indigo-200">/admin</code>
           </p>
           <ul className="mt-3 space-y-1 text-sm text-slate-300">
             {admins.map((email) => (
@@ -34,34 +31,30 @@ export default async function AdminSettingsPage() {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <h2 className="text-sm font-semibold text-slate-100">產品矩陣入口</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {PRODUCT_ECOSYSTEM.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-3">
-                <span className="text-slate-300">{p.name}</span>
-                <a
-                  href={p.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-300 hover:underline"
-                >
-                  開啟
-                </a>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-xs text-slate-500">
-            綠界 ECPay 統一走主站訂閱中控：{" "}
-            <Link href="/dashboard/pass#upgrade" className="text-indigo-300 hover:underline">
-              /dashboard/pass#upgrade
-            </Link>
+          <h2 className="text-sm font-semibold text-slate-100">金流</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            NovaOS／NovaStore／DocMate／拓維訂閱統一走主站綠界；拓脈訂閱與訂金走拓脈本站。
           </p>
+          <div className="mt-4 flex flex-wrap gap-3 text-sm">
+            <Link
+              href="/dashboard/pass#upgrade"
+              className="text-indigo-300 hover:underline"
+            >
+              Pass 訂閱中控
+            </Link>
+            <Link
+              href="/dashboard/pass#dimension-upgrade"
+              className="text-indigo-300 hover:underline"
+            >
+              拓維方案
+            </Link>
+          </div>
         </div>
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-50 text-slate-900">
         <div className="border-b border-slate-200 bg-white px-5 py-3 text-sm font-semibold">
-          特約店家／早鳥管理（沿用既有面板）
+          特約店家／早鳥
         </div>
         <div className="p-4 md:p-5">
           <AdminEarlyBirdPanel />
