@@ -25,7 +25,7 @@ export async function GET() {
 
   const admin = createAdminClient();
 
-  const [{ data: profile }, activations, { data: docmate }] = await Promise.all([
+  const [{ data: profile }, activations] = await Promise.all([
     admin
       .from("profiles")
       .select(
@@ -34,11 +34,6 @@ export async function GET() {
       .eq("id", user.id)
       .maybeSingle(),
     listActivationsForSeller(user.id),
-    admin
-      .from("docmate_profiles")
-      .select("plan, documents_used, questions_used, usage_period")
-      .eq("id", user.id)
-      .maybeSingle(),
   ]);
 
   const products = NOVAOS_ECOSYSTEM_PRODUCTS.map((p) => {
@@ -61,22 +56,6 @@ export async function GET() {
           status: "active",
           plan: "free",
           label: `${SUBKEEPER_PRODUCT.name}永久免費`,
-          expiresAt: null,
-          trialEndsAt: null,
-        },
-      };
-    }
-    if (p.id === "docmate") {
-      const plan = docmate?.plan || "free";
-      return {
-        ...p,
-        entitlement: {
-          status: plan === "free" ? "free" : "active",
-          plan,
-          label: `Nova AI Doc · ${String(plan).toUpperCase()}`,
-          documentsUsed: docmate?.documents_used ?? 0,
-          questionsUsed: docmate?.questions_used ?? 0,
-          usagePeriod: docmate?.usage_period ?? null,
           expiresAt: null,
           trialEndsAt: null,
         },

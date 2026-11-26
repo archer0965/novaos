@@ -40,12 +40,6 @@ export const NOVAOS_ECOSYSTEM_PRODUCTS = [
     role: "預約與排班",
   },
   {
-    id: "docmate",
-    name: "Nova AI Doc",
-    href: "https://docmate-ai-one.vercel.app",
-    role: "AI 文件助理",
-  },
-  {
     id: "dimension",
     name: "拓維空間",
     href: "https://novadimension.vercel.app",

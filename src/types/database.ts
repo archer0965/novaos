@@ -387,7 +387,6 @@ export const PRICING_CONFIG = {
         "NovaStore 訂單額度每月 100 筆",
         "依資格套用早鳥／一般／特約折扣",
         "推薦碼首月現折 $50",
-        "Nova AI Doc 另有獨立方案（Pro NT$199／Business NT$499）",
       ],
       prices: {
         monthly: { total: 299, avgMonthly: 299 },
@@ -416,11 +415,10 @@ export const PRICING_CONFIG = {
       isPopular: true,
       popularBadge: "全家桶",
       isBundle: true,
-      blurb: "三模組方案：拓脈＋NovaStore＋Nova AI Doc",
+      blurb: "雙模組方案：拓脈預約＋NovaStore",
       features: [
-        "三模組：拓脈預約",
-        "三模組：NovaStore（訂單無上限）",
-        "三模組：Nova AI Doc（商業版額度）",
+        "雙模組：拓脈預約",
+        "雙模組：NovaStore（訂單無上限）",
         "含訂閱中控（NovaOS 會員中心）",
         "不含拓維空間（獨立 Credit／訂閱）",
         "訂閱管家＝永久免費個人工具（≠ 訂閱中控，不佔方案價）",

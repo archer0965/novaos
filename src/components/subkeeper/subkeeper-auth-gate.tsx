@@ -33,7 +33,7 @@ export function SubkeeperAuthGate() {
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           訂閱管家已升級為雲端帳號制：訂閱清單綁定你的 NovaOS
-          身分，與 NovaStore、Nova AI Doc
+          身分，與 NovaStore
           等產品共用同一組登入。未登入訪客無法讀寫他人或匿名資料。
         </p>
 

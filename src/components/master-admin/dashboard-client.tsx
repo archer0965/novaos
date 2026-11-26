@@ -287,7 +287,7 @@ export function MasterDashboardClient() {
                 {loading ? "載入中…" : "尚無動態"}
               </li>
             ) : (
-              activity.slice(0, 20).map((item) => (
+              activity.filter((item) => item.type !== "aidoc").slice(0, 20).map((item) => (
                 <li
                   key={item.id}
                   className="rounded-lg border border-white/5 bg-black/20 px-3 py-2"

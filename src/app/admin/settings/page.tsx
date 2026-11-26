@@ -33,7 +33,7 @@ export default async function AdminSettingsPage() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <h2 className="text-sm font-semibold text-slate-100">金流</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            NovaOS／NovaStore／DocMate／拓維訂閱統一走主站綠界；拓脈訂閱與訂金走拓脈本站。
+            NovaOS／NovaStore／拓維訂閱統一走主站綠界；拓脈訂閱與訂金走拓脈本站。
           </p>
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             <Link

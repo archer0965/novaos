@@ -121,7 +121,7 @@ export function AuthForm({
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "login"
               ? "統一帳號入口：登入後可回到各產品站繼續使用"
-              : "一組 Email／密碼適用 NovaStore、Nova AI Doc、訂閱管家等產品"}
+              : "一組 Email／密碼適用 NovaStore、訂閱管家等產品"}
           </p>
           {mode === "signup" && signupHint ? (
             <p className="mt-3 rounded-md border border-accent/35 bg-accent/10 px-3 py-2 text-sm font-medium text-accent-foreground">

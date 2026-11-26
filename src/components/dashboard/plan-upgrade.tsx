@@ -55,7 +55,6 @@ function resolveInitialModule(
   activeModules: string[] | null | undefined
 ): NovaModuleId {
   const raw = (initialProduct || "").trim().toLowerCase();
-  if (raw === "ai_doc" || raw === "aidoc" || raw === "docmate") return "ai_doc";
   if (raw === "booking" || raw === "taiwanbiz") return "booking";
   if (raw === "store" || raw === "novastore") return "store";
   const first = activeModules?.[0];

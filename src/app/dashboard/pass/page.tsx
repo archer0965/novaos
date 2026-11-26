@@ -15,7 +15,6 @@ import { generateReferralCode, NOVA_MODULES, PAYMENT_GATEWAY_STATUS } from "@/li
 import { NOVAOS_ECOSYSTEM_PRODUCTS } from "@/lib/novaos-trust";
 import { TIER_META } from "@/lib/pricing-tiers";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/types/database";
 
 export const metadata = { title: "訂閱中控" };
@@ -67,15 +66,9 @@ export default async function PassPage({
     line_channel_secret: null,
   } satisfies Profile;
 
-  const [activations, earlyStatuses, docmate] = await Promise.all([
+  const [activations, earlyStatuses] = await Promise.all([
     listActivationsForSeller(user.id),
     getAllModuleEarlyBirdStatuses(),
-    createAdminClient()
-      .from("docmate_profiles")
-      .select("plan")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then((r) => r.data),
   ]);
 
   const activeMods = Array.isArray(typedProfile.active_modules)
@@ -102,19 +95,6 @@ export default async function PassPage({
           status: "free",
           plan: "free",
           label: "永久免費",
-          expiresAt: null,
-          trialEndsAt: null,
-        },
-      };
-    }
-    if (p.id === "docmate") {
-      const plan = docmate?.plan || "free";
-      return {
-        ...p,
-        entitlement: {
-          status: plan === "free" ? "free" : "active",
-          plan,
-          label: `AI Doc · ${String(plan).toUpperCase()}`,
           expiresAt: null,
           trialEndsAt: null,
         },
@@ -190,7 +170,7 @@ export default async function PassPage({
           ) : null}
           {typedProfile.is_ambassador ? (
             <span className="rounded-md bg-violet-100 px-2 py-1 text-violet-950">
-              推廣大使 · Nova AI Doc
+              推廣大使
             </span>
           ) : null}
           {activations.map((a) => (

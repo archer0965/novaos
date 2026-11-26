@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { siteConfig } from "@/lib/site";
-import { AMBASSADOR, EARLY_BIRD } from "@/types/database";
+import { EARLY_BIRD } from "@/types/database";
 
 /** Compact header tag that jumps to the partnership section. */
 export function PartnerStoreApplyTag() {
@@ -41,12 +41,6 @@ export function PartnerStoreSection() {
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               通過後：{EARLY_BIRD.description}
-            </p>
-          </div>
-          <div className="rounded-xl border border-border/80 bg-background/50 p-4">
-            <h3 className="font-display text-base font-semibold">推廣大使</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {AMBASSADOR.description}
             </p>
           </div>
         </div>

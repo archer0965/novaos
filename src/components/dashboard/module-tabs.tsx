@@ -6,7 +6,7 @@ import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
 import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 import { cn } from "@/lib/utils";
 
-const ORDER: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
+const ORDER: NovaModuleId[] = ["booking", "store", "pass"];
 
 export function ModuleTabs({
   unlocked,

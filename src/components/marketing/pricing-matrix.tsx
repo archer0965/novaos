@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import {
-  AI_DOC_PLAN_META,
-  AI_DOC_TIER_CHECKOUT_TOTALS,
   SUBSCRIPTION_BASE_PRICES,
   TIER_CHECKOUT_TOTALS,
   TIER_META,
@@ -96,12 +94,6 @@ export function PricingMatrix() {
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
-                <td className="px-4 py-3 text-slate-400">Nova AI Doc</td>
-                <td className="px-4 py-3">另購</td>
-                <td className="px-4 py-3">✓ 含商業版額度</td>
-                <td className="px-4 py-3 text-slate-500">—</td>
-              </tr>
-              <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">
                   訂閱中控
                   <span className="mt-0.5 block text-[11px] text-slate-500">
@@ -151,16 +143,15 @@ export function PricingMatrix() {
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-4 text-sm text-cyan-50">
-          <p className="font-semibold">旗艦全家桶＝三模組方案</p>
+          <p className="font-semibold">旗艦全家桶＝雙模組方案</p>
           <p className="mt-1 text-xs text-cyan-100/80">
-            僅含拓脈預約、NovaStore、Nova AI Doc（加帳號內建訂閱中控）。拓維空間與
+            僅含拓脈預約、NovaStore（加帳號內建訂閱中控）。拓維空間與
             {SUBKEEPER_PRODUCT.name}不在方案價內。
           </p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
             {[
               "✓ 拓脈預約（完整模組）",
               "✓ NovaStore（訂單無上限）",
-              "✓ Nova AI Doc（商業版額度）",
               "✓ 訂閱中控（NovaOS 會員中心）",
             ].map((item) => (
               <li key={item} className="flex gap-2">
@@ -287,66 +278,6 @@ export function PricingMatrix() {
                     >
                       綠界付款升級
                     </Link>
-                  </article>
-                );
-              })}
-            </div>
-
-            <h3 className="font-display text-lg font-semibold text-white">
-              Nova AI Doc（獨立方案）
-            </h3>
-            <div className="grid gap-5 md:grid-cols-3">
-              {(["free", "pro", "business"] as const).map((key) => {
-                const plan = AI_DOC_PLAN_META[key];
-                const displayBase =
-                  key === "free"
-                    ? 0
-                    : key === "pro"
-                      ? ({ monthly: 199, half_yearly: 1194, yearly: 2388 } as const)[
-                          cycle
-                        ]
-                      : ({ monthly: 499, half_yearly: 2994, yearly: 5988 } as const)[
-                          cycle
-                        ];
-                const price =
-                  key === "free"
-                    ? 0
-                    : AI_DOC_TIER_CHECKOUT_TOTALS[tier][key][cycle];
-                return (
-                  <article
-                    key={key}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-                  >
-                    <h4 className="font-display font-semibold text-white">
-                      {plan.name}
-                    </h4>
-                    <p className="mt-3 font-display text-2xl font-bold text-white">
-                      {key === "free" ? (
-                        "免費"
-                      ) : (
-                        <>
-                          {price < displayBase ? (
-                            <span className="mr-2 text-sm text-slate-500 line-through">
-                              NT${displayBase.toLocaleString("zh-TW")}
-                            </span>
-                          ) : null}
-                          NT${price.toLocaleString("zh-TW")}
-                        </>
-                      )}
-                    </p>
-                    <ul className="mt-3 space-y-1.5 text-xs text-slate-400">
-                      {plan.features.map((f) => (
-                        <li key={f}>· {f}</li>
-                      ))}
-                    </ul>
-                    {key !== "free" ? (
-                      <Link
-                        href="/login?next=%2Fdashboard%2Fpass%3Fproduct%3Dai_doc%23upgrade"
-                        className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-cyan-400/90 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
-                      >
-                        綠界付款升級
-                      </Link>
-                    ) : null}
                   </article>
                 );
               })}

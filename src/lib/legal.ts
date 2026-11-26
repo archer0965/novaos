@@ -18,7 +18,6 @@ export const LEGAL_COVERED_SERVICES = [
   { name: "拓新雲端 NovaOS", note: "總站帳號、訂閱中控與產品矩陣入口" },
   { name: "NovaStore", note: "賣場、對帳與訂單相關工具" },
   { name: "拓脈預約", note: "美業／服務業預約與檔期工具" },
-  { name: "Nova AI Doc", note: "AI 文件摘要、問答與知識整理" },
   { name: "拓維空間（NovaDimension AI）", note: "AI 軟裝空間改造與擬真渲染" },
   { name: "訂閱管家", note: "個人訂閱費用管理與扣款提醒" },
 ] as const;

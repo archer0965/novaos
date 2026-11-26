@@ -57,17 +57,6 @@ export const ADMIN_PRODUCTS: AdminProductMeta[] = [
     accent: "cyan",
   },
   {
-    id: "aidoc",
-    label: "Nova AI Doc",
-    short: "AI Doc",
-    href: "/admin/aidoc",
-    publicUrl: "https://docmate-ai-one.vercel.app",
-    opsUrl: "https://docmate-ai-one.vercel.app/dashboard",
-    opsLabel: "DocMate 工作台",
-    blurb: "文件用量與作者活動",
-    accent: "sky",
-  },
-  {
     id: "subkeeper",
     label: "訂閱管家",
     short: "訂閱管家",

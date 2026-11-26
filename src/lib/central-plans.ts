@@ -47,7 +47,7 @@ const HUB_FLAGSHIP = {
   yearly: 5988,
 } as const;
 
-export const CENTRAL_PLANS: CentralPlanRow[] = [
+const ALL_CENTRAL_PLANS: CentralPlanRow[] = [
   {
     product_id: "novastore",
     product_name: "NovaStore",
@@ -238,8 +238,8 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     half_yearly_price: HUB_FLAGSHIP.half_yearly,
     yearly_price: HUB_FLAGSHIP.yearly,
     trial_days: 7,
-    usage_limits: { modules: "booking+store+ai_doc" },
-    feature_list: ["拓脈＋NovaStore＋Nova AI Doc", "訂閱中控免費"],
+    usage_limits: { modules: "booking+store" },
+    feature_list: ["拓脈＋NovaStore 雙模組", "訂閱中控免費"],
     discount_rules: "早鳥／一般／特約／大使",
     product_status: "active",
     authority: "novaos-hub",
@@ -262,6 +262,11 @@ export const CENTRAL_PLANS: CentralPlanRow[] = [
     notes: "正式網址 temporary-speedy-reef-cy4xhhu.vercel.app",
   },
 ];
+
+/** 已停止提供的產品（Nova AI Doc）不列入對外目錄。 */
+export const CENTRAL_PLANS: CentralPlanRow[] = ALL_CENTRAL_PLANS.filter(
+  (p) => p.product_id !== "docmate"
+);
 
 export function plansByAuthority(authority: CentralPlanRow["authority"]) {
   return CENTRAL_PLANS.filter((p) => p.authority === authority);

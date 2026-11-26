@@ -137,7 +137,6 @@ export function resolveNavMode(pathname: string): NavMode {
   ) {
     return "store";
   }
-  if (pathname.startsWith("/dashboard/ai-doc")) return "ai_doc";
   if (
     pathname.startsWith("/dashboard/pass") ||
     pathname.startsWith("/dashboard/subkeeper") ||
