@@ -228,13 +228,13 @@ export async function POST(request: Request) {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "no-store",
+          // HTTP headers must be Latin-1 (ByteString); never put CJK strings here.
           "X-NovaOS-Quote": JSON.stringify({
             catalog: "ai_doc",
             baseAmount: quote.baseAmount,
             tierAmount: quote.tierAmount,
             finalAmount: quote.finalAmount,
             tier: quote.tier,
-            foldLabel: quote.foldLabel,
           }),
         },
       });
@@ -296,13 +296,13 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
+        // HTTP headers must be Latin-1 (ByteString); never put CJK strings here.
         "X-NovaOS-Quote": JSON.stringify({
           catalog: "novaos",
           baseAmount: quote.baseAmount,
           tierAmount: quote.tierAmount,
           finalAmount: quote.finalAmount,
           tier: quote.tier,
-          foldLabel: quote.foldLabel,
           savingsVsBase: quote.savingsVsBase,
         }),
       },

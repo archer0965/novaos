@@ -50,14 +50,31 @@ function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
   return PLAN_RANK[target] > PLAN_RANK[current];
 }
 
+function resolveInitialModule(
+  initialProduct: string | null | undefined,
+  activeModules: string[] | null | undefined
+): NovaModuleId {
+  const raw = (initialProduct || "").trim().toLowerCase();
+  if (raw === "ai_doc" || raw === "aidoc" || raw === "docmate") return "ai_doc";
+  if (raw === "booking" || raw === "taiwanbiz") return "booking";
+  if (raw === "store" || raw === "novastore") return "store";
+  const first = activeModules?.[0];
+  if (first && MODULE_PICK.includes(first as NovaModuleId)) {
+    return first as NovaModuleId;
+  }
+  return "store";
+}
+
 export function PlanUpgrade({
   profile,
   activations = [],
   forcedTier,
+  initialProduct,
 }: {
   profile: Profile;
   activations?: ModuleActivationRow[];
   forcedTier?: PricingTierId | null;
+  initialProduct?: string | null;
 }) {
   const current = normalizePlan(profile.plan_type);
   const trialOn = isTrialActive(profile.trial_ends_at);
@@ -67,8 +84,8 @@ export function PlanUpgrade({
   const [loadingPlan, setLoadingPlan] = useState<PaidPlanKey | null>(null);
   const [quote, setQuote] = useState<UpgradeProrationQuote | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<NovaModuleId>(
-    (profile.active_modules?.[0] as NovaModuleId) || "store"
+  const [selectedModule, setSelectedModule] = useState<NovaModuleId>(() =>
+    resolveInitialModule(initialProduct, profile.active_modules)
   );
   const [referralCode, setReferralCode] = useState("");
 

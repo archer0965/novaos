@@ -44,9 +44,10 @@ export async function updateSession(request: NextRequest) {
   if (isDashboard && !user) {
     // Relative redirect only — never rewrite Host (avoids 421 / misdirected hosts).
     const url = request.nextUrl.clone();
+    const returnPath = `${path}${request.nextUrl.search}`;
     url.pathname = "/login";
     url.search = "";
-    url.searchParams.set("next", path);
+    url.searchParams.set("next", returnPath);
     return NextResponse.redirect(url);
   }
 
@@ -63,8 +64,13 @@ export async function updateSession(request: NextRequest) {
       url.searchParams.set("next", dest);
       return NextResponse.redirect(url);
     }
-    url.pathname = dest.startsWith("/") ? dest : "/dashboard";
-    url.search = "";
+    const target = new URL(
+      dest.startsWith("/") ? dest : "/dashboard",
+      request.nextUrl.origin
+    );
+    url.pathname = target.pathname;
+    url.search = target.search;
+    url.hash = target.hash;
     return NextResponse.redirect(url);
   }
 

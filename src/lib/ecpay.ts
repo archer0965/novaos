@@ -106,11 +106,18 @@ export function getEcpayConfig(): EcpayConfig {
   };
 }
 
-/** ECPay URL-encode rules for CheckMacValue */
+/** ECPay .NET UrlEncode rules for CheckMacValue */
 export function ecpayUrlEncode(value: string): string {
   return encodeURIComponent(value)
+    .toLowerCase()
     .replace(/%20/g, "+")
-    .replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+    .replace(/%2d/g, "-")
+    .replace(/%5f/g, "_")
+    .replace(/%2e/g, ".")
+    .replace(/%21/g, "!")
+    .replace(/%2a/g, "*")
+    .replace(/%28/g, "(")
+    .replace(/%29/g, ")");
 }
 
 function sortedQuery(
@@ -126,7 +133,7 @@ function sortedQuery(
         params[k] !== null &&
         params[k] !== ""
     )
-    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    .sort((a, b) => (a.toLowerCase() > b.toLowerCase() ? 1 : a.toLowerCase() < b.toLowerCase() ? -1 : 0))
     .map((k) => `${k}=${params[k]}`)
     .join("&");
 

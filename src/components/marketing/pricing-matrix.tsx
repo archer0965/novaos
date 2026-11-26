@@ -282,7 +282,7 @@ export function PricingMatrix() {
                       ))}
                     </ul>
                     <Link
-                      href="/signup?next=/dashboard/pass#upgrade"
+                      href="/login?next=%2Fdashboard%2Fpass%23upgrade"
                       className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl bg-cyan-400 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
                     >
                       綠界付款升級
@@ -339,6 +339,14 @@ export function PricingMatrix() {
                         <li key={f}>· {f}</li>
                       ))}
                     </ul>
+                    {key !== "free" ? (
+                      <Link
+                        href="/login?next=%2Fdashboard%2Fpass%3Fproduct%3Dai_doc%23upgrade"
+                        className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-cyan-400/90 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                      >
+                        綠界付款升級
+                      </Link>
+                    ) : null}
                   </article>
                 );
               })}

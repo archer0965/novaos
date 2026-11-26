@@ -257,7 +257,11 @@ export default async function PassPage({
       </section>
 
       <section id="upgrade">
-        <PlanUpgrade profile={typedProfile} activations={activations} />
+        <PlanUpgrade
+          profile={typedProfile}
+          activations={activations}
+          initialProduct={params.product || null}
+        />
       </section>
 
       <DimensionCheckout initialPlan={params.plan || null} />
