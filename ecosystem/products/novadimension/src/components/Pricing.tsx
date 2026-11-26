@@ -64,7 +64,7 @@ export default function Pricing() {
             </h2>
             <p className="mt-4 text-base leading-7 text-ink-muted md:text-lg">
               付費方案透過拓新雲端主站綠界 ECPay
-              結帳，與 DocMate、NovaStore 同一帳號與付款體系。
+              結帳，與 NovaStore 同一帳號與付款體系。
             </p>
           </div>
         </Reveal>

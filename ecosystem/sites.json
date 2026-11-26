@@ -10,7 +10,7 @@
     "repo": "https://github.com/archer0965/novaos",
     "localPath": ".",
     "role": "hub",
-    "notes": "品牌主站。付款路徑統一主站 ECPay；價目：NovaStore／拓脈跟 hub，Nova AI Doc／拓維跟各站。"
+    "notes": "品牌主站。付款路徑統一主站 ECPay；價目：NovaStore／拓脈跟 hub，拓維跟各站。"
   },
   "sites": [
     {
@@ -22,15 +22,6 @@
       "localFallback": "../repos/novastore",
       "role": "product",
       "notes": "價目本站顯示；付費升級導向 paycheck.com.de Pass（綠界）。"
-    },
-    {
-      "id": "docmate",
-      "name": "Nova AI Doc",
-      "url": "https://docmate-ai-one.vercel.app",
-      "vercelProject": "docmate-ai",
-      "repo": "https://github.com/archer0965/docmate-ai",
-      "localFallback": "../repos/docmate-ai",
-      "role": "product"
     },
     {
       "id": "booking",

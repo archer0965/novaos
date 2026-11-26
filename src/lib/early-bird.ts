@@ -360,71 +360,9 @@ export function partnerCycleLabel(cycle: string | null | undefined): string {
   return "月繳";
 }
 
-/** Admin grants 推廣大使（Nova AI Doc Tier 3） */
-export async function assignAmbassador(options: {
-  targetUserEmail: string;
-  now?: Date;
-}): Promise<{
-  success: true;
-  message: string;
-  userId: string;
-  email: string;
-  trialEndsAt: string;
-}> {
-  const admin = createAdminClient();
-  const email = options.targetUserEmail.trim().toLowerCase();
-  if (!email || !email.includes("@")) {
-    throw new Error("請輸入有效的信箱");
-  }
-  const user = await findAuthUserByEmail(email);
-  if (!user) {
-    throw new Error("找不到此信箱的註冊帳號，請確認客戶已先註冊");
-  }
-
-  const now = options.now ?? new Date();
-  const trialEnds = new Date(now.getTime() + EARLY_BIRD.trialDays * 24 * 60 * 60 * 1000);
-
-  const { error } = await admin
-    .from("profiles")
-    .update({
-      is_ambassador: true,
-      discount_tier: "ambassador",
-    })
-    .eq("id", user.id);
-  if (error) throw error;
-
-  const { data: existing } = await admin
-    .from("module_activations")
-    .select("id")
-    .eq("seller_id", user.id)
-    .eq("module_id", "ai_doc")
-    .maybeSingle();
-  if (existing) {
-    await admin
-      .from("module_activations")
-      .update({
-        trial_ends_at: trialEnds.toISOString(),
-        is_module_early_bird: false,
-      })
-      .eq("id", existing.id);
-  } else {
-    await admin.from("module_activations").insert({
-      seller_id: user.id,
-      module_id: "ai_doc",
-      activated_at: now.toISOString(),
-      is_module_early_bird: false,
-      trial_ends_at: trialEnds.toISOString(),
-    });
-  }
-
-  refreshPartnerSurfaces(user.id);
-  return {
-    success: true,
-    message: "已開通推廣大使（Nova AI Doc 14 天試用＋大使折扣）",
-    userId: user.id,
-    email,
-    trialEndsAt: trialEnds.toISOString(),
-  };
+/** 推廣大使計畫已隨 Nova AI Doc 停止提供，不再開通新資格。 */
+export async function assignAmbassador(): Promise<never> {
+  throw new Error("推廣大使計畫已停止");
 }
 
 export async function revokeAmbassador(targetUserEmail: string) {

@@ -186,7 +186,7 @@ export function PricingMatrix() {
         {showDiscountDetail ? (
           <div className="mt-4 space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-sm text-slate-400">
-              以下為早鳥／一般折扣與週期價；特約店家／推廣大使需人工審核（見{" "}
+              以下為早鳥／一般折扣與週期價；特約店家需人工審核（見{" "}
               <a
                 href="#partner"
                 className="text-emerald-300 underline-offset-4 hover:underline"

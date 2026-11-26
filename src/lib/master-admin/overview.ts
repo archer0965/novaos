@@ -17,11 +17,6 @@ export type OverviewKpis = {
     completedThisMonth: number;
     completionRate: number;
   };
-  aidoc: {
-    draftsToday: number;
-    draftsThisMonth: number;
-    activeAuthors: number;
-  };
   subkeeper: {
     totalActiveSubscriptions: number;
     monthlyTrackedAmount: number;
@@ -32,7 +27,7 @@ export type OverviewKpis = {
 
 export type ActivityItem = {
   id: string;
-  type: "signup" | "order" | "report" | "booking" | "aidoc" | "subkeeper";
+  type: "signup" | "order" | "report" | "booking" | "subkeeper";
   title: string;
   detail: string;
   at: string;
@@ -44,7 +39,6 @@ export type ActivitySeriesPoint = {
   signups: number;
   orders: number;
   bookings: number;
-  docs: number;
 };
 
 function monthStartIso(): string {
@@ -52,18 +46,6 @@ function monthStartIso(): string {
   const y = now.getUTCFullYear();
   const m = String(now.getUTCMonth() + 1).padStart(2, "0");
   return `${y}-${m}-01T00:00:00.000Z`;
-}
-
-function todayStartIso(): string {
-  const now = new Date();
-  const ymd = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Taipei",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-  // Approximate Taipei midnight as UTC+8
-  return new Date(`${ymd}T00:00:00+08:00`).toISOString();
 }
 
 function taipeiYmd(d: Date): string {
@@ -90,7 +72,6 @@ async function safeCount(
 export async function buildOverviewKpis(): Promise<OverviewKpis> {
   const admin = createAdminClient();
   const monthStart = monthStartIso();
-  const dayStart = todayStartIso();
 
   const { data: profiles } = await admin
     .from("profiles")
@@ -148,30 +129,6 @@ export async function buildOverviewKpis(): Promise<OverviewKpis> {
       ? Math.round((completedThisMonth / appointmentsThisMonth) * 100)
       : 0;
 
-  // AI Doc
-  const draftsToday = await safeCount(() =>
-    admin
-      .from("ai_doc_drafts")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", dayStart)
-  );
-  const draftsThisMonth = await safeCount(() =>
-    admin
-      .from("ai_doc_drafts")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", monthStart)
-  );
-  let activeAuthors = 0;
-  try {
-    const { data: docs } = await admin
-      .from("ai_doc_drafts")
-      .select("seller_id")
-      .gte("created_at", monthStart);
-    activeAuthors = new Set((docs || []).map((d) => d.seller_id)).size;
-  } catch {
-    /* ignore */
-  }
-
   // SubKeeper
   let totalActiveSubscriptions = 0;
   let monthlyTrackedAmount = 0;
@@ -208,11 +165,6 @@ export async function buildOverviewKpis(): Promise<OverviewKpis> {
       appointmentsThisMonth,
       completedThisMonth,
       completionRate,
-    },
-    aidoc: {
-      draftsToday,
-      draftsThisMonth,
-      activeAuthors,
     },
     subkeeper: {
       totalActiveSubscriptions,
@@ -311,26 +263,6 @@ export async function buildActivityStream(
 
   try {
     const { data } = await admin
-      .from("ai_doc_drafts")
-      .select("id, title, doc_type, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    for (const row of data || []) {
-      items.push({
-        id: `doc-${row.id}`,
-        type: "aidoc",
-        title: "文件上傳／草稿",
-        detail: `${row.title} · ${row.doc_type}`,
-        at: row.created_at,
-        site: "aidoc",
-      });
-    }
-  } catch {
-    /* ignore */
-  }
-
-  try {
-    const { data } = await admin
       .from("personal_subscriptions")
       .select("id, name, amount_twd, created_at")
       .order("created_at", { ascending: false })
@@ -367,7 +299,6 @@ export async function buildActivitySeries(): Promise<ActivitySeriesPoint[]> {
       signups: 0,
       orders: 0,
       bookings: 0,
-      docs: 0,
     });
   }
   const index = new Map(days.map((d, i) => [d.label, i]));
@@ -411,15 +342,5 @@ export async function buildActivitySeries(): Promise<ActivitySeriesPoint[]> {
   } catch {
     /* ignore */
   }
-  try {
-    const { data } = await admin
-      .from("ai_doc_drafts")
-      .select("created_at")
-      .gte("created_at", since);
-    for (const r of data || []) bump(r.created_at, "docs");
-  } catch {
-    /* ignore */
-  }
-
   return days;
 }

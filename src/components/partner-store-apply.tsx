@@ -10,7 +10,7 @@ export function PartnerStoreApplyTag() {
       href="#partner"
       className="inline-flex items-center rounded-md border border-accent/40 bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent-foreground transition hover:bg-accent/25"
     >
-      特約店家／推廣大使
+      特約店家
     </Link>
   );
 }
@@ -25,7 +25,7 @@ export function PartnerStoreSection() {
       <div className="mx-auto max-w-3xl px-4">
         <p className="text-sm font-medium text-primary">人工審核合作資格</p>
         <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          特約店家／推廣大使
+          特約店家
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-lg">
           此資格不在定價方案直接選購，需私訊官方 LINE 申請並經人工審核；通過後由管理員開通優惠。

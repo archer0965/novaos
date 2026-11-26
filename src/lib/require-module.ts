@@ -62,16 +62,12 @@ export async function requireModuleOrGate(moduleId: NovaModuleId): Promise<
   const partner =
     Boolean(profile.is_early_bird) ||
     profile.discount_tier === "lifetime_special";
-  const ambassador = Boolean(profile.is_ambassador);
   let vipHint: string | null = null;
   if (
     (moduleId === "booking" || moduleId === "store") &&
     partner
   ) {
     vipHint = "您具特約店家資格：啟用後享 14 天試用與特約折扣（月 9／半年 82／年 75 折）。";
-  } else if (moduleId === "ai_doc" && ambassador) {
-    vipHint =
-      "您具推廣大使資格：啟用後享 14 天試用與大使折扣（月 9／半年 82／年 75 折）。";
   }
 
   return {

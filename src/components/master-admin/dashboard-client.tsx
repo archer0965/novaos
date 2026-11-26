@@ -59,11 +59,6 @@ function productMetric(
         value: String(kpis.booking.appointmentsThisMonth),
         hint: `完工率 ${kpis.booking.completionRate}% · 完工 ${kpis.booking.completedThisMonth}`,
       };
-    case "aidoc":
-      return {
-        value: String(kpis.aidoc.draftsThisMonth),
-        hint: `今日 ${kpis.aidoc.draftsToday} · 活躍作者 ${kpis.aidoc.activeAuthors}`,
-      };
     case "subkeeper":
       return {
         value: String(kpis.subkeeper.totalActiveSubscriptions),
@@ -222,7 +217,7 @@ export function MasterDashboardClient() {
             近 14 日活躍
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            註冊／下單／預約／文件
+            註冊／下單／預約
           </p>
           <div className="mt-4 h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -265,14 +260,6 @@ export function MasterDashboardClient() {
                   strokeWidth={2}
                   dot={false}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="docs"
-                  name="文件"
-                  stroke="#fb7185"
-                  strokeWidth={2}
-                  dot={false}
-                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -287,7 +274,7 @@ export function MasterDashboardClient() {
                 {loading ? "載入中…" : "尚無動態"}
               </li>
             ) : (
-              activity.filter((item) => item.type !== "aidoc").slice(0, 20).map((item) => (
+              activity.slice(0, 20).map((item) => (
                 <li
                   key={item.id}
                   className="rounded-lg border border-white/5 bg-black/20 px-3 py-2"

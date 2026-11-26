@@ -168,11 +168,6 @@ export default async function PassPage({
               特約店家 · {TIER_META.vip.label}
             </span>
           ) : null}
-          {typedProfile.is_ambassador ? (
-            <span className="rounded-md bg-violet-100 px-2 py-1 text-violet-950">
-              推廣大使
-            </span>
-          ) : null}
           {activations.map((a) => (
             <span
               key={a.id}

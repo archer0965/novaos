@@ -4,7 +4,7 @@
 
 - **正式網址：** https://paycheck.com.de  
 - **套件名稱：** `novaos`  
-- **產品矩陣：** NovaStore、拓脈預約、Nova AI Doc、訂閱管家、拓維空間
+- **產品矩陣：** NovaStore、拓脈預約、訂閱管家、拓維空間
 
 ## 與子站的關係（不衝突）
 
@@ -12,7 +12,6 @@
 |------|------|
 | **本專案（拓新雲端）** | 品牌主站、導流、定價／金流統一入口、ecosystem 編排 |
 | **novastore** | 賣場對帳產品（獨立 repo／Vercel） |
-| **docmate-ai** | Nova AI Doc（獨立 repo／Vercel） |
 | 拓脈／訂閱管家／拓維 | 獨立站；網址見 `ecosystem/sites.json`（部分尚未接 Git） |
 
 子站原始碼**不併入**本 repo。需要一次改多站時：

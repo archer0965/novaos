@@ -5,7 +5,7 @@ import type { PricingPlanId } from "@/lib/constants";
 import { PRICING_PLANS } from "@/lib/constants";
 
 /**
- * 付費結帳統一導向拓新雲端主站綠界 ECPay（與 DocMate 相同模式）。
+ * 付費結帳統一導向拓新雲端主站綠界 ECPay（與 NovaStore 相同模式）。
  * 本站不再自行組 ECPay 表單，避免雙金流／雙商戶。
  */
 export async function POST(request: Request) {

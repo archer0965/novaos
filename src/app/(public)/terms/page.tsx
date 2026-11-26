@@ -65,7 +65,7 @@ export default function TermsPage() {
             部分功能採免費額度、試用期或付費訂閱制；實際方案、價格與折扣以站上定價頁及結帳畫面為準。
           </li>
           <li>
-            特約店家、推廣大使等優惠資格需經人工審核，審核通過後始生效力，細節見首頁合作申請與{" "}
+            特約店家等優惠資格需經人工審核，審核通過後始生效力，細節見首頁合作申請與{" "}
             <Link href="/refund" className="text-primary underline-offset-2 hover:underline">
               付費與退款政策
             </Link>

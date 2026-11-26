@@ -15,7 +15,7 @@ const items = [
   },
   {
     q: "如何付款？",
-    a: "付費方案統一導向拓新雲端主站（paycheck.com.de）以綠界 ECPay 結帳，與 DocMate、NovaStore 同一帳號與金流。付款成功後由主站開通權益。",
+    a: "付費方案統一導向拓新雲端主站（paycheck.com.de）以綠界 ECPay 結帳，與 NovaStore 同一帳號與金流。付款成功後由主站開通權益。",
   },
   {
     q: "會幫忙代購家具或施工嗎？",

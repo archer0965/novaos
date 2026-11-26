@@ -64,9 +64,9 @@ export interface Profile {
   expiry_reminder_1d_for?: string | null;
   /** Admin-approved 特約店家 (DB column kept as is_early_bird). Applies to NovaStore & 拓脈預約. */
   is_early_bird?: boolean | null;
-  /** lifetime_special = 特約店家；ambassador = 推廣大使 (AI Doc) */
+  /** lifetime_special = 特約店家；ambassador = 推廣大使（已停止，僅保留既有資料相容） */
   discount_tier?: DiscountTier | string | null;
-  /** 推廣大使（Nova AI Doc Tier 3） */
+  /** 推廣大使（已停止提供，僅保留既有資料相容） */
   is_ambassador?: boolean | null;
   /**
    * @deprecated Signup no longer consumes early-bird seats.
@@ -319,7 +319,7 @@ export const PRICING_CONFIG = {
       "子站顯示之特約文案須與本條款及主站定價一致；若有衝突以主站為準。",
     ],
   },
-  /** Tier 3：推廣大使（Nova AI Doc） */
+  /** Tier 3：推廣大使（已停止提供） */
   ambassador: {
     trialDays: 14,
     cycleMultipliers: {
@@ -328,9 +328,9 @@ export const PRICING_CONFIG = {
       yearly: 0.75,
     } satisfies Record<BillingCycle, number>,
     discountTier: "ambassador" as const,
-    label: "推廣大使專屬優惠",
+    label: "推廣大使專屬優惠（已停止提供）",
     description:
-      "適用 Nova AI Doc；啟用時 14 天試用，續約享月 9 折／半年 82 折／年 75 折（與主站定價一致；子站衝突以主站為準）。",
+      "推廣大使計畫已停止，不再開通新資格。",
   },
   billingCycles: {
     monthly: {
