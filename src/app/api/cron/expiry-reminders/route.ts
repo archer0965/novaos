@@ -5,6 +5,12 @@ import { authorizeCronRequest } from "@/lib/cron-auth";
 import { sendExpiryReminderEmail } from "@/lib/email";
 import { buildExpiryReminderLineText } from "@/lib/expiry-notify";
 import { sendLineTextMessage } from "@/lib/line";
+import { sendNovaShieldExpiryReminderEmail } from "@/lib/novashield/billingEmail";
+import {
+  listExpiringNovaShieldProShops,
+  markNovaShieldReminderSent,
+} from "@/lib/novashield/db";
+import { daysUntilExpiry as novaShieldDaysUntilExpiry } from "@/lib/novashield/subscription";
 import { daysUntilExpiry, isSubscriptionExpired } from "@/lib/subscription";
 import {
   isPaidPlan,
@@ -217,13 +223,58 @@ async function runReminders() {
   };
 }
 
+async function runNovaShieldReminders(now: Date) {
+  let checked = 0;
+  let sent = 0;
+  let skipped = 0;
+
+  try {
+    const candidates = await listExpiringNovaShieldProShops(now);
+    checked = candidates.length;
+
+    for (const shop of candidates) {
+      const daysLeft = novaShieldDaysUntilExpiry(shop.planExpiresAt, now);
+      if (daysLeft < 1 || daysLeft > 3) {
+        skipped += 1;
+        continue;
+      }
+      if (shop.reminder3dSentFor === shop.planExpiresAt) {
+        skipped += 1;
+        continue;
+      }
+
+      const mail = await sendNovaShieldExpiryReminderEmail({
+        to: shop.emailNotification,
+        shopId: shop.shopId,
+        shopName: shop.shopName,
+        billingCycle: shop.billingCycle,
+        expiresAt: shop.planExpiresAt,
+        daysLeft,
+      });
+
+      if (!mail.ok) {
+        skipped += 1;
+        continue;
+      }
+
+      await markNovaShieldReminderSent(shop.shopId, shop.planExpiresAt);
+      sent += 1;
+    }
+  } catch (error) {
+    console.warn("[expiry-reminders] novashield skipped:", error);
+  }
+
+  return { checked, sent, skipped };
+}
+
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
     const result = await runReminders();
-    return NextResponse.json({ success: true, ...result });
+    const novashield = await runNovaShieldReminders(new Date());
+    return NextResponse.json({ success: true, ...result, novashield });
   } catch (error) {
     console.error("[expiry-reminders]", error);
     return NextResponse.json({ success: false, error: "Cron failed" }, { status: 500 });
