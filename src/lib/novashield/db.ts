@@ -278,3 +278,46 @@ export async function markNovaShieldReminderSent(
     .eq("shop_id", shopId)
     .eq("plan_expires_at", expectedExpiresAt);
 }
+
+/** Master admin: downgrade a shop back to FREE and clear expiry. */
+export async function setNovaShieldShopFree(shopId: string): Promise<ShopConfig> {
+  const admin = getAdmin();
+  const existing = await getNovaShieldShop(shopId);
+  const base = existing ?? getInitialShopConfig(shopId);
+
+  const downgraded = normalizeShopConfig(shopId, {
+    ...base,
+    shopId,
+    plan: "FREE",
+    billingCycle: null,
+    planExpiresAt: null,
+    reminder3dSentFor: null,
+    ratingMode: "single",
+  });
+
+  const { error } = await admin.from("novashield_shops").upsert(
+    {
+      shop_id: shopId,
+      config: downgraded,
+      plan: "FREE",
+      billing_cycle: null,
+      plan_expires_at: null,
+      reminder_3d_for: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "shop_id" },
+  );
+
+  checkTableMissing(error);
+  return downgraded;
+}
+
+/** Master admin: remove a shop record (does not delete historical ECPay trades). */
+export async function deleteNovaShieldShop(shopId: string): Promise<void> {
+  const admin = getAdmin();
+  const { error } = await admin
+    .from("novashield_shops")
+    .delete()
+    .eq("shop_id", shopId);
+  checkTableMissing(error);
+}

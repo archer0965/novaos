@@ -66,8 +66,8 @@ function productMetric(
       };
     case "novashield":
       return {
-        value: "獨立訂閱",
-        hint: "免費版 $0／專業版 NT$199 起 · 前往商譽寶後台",
+        value: `${kpis.novashield?.totalShops ?? 0} 店`,
+        hint: `有效 PRO ${kpis.novashield?.activeProShops ?? 0} · 本月 ${formatTwd(kpis.novashield?.revenueThisMonth ?? 0)}`,
       };
     case "dimension":
       return {

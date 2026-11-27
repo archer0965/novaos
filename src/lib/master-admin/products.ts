@@ -286,3 +286,195 @@ export async function listUsers(url: URL): Promise<
     return emptyPage(params);
   }
 }
+
+export type AdminNovaShieldShopRow = {
+  id: string;
+  shopId: string;
+  shopName: string;
+  emailNotification: string;
+  lineId: string;
+  plan: "FREE" | "PRO";
+  effectivePlan: "FREE" | "PRO";
+  expired: boolean;
+  billingCycle: string | null;
+  planExpiresAt: string | null;
+  updatedAt: string;
+};
+
+export type AdminNovaShieldTradeRow = {
+  merchantTradeNo: string;
+  shopId: string;
+  billingCycle: string;
+  amount: number;
+  rtnCode: string;
+  processedAt: string;
+};
+
+export async function listNovaShield(url: URL): Promise<
+  PagedResult<AdminNovaShieldShopRow> & {
+    migrated: boolean;
+    summary: {
+      totalShops: number;
+      activeProShops: number;
+      expiringSoon: number;
+      revenueThisMonth: number;
+      totalRevenue: number;
+    };
+    trades: AdminNovaShieldTradeRow[];
+  }
+> {
+  const params = parseListParams(url);
+  const admin = createAdminClient();
+  const now = new Date();
+  const in7DaysMs = now.getTime() + 7 * 24 * 60 * 60 * 1000;
+  const monthStartIso = `${now.getUTCFullYear()}-${String(
+    now.getUTCMonth() + 1
+  ).padStart(2, "0")}-01T00:00:00.000Z`;
+
+  try {
+    const [{ data: shopsData, error: shopsErr }, { data: tradesData }] =
+      await Promise.all([
+        admin
+          .from("novashield_shops")
+          .select(
+            "shop_id, config, plan, billing_cycle, plan_expires_at, updated_at"
+          )
+          .order("updated_at", { ascending: false })
+          .limit(500),
+        admin
+          .from("novashield_processed_trades")
+          .select(
+            "merchant_trade_no, shop_id, billing_cycle, amount, rtn_code, processed_at"
+          )
+          .order("processed_at", { ascending: false })
+          .limit(50),
+      ]);
+
+    if (shopsErr) {
+      if (
+        shopsErr.code === "42P01" ||
+        shopsErr.code === "PGRST205" ||
+        shopsErr.message?.includes("novashield_shops")
+      ) {
+        return {
+          ...emptyPage<AdminNovaShieldShopRow>(params),
+          migrated: false,
+          summary: {
+            totalShops: 0,
+            activeProShops: 0,
+            expiringSoon: 0,
+            revenueThisMonth: 0,
+            totalRevenue: 0,
+          },
+          trades: [],
+        };
+      }
+      throw shopsErr;
+    }
+
+    const allShops: AdminNovaShieldShopRow[] = (shopsData || []).map((row) => {
+      const cfg = (row.config || {}) as Record<string, unknown>;
+      const rawPlan = row.plan === "PRO" ? "PRO" : "FREE";
+      const expiresTs = row.plan_expires_at
+        ? new Date(row.plan_expires_at).getTime()
+        : NaN;
+      const expired =
+        rawPlan === "PRO" &&
+        !Number.isNaN(expiresTs) &&
+        expiresTs <= now.getTime();
+      const effectivePlan = rawPlan === "PRO" && !expired ? "PRO" : "FREE";
+      return {
+        id: row.shop_id,
+        shopId: row.shop_id,
+        shopName: String(cfg.shopName || row.shop_id),
+        emailNotification: String(cfg.emailNotification || ""),
+        lineId: String(cfg.lineId || ""),
+        plan: rawPlan,
+        effectivePlan,
+        expired,
+        billingCycle: row.billing_cycle || null,
+        planExpiresAt: row.plan_expires_at || null,
+        updatedAt: row.updated_at || now.toISOString(),
+      };
+    });
+
+    const activeProShops = allShops.filter((s) => s.effectivePlan === "PRO").length;
+    const expiringSoon = allShops.filter((s) => {
+      if (s.effectivePlan !== "PRO" || !s.planExpiresAt) return false;
+      const ts = new Date(s.planExpiresAt).getTime();
+      return !Number.isNaN(ts) && ts > now.getTime() && ts <= in7DaysMs;
+    }).length;
+
+    const trades: AdminNovaShieldTradeRow[] = (tradesData || []).map((t) => ({
+      merchantTradeNo: t.merchant_trade_no,
+      shopId: t.shop_id,
+      billingCycle: t.billing_cycle,
+      amount: Number(t.amount) || 0,
+      rtnCode: t.rtn_code,
+      processedAt: t.processed_at,
+    }));
+
+    const totalRevenue = trades
+      .filter((t) => t.rtnCode === "1")
+      .reduce((acc, t) => acc + t.amount, 0);
+    const revenueThisMonth = trades
+      .filter((t) => t.rtnCode === "1" && t.processedAt >= monthStartIso)
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    let filtered = allShops;
+    if (params.q) {
+      const q = params.q.toLowerCase();
+      filtered = filtered.filter(
+        (s) =>
+          s.shopId.toLowerCase().includes(q) ||
+          s.shopName.toLowerCase().includes(q) ||
+          s.emailNotification.toLowerCase().includes(q) ||
+          s.lineId.toLowerCase().includes(q)
+      );
+    }
+    if (params.status === "pro") {
+      filtered = filtered.filter((s) => s.effectivePlan === "PRO");
+    } else if (params.status === "free") {
+      filtered = filtered.filter((s) => s.effectivePlan === "FREE");
+    } else if (params.status === "expiring") {
+      filtered = filtered.filter((s) => {
+        if (s.effectivePlan !== "PRO" || !s.planExpiresAt) return false;
+        const ts = new Date(s.planExpiresAt).getTime();
+        return !Number.isNaN(ts) && ts > now.getTime() && ts <= in7DaysMs;
+      });
+    } else if (params.status === "expired") {
+      filtered = filtered.filter((s) => s.expired);
+    }
+
+    const total = filtered.length;
+    const offset = (params.page - 1) * params.pageSize;
+    return {
+      migrated: true,
+      summary: {
+        totalShops: allShops.length,
+        activeProShops,
+        expiringSoon,
+        revenueThisMonth,
+        totalRevenue,
+      },
+      rows: filtered.slice(offset, offset + params.pageSize),
+      total,
+      page: params.page,
+      pageSize: params.pageSize,
+      trades,
+    };
+  } catch {
+    return {
+      ...emptyPage<AdminNovaShieldShopRow>(params),
+      migrated: false,
+      summary: {
+        totalShops: 0,
+        activeProShops: 0,
+        expiringSoon: 0,
+        revenueThisMonth: 0,
+        totalRevenue: 0,
+      },
+      trades: [],
+    };
+  }
+}

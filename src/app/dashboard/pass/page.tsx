@@ -282,6 +282,9 @@ export default async function PassPage({
             </Link>
           );
         })}
+        <Link href="/novashield/admin" className="ml-2 text-primary hover:underline">
+          🛡️Nova商譽寶後台
+        </Link>
       </section>
     </div>
   );

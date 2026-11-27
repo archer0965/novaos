@@ -22,12 +22,18 @@ export type OverviewKpis = {
     monthlyTrackedAmount: number;
     dueSoonCount: number;
   };
+  novashield: {
+    totalShops: number;
+    activeProShops: number;
+    expiringSoon: number;
+    revenueThisMonth: number;
+  };
   asOf: string;
 };
 
 export type ActivityItem = {
   id: string;
-  type: "signup" | "order" | "report" | "booking" | "subkeeper";
+  type: "signup" | "order" | "report" | "booking" | "subkeeper" | "novashield";
   title: string;
   detail: string;
   at: string;
@@ -153,6 +159,41 @@ export async function buildOverviewKpis(): Promise<OverviewKpis> {
     /* ignore */
   }
 
+  // NovaShield (商譽寶)
+  let novashieldTotalShops = 0;
+  let novashieldActivePro = 0;
+  let novashieldExpiringSoon = 0;
+  let novashieldRevenueThisMonth = 0;
+  try {
+    const nowMs = Date.now();
+    const in7dMs = nowMs + 7 * 24 * 60 * 60 * 1000;
+    const [{ data: nsShops }, { data: nsTrades }] = await Promise.all([
+      admin
+        .from("novashield_shops")
+        .select("shop_id, plan, plan_expires_at"),
+      admin
+        .from("novashield_processed_trades")
+        .select("amount, rtn_code, processed_at")
+        .gte("processed_at", monthStart),
+    ]);
+    const shops = nsShops || [];
+    novashieldTotalShops = shops.length;
+    for (const s of shops) {
+      if (s.plan !== "PRO") continue;
+      const expMs = s.plan_expires_at ? new Date(s.plan_expires_at).getTime() : NaN;
+      if (!Number.isNaN(expMs) && expMs <= nowMs) continue;
+      novashieldActivePro += 1;
+      if (!Number.isNaN(expMs) && expMs <= in7dMs) novashieldExpiringSoon += 1;
+    }
+    for (const t of nsTrades || []) {
+      if (t.rtn_code === "1") {
+        novashieldRevenueThisMonth += Number(t.amount) || 0;
+      }
+    }
+  } catch {
+    /* ignore if migration 030 not applied yet */
+  }
+
   return {
     totalUsers,
     newUsersThisMonth,
@@ -170,6 +211,12 @@ export async function buildOverviewKpis(): Promise<OverviewKpis> {
       totalActiveSubscriptions,
       monthlyTrackedAmount: Math.round(monthlyTrackedAmount),
       dueSoonCount,
+    },
+    novashield: {
+      totalShops: novashieldTotalShops,
+      activeProShops: novashieldActivePro,
+      expiringSoon: novashieldExpiringSoon,
+      revenueThisMonth: Math.round(novashieldRevenueThisMonth),
     },
     asOf: new Date().toISOString(),
   };
@@ -275,6 +322,26 @@ export async function buildActivityStream(
         detail: `${row.name} · NT$ ${row.amount_twd}`,
         at: row.created_at,
         site: "subkeeper",
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    const { data } = await admin
+      .from("novashield_processed_trades")
+      .select("merchant_trade_no, shop_id, billing_cycle, amount, processed_at")
+      .order("processed_at", { ascending: false })
+      .limit(10);
+    for (const row of data || []) {
+      items.push({
+        id: `ns-${row.merchant_trade_no}`,
+        type: "novashield",
+        title: "商譽寶 PRO 付款",
+        detail: `${row.shop_id} · NT$ ${Number(row.amount).toLocaleString("zh-TW")} · ${row.billing_cycle}`,
+        at: row.processed_at,
+        site: "novashield",
       });
     }
   } catch {
