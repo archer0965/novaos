@@ -8,6 +8,7 @@ interface PositiveReviewCardProps {
   exactAverage: number;
   googleReviewUrl: string;
   accentColor?: string;
+  onGoogleClick?: () => void;
   onResetRating?: () => void;
   compact?: boolean;
 }
@@ -18,6 +19,7 @@ export function PositiveReviewCard({
   exactAverage,
   googleReviewUrl,
   accentColor = "#F59E0B",
+  onGoogleClick,
   onResetRating,
   compact = false,
 }: PositiveReviewCardProps) {
@@ -65,6 +67,7 @@ export function PositiveReviewCard({
           href={googleReviewUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={onGoogleClick}
           style={{ backgroundColor: accentColor }}
           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.99]"
         >

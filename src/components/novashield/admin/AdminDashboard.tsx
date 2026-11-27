@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
+  BarChart3,
   BellRing,
   CalendarClock,
   CheckCircle2,
@@ -13,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   Plus,
+  QrCode,
   RotateCcw,
   Save,
   Sliders,
@@ -21,6 +23,7 @@ import {
   UserCheck,
   Zap,
 } from "lucide-react";
+import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { ShopSettingsForm } from "./ShopSettingsForm";
 import { LineConfigPanel } from "./LineConfigPanel";
 import { QrCodeShareCard } from "./QrCodeShareCard";
@@ -80,6 +83,9 @@ export function AdminDashboard({
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "analytics" | "qrcode" | "settings"
+  >("analytics");
   const [mobileTab, setMobileTab] = useState<"settings" | "preview">(
     "settings",
   );
@@ -406,66 +412,138 @@ export function AdminDashboard({
         </div>
       )}
 
-      {/* Mobile Tab Switcher */}
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-200/70 p-1 lg:hidden">
+      {/* Top-level Admin Section Tabs */}
+      <div
+        role="tablist"
+        aria-label="後台功能分頁"
+        className="mb-6 grid grid-cols-3 gap-2 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm"
+      >
         <button
           type="button"
-          onClick={() => setMobileTab("settings")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
-            mobileTab === "settings"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600"
+          role="tab"
+          aria-selected={activeTab === "analytics"}
+          onClick={() => setActiveTab("analytics")}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
+            activeTab === "analytics"
+              ? "bg-[#0F172A] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          <Sliders className="h-3.5 w-3.5" />
-          <span>門市設定</span>
+          <BarChart3
+            className={`h-4 w-4 ${activeTab === "analytics" ? "text-[#F59E0B]" : ""}`}
+          />
+          <span>數據儀表板</span>
         </button>
+
         <button
           type="button"
-          onClick={() => setMobileTab("preview")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
-            mobileTab === "preview"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600"
+          role="tab"
+          aria-selected={activeTab === "qrcode"}
+          onClick={() => setActiveTab("qrcode")}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
+            activeTab === "qrcode"
+              ? "bg-[#0F172A] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          <Smartphone className="h-3.5 w-3.5" />
-          <span>顧客端即時預覽</span>
+          <QrCode
+            className={`h-4 w-4 ${activeTab === "qrcode" ? "text-[#F59E0B]" : ""}`}
+          />
+          <span>QR Code 設計</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "settings"}
+          onClick={() => setActiveTab("settings")}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
+            activeTab === "settings"
+              ? "bg-[#0F172A] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <Sliders
+            className={`h-4 w-4 ${activeTab === "settings" ? "text-[#F59E0B]" : ""}`}
+          />
+          <span>門市與 LINE 設定</span>
         </button>
       </div>
 
-      {/* Main 2-Column Workspace */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div
-          className={`space-y-5 lg:col-span-7 ${
-            mobileTab === "preview" ? "hidden lg:block" : "block"
-          }`}
-        >
-          <QrCodeShareCard shopId={config.shopId} shopName={config.shopName} />
+      {/* Tab 1: Analytics Dashboard */}
+      {activeTab === "analytics" && (
+        <AnalyticsDashboard
+          config={config}
+          onUpgradeToPro={() => openUpgradeModal("monthly")}
+        />
+      )}
 
-          <LineConfigPanel
-            config={config}
-            onLineIdChange={(lineId) => setConfig({ ...config, lineId })}
-            onUpgradeToPro={() => openUpgradeModal("monthly")}
-          />
+      {/* Tab 2: Customizable QR Code Generator */}
+      {activeTab === "qrcode" && (
+        <QrCodeShareCard shopId={config.shopId} shopName={config.shopName} />
+      )}
 
-          <ShopSettingsForm
-            config={config}
-            onChange={setConfig}
-            onUpgradeToPro={() => openUpgradeModal("monthly")}
-          />
-        </div>
-
-        <div
-          className={`lg:col-span-5 ${
-            mobileTab === "settings" ? "hidden lg:block" : "block"
-          }`}
-        >
-          <div className="lg:sticky lg:top-20">
-            <LivePhonePreview config={config} />
+      {/* Tab 3: Shop Settings + Live Mobile Preview */}
+      {activeTab === "settings" && (
+        <>
+          <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-200/70 p-1 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileTab("settings")}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
+                mobileTab === "settings"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600"
+              }`}
+            >
+              <Sliders className="h-3.5 w-3.5" />
+              <span>門市設定</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("preview")}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
+                mobileTab === "preview"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600"
+              }`}
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              <span>顧客端即時預覽</span>
+            </button>
           </div>
-        </div>
-      </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div
+              className={`space-y-5 lg:col-span-7 ${
+                mobileTab === "preview" ? "hidden lg:block" : "block"
+              }`}
+            >
+              <LineConfigPanel
+                config={config}
+                onLineIdChange={(lineId) => setConfig({ ...config, lineId })}
+                onUpgradeToPro={() => openUpgradeModal("monthly")}
+              />
+
+              <ShopSettingsForm
+                config={config}
+                onChange={setConfig}
+                onUpgradeToPro={() => openUpgradeModal("monthly")}
+              />
+            </div>
+
+            <div
+              className={`lg:col-span-5 ${
+                mobileTab === "settings" ? "hidden lg:block" : "block"
+              }`}
+            >
+              <div className="lg:sticky lg:top-20">
+                <LivePhonePreview config={config} />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Pricing Section */}
       <div className="mt-8">

@@ -4,6 +4,8 @@ export type BillingCycle = "monthly" | "yearly";
 
 export type RatingMode = "single" | "multi";
 
+export type FeedbackStatus = "messaged" | "pending";
+
 export interface ShopConfig {
   shopId: string;
   shopName: string;
@@ -42,4 +44,40 @@ export interface EmailFeedbackResult {
   subject: string;
   bodyText: string;
   sentAt: string;
+}
+
+export interface FeedbackLogItem {
+  id: string;
+  shopId: string;
+  rating: number;
+  summary: string;
+  customerName?: string;
+  phone?: string;
+  channel: "google" | "line" | "email";
+  status: FeedbackStatus;
+  categoryScores?: Record<string, number>;
+  createdAt: string;
+}
+
+export interface StarDistributionBucket {
+  star: 5 | 4 | 3 | 2 | 1;
+  count: number;
+  percent: number;
+}
+
+export interface CategoryAverageMetric {
+  label: string;
+  average: number;
+  count: number;
+}
+
+export interface ShopAnalyticsSummary {
+  totalCount: number;
+  averageRating: number;
+  googleRedirectCount: number;
+  googleRedirectRate: number;
+  interceptedCount: number;
+  starDistribution: StarDistributionBucket[];
+  categoryAverages: CategoryAverageMetric[];
+  recentFeedbacks: FeedbackLogItem[];
 }

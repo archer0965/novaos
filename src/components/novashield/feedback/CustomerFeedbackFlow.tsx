@@ -9,6 +9,7 @@ import { LineRedirectCard } from "./LineRedirectCard";
 import { EmailFeedbackForm } from "./EmailFeedbackForm";
 import { EmailSentSuccessCard } from "./EmailSentSuccessCard";
 import { CustomerRightsNotice } from "@/components/novashield/legal/CustomerRightsNotice";
+import { recordCustomerFeedbackEvent } from "@/lib/novashield/analytics";
 import { DEFAULT_GOOGLE_REVIEW_URL } from "@/lib/novashield/mockData";
 import type {
   DimensionScore,
@@ -106,6 +107,80 @@ export function CustomerFeedbackFlow({
 
   function handleRate(dimId: string, score: number) {
     setScores((prev) => ({ ...prev, [dimId]: score }));
+  }
+
+  function handleLineDeepLinkGenerated(result: LineDeepLinkResult) {
+    setDeepLinkResult(result);
+    const categoryScores: Record<string, number> = {};
+    for (const d of dimensionScores) {
+      categoryScores[d.label] = d.score;
+    }
+    const suggestionLine =
+      result.messageText
+        .split("\n")
+        .find((line) => line.startsWith("改善建議："))
+        ?.replace("改善建議：", "") || "顧客已透過 LINE 私訊反映意見";
+    const nameLine = result.messageText
+      .split("\n")
+      .find((line) => line.startsWith("聯絡姓名："))
+      ?.replace("聯絡姓名：", "");
+    const phoneLine = result.messageText
+      .split("\n")
+      .find((line) => line.startsWith("聯絡電話："))
+      ?.replace("聯絡電話：", "");
+
+    recordCustomerFeedbackEvent({
+      shopId: shop.shopId,
+      rating: roundedAverage,
+      summary: suggestionLine,
+      customerName: nameLine,
+      phone: phoneLine,
+      channel: "line",
+      status: "messaged",
+      categoryScores: isSingleMode ? undefined : categoryScores,
+    });
+  }
+
+  function handleEmailFeedbackSent(result: EmailFeedbackResult) {
+    setEmailResult(result);
+    const suggestionLine =
+      result.bodyText
+        .split("\n")
+        .find((line) => line.startsWith("改善建議："))
+        ?.replace("改善建議：", "") || "顧客已送出 Email 意見回饋";
+    const nameLine = result.bodyText
+      .split("\n")
+      .find((line) => line.startsWith("顧客姓名："))
+      ?.replace("顧客姓名：", "");
+    const phoneLine = result.bodyText
+      .split("\n")
+      .find((line) => line.startsWith("聯絡電話："))
+      ?.replace("聯絡電話：", "");
+
+    recordCustomerFeedbackEvent({
+      shopId: shop.shopId,
+      rating: roundedAverage,
+      summary: suggestionLine,
+      customerName: nameLine === "未提供" ? undefined : nameLine,
+      phone: phoneLine === "未提供" ? undefined : phoneLine,
+      channel: "email",
+      status: "pending",
+    });
+  }
+
+  function handlePositiveGoogleClick() {
+    const categoryScores: Record<string, number> = {};
+    for (const d of dimensionScores) {
+      categoryScores[d.label] = d.score;
+    }
+    recordCustomerFeedbackEvent({
+      shopId: shop.shopId,
+      rating: roundedAverage,
+      summary: `顧客給予 ${roundedAverage} 星好評，已點擊前往 Google Maps 留下公開評論。`,
+      channel: "google",
+      status: "messaged",
+      categoryScores: isSingleMode ? undefined : categoryScores,
+    });
   }
 
   function handleReset() {
@@ -245,6 +320,7 @@ export function CustomerFeedbackFlow({
                         exactAverage={exactAverage}
                         googleReviewUrl={safeGoogleUrl}
                         accentColor={effectiveBrandColor}
+                        onGoogleClick={handlePositiveGoogleClick}
                         onResetRating={handleReset}
                         compact={isPreview}
                       />
@@ -256,7 +332,7 @@ export function CustomerFeedbackFlow({
                         roundedRating={roundedAverage}
                         exactAverage={exactAverage}
                         dimensions={isSingleMode ? undefined : dimensionScores}
-                        onDeepLinkGenerated={setDeepLinkResult}
+                        onDeepLinkGenerated={handleLineDeepLinkGenerated}
                         compact={isPreview}
                       />
                     ) : (
@@ -266,7 +342,7 @@ export function CustomerFeedbackFlow({
                         contactEmail={shop.emailNotification}
                         emailFormEndpoint={shop.emailFormEndpoint}
                         rating={roundedAverage}
-                        onEmailSent={setEmailResult}
+                        onEmailSent={handleEmailFeedbackSent}
                         compact={isPreview}
                       />
                     )}
