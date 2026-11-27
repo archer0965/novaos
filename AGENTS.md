@@ -10,6 +10,7 @@
 |------|------|----------|
 | NovaStore | https://novastore-omega.vercel.app | `novastore`（`ecosystem/sites.json`） |
 | 拓脈預約 | https://taiwanbiz.vercel.app | 獨立站（repo 待綁） |
+| Nova商譽寶 | https://novashield-mauve.vercel.app | `novashield` |
 | 訂閱管家 | https://temporary-speedy-reef-cy4xhhu.vercel.app | 獨立站（repo 待綁） |
 
 ## 一次改多站 vs 只改一站

@@ -127,6 +127,18 @@ export default async function PassPage({
         },
       };
     }
+    if (p.id === "novashield") {
+      return {
+        ...p,
+        entitlement: {
+          status: "external",
+          plan: "independent",
+          label: "獨立訂閱（免費版 $0／專業版 NT$199 起）",
+          expiresAt: null,
+          trialEndsAt: null,
+        },
+      };
+    }
     return {
       ...p,
       entitlement: {

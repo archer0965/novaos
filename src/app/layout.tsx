@@ -29,7 +29,7 @@ const Toaster = dynamic(
 /** Must match public/og-image.jpg hero copy exactly (LINE/FB preview title). */
 const siteTitle = "拓新雲端 NovaOS｜智慧雲端工具矩陣";
 const siteDescription =
-  "專為新創與社群商家打造的智慧雲端工具矩陣。整合 NovaStore 賣場對帳、拓脈預約、訂閱管家與拓維空間。";
+  "專為新創與社群商家打造的智慧雲端工具矩陣。整合 NovaStore 賣場對帳、拓脈預約、Nova商譽寶、訂閱管家與拓維空間。";
 const twitterDescription =
   "專為新創與社群商家打造的智慧雲端工具矩陣｜拓新雲端 NovaOS";
 /** Bump when OG title/image change so crawlers treat it as a new asset. */
@@ -49,6 +49,8 @@ export const metadata: Metadata = {
     "拓新雲端",
     "拓脈預約",
     "NovaStore",
+    "Nova商譽寶",
+    "NovaShield",
     "拓維空間",
     "NovaDimension",
     "美業預約",

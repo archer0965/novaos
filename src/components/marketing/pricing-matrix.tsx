@@ -105,6 +105,12 @@ export function PricingMatrix() {
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
+                <td className="px-4 py-3 text-slate-400">Nova商譽寶</td>
+                <td className="px-4 py-3 text-slate-500">獨立訂閱</td>
+                <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
+                <td className="px-4 py-3 text-slate-500">—</td>
+              </tr>
+              <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">拓維空間</td>
                 <td className="px-4 py-3 text-slate-500">獨立 Credit</td>
                 <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
@@ -145,7 +151,7 @@ export function PricingMatrix() {
         <div className="mt-10 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-4 text-sm text-cyan-50">
           <p className="font-semibold">旗艦全家桶＝雙模組方案</p>
           <p className="mt-1 text-xs text-cyan-100/80">
-            僅含拓脈預約、NovaStore（加帳號內建訂閱中控）。拓維空間與
+            僅含拓脈預約、NovaStore（加帳號內建訂閱中控）。Nova商譽寶、拓維空間與
             {SUBKEEPER_PRODUCT.name}不在方案價內。
           </p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
@@ -161,7 +167,7 @@ export function PricingMatrix() {
             ))}
           </ul>
           <ul className="mt-3 grid gap-1 text-xs text-cyan-100/75 sm:grid-cols-2">
-            <li>不含：拓維空間（獨立 Credit／訂閱）</li>
+            <li>不含：Nova商譽寶（獨立訂閱）、拓維空間（獨立 Credit／訂閱）</li>
             <li>
               另提供：{SUBKEEPER_PRODUCT.name}
               （個人訂閱管理工具，永久免費，≠ 訂閱中控）

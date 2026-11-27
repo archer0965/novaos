@@ -12,6 +12,7 @@ export type CentralProductId =
   | "hub"
   | "novastore"
   | "booking"
+  | "novashield"
   | "docmate"
   | "dimension"
   | "subkeeper";
@@ -30,7 +31,12 @@ export type CentralPlanRow = {
   feature_list: string[];
   discount_rules: string;
   product_status: "active" | "beta" | "deprecated";
-  authority: "novaos-hub" | "docmate-site" | "dimension-site" | "local-free";
+  authority:
+    | "novaos-hub"
+    | "docmate-site"
+    | "dimension-site"
+    | "novashield-site"
+    | "local-free";
   notes?: string;
 };
 
@@ -178,6 +184,44 @@ const ALL_CENTRAL_PLANS: CentralPlanRow[] = [
     discount_rules: "早鳥／一般／大使（對齊主站）",
     product_status: "active",
     authority: "novaos-hub",
+  },
+  {
+    product_id: "novashield",
+    product_name: "Nova商譽寶",
+    product_url: "https://novashield-mauve.vercel.app",
+    plan_id: "free",
+    plan_name: "免費體驗版",
+    monthly_price: 0,
+    half_yearly_price: 0,
+    yearly_price: 0,
+    trial_days: 0,
+    usage_limits: {},
+    feature_list: ["單一總體星等評分", "Google Maps 好評引導", "Email 客訴通知"],
+    discount_rules: "永久免費",
+    product_status: "active",
+    authority: "novashield-site",
+    notes: "獨立微服務，不含於旗艦全家桶",
+  },
+  {
+    product_id: "novashield",
+    product_name: "Nova商譽寶",
+    product_url: "https://novashield-mauve.vercel.app",
+    plan_id: "pro",
+    plan_name: "專業版 Pro",
+    monthly_price: 199,
+    half_yearly_price: null,
+    yearly_price: 1990,
+    trial_days: 0,
+    usage_limits: {},
+    feature_list: [
+      "LINE 官方帳號 Deep Link 私訊引導",
+      "多維度自訂評分",
+      "品牌 Logo 與主題色",
+      "自訂分流星等門檻",
+    ],
+    discount_rules: "年繳省 NT$398（獨立微服務，走本站綠界 ECPay）",
+    product_status: "active",
+    authority: "novashield-site",
   },
   {
     product_id: "dimension",

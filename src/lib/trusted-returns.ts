@@ -5,6 +5,7 @@ export const NOVAOS_HUB_ORIGIN = "https://paycheck.com.de";
 export const TRUSTED_PRODUCT_ORIGINS = [
   "https://novastore-omega.vercel.app",
   "https://taiwanbiz.vercel.app",
+  "https://novashield-mauve.vercel.app",
   "https://temporary-speedy-reef-cy4xhhu.vercel.app",
   "https://novadimension.vercel.app",
   // Preview aliases occasionally used in docs / bookmarks

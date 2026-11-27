@@ -18,7 +18,7 @@ const jsonLd = {
   name: siteConfig.legalName,
   url: PRODUCTION_URL,
   description:
-    "專為新創與社群商家打造的智慧雲端工具矩陣。整合 NovaStore、拓脈預約、訂閱管家與拓維空間。",
+    "專為新創與社群商家打造的智慧雲端工具矩陣。整合 NovaStore、拓脈預約、Nova商譽寶、訂閱管家與拓維空間。",
   email: siteConfig.supportEmail,
   brand: {
     "@type": "Brand",

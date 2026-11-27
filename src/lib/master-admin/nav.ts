@@ -2,6 +2,7 @@ export type AdminSiteId =
   | "overview"
   | "novastore"
   | "booking"
+  | "novashield"
   | "aidoc"
   | "subkeeper"
   | "dimension"
@@ -57,6 +58,17 @@ export const ADMIN_PRODUCTS: AdminProductMeta[] = [
     accent: "cyan",
   },
   {
+    id: "novashield",
+    label: "Nova商譽寶",
+    short: "商譽寶",
+    href: "/admin/novashield",
+    publicUrl: "https://novashield-mauve.vercel.app",
+    opsUrl: "https://novashield-mauve.vercel.app/admin",
+    opsLabel: "商譽寶後台",
+    blurb: "門市好評引導與客訴防護",
+    accent: "sky",
+  },
+  {
     id: "subkeeper",
     label: "訂閱管家",
     short: "訂閱管家",
@@ -96,11 +108,13 @@ export const ADMIN_NAV_PRODUCTS: AdminNavItem[] = ADMIN_PRODUCTS.map((p) => ({
       ? "ShoppingCart"
       : p.id === "booking"
         ? "CalendarDays"
-        : p.id === "aidoc"
-          ? "FileText"
-          : p.id === "subkeeper"
-            ? "CreditCard"
-            : "Box",
+        : p.id === "novashield"
+          ? "Shield"
+          : p.id === "aidoc"
+            ? "FileText"
+            : p.id === "subkeeper"
+              ? "CreditCard"
+              : "Box",
 }));
 
 export const ADMIN_NAV_PLATFORM: AdminNavItem[] = [
@@ -129,6 +143,7 @@ export function productFromPath(pathname: string): AdminProductMeta | null {
 export function siteFromPath(pathname: string): AdminSiteId {
   if (pathname.startsWith("/admin/novastore")) return "novastore";
   if (pathname.startsWith("/admin/booking")) return "booking";
+  if (pathname.startsWith("/admin/novashield")) return "novashield";
   if (pathname.startsWith("/admin/aidoc")) return "aidoc";
   if (pathname.startsWith("/admin/subkeeper")) return "subkeeper";
   if (pathname.startsWith("/admin/dimension")) return "dimension";

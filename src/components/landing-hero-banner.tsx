@@ -54,7 +54,7 @@ export function LandingHeroBanner({
           />
         </div>
         <p className="animate-fade-up delay-100 mt-5 text-xs font-semibold tracking-[0.18em] text-sky-300/90">
-          拓脈預約 · NovaStore · 訂閱管家 · 拓維空間
+          拓脈預約 · NovaStore · Nova商譽寶 · 訂閱管家 · 拓維空間
         </p>
 
         <h1 className="animate-fade-up delay-100 mt-5 max-w-4xl text-balance font-display text-3xl font-bold leading-snug tracking-tight text-white md:text-5xl md:leading-[1.15]">

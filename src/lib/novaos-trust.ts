@@ -40,6 +40,12 @@ export const NOVAOS_ECOSYSTEM_PRODUCTS = [
     role: "預約與排班",
   },
   {
+    id: "novashield",
+    name: "Nova商譽寶",
+    href: "https://novashield-mauve.vercel.app",
+    role: "門市好評引導與客訴防護",
+  },
+  {
     id: "dimension",
     name: "拓維空間",
     href: "https://novadimension.vercel.app",

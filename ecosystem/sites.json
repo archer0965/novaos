@@ -34,6 +34,15 @@
       "localFallback": "../repos/taiwanbiz"
     },
     {
+      "id": "novashield",
+      "name": "Nova商譽寶（NovaShield）",
+      "url": "https://novashield-mauve.vercel.app",
+      "vercelProject": "novashield",
+      "repo": "https://github.com/archer0965/novashield",
+      "localFallback": "../repos/novashield",
+      "notes": "獨立微服務（Neon Postgres）；免費版 $0／專業版 NT$199/月、$1,990/年；與主站共用綠界商戶。"
+    },
+    {
       "id": "subkeeper",
       "name": "訂閱管家",
       "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",

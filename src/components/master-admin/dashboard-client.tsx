@@ -64,6 +64,11 @@ function productMetric(
         value: String(kpis.subkeeper.totalActiveSubscriptions),
         hint: `月額約 ${formatTwd(kpis.subkeeper.monthlyTrackedAmount)} · 7 日內到期 ${kpis.subkeeper.dueSoonCount}`,
       };
+    case "novashield":
+      return {
+        value: "獨立訂閱",
+        hint: "免費版 $0／專業版 NT$199 起 · 前往商譽寶後台",
+      };
     case "dimension":
       return {
         value: "Credit",
@@ -113,7 +118,7 @@ export function MasterDashboardClient() {
     <div className="space-y-8">
       <SectionTitle
         title="總覽"
-        subtitle="五站指揮台：先看全域，再點進單一產品監看"
+        subtitle="六站指揮台：先看全域，再點進單一產品監看"
       />
 
       {error ? (

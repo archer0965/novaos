@@ -53,7 +53,7 @@ export function BrandHero() {
 
         <p className="motion-safe:animate-fade-up delay-200 mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
           專為新創與社群商家打造的智慧雲端工具矩陣——整合
-          NovaStore、拓脈預約、訂閱管家與拓維空間。
+          NovaStore、拓脈預約、Nova商譽寶、訂閱管家與拓維空間。
         </p>
 
         <div className="motion-safe:animate-fade-up delay-300 mt-9 flex flex-wrap items-center gap-3">
