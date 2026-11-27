@@ -11,7 +11,7 @@ export interface AiFeedbackAnalysis {
 
 export interface AiAnalyzeApiResponse {
   ok: boolean;
-  mode: "openai" | "mock";
+  mode: "gemini" | "openai" | "mock";
   result?: AiFeedbackAnalysis;
   quota?: AiQuotaSnapshot;
   quotaState?: AiQuotaState;

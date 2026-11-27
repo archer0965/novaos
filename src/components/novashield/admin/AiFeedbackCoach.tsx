@@ -129,9 +129,9 @@ export function AiFeedbackCoach({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [topupToast, setTopupToast] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AiFeedbackAnalysis | null>(null);
-  const [analysisMode, setAnalysisMode] = useState<"openai" | "mock" | null>(
-    null,
-  );
+  const [analysisMode, setAnalysisMode] = useState<
+    "gemini" | "openai" | "mock" | null
+  >(null);
   const [lastDeductedFrom, setLastDeductedFrom] = useState<
     "monthly" | "topup" | null
   >(null);
@@ -514,9 +514,11 @@ export function AiFeedbackCoach({
                 </span>
               )}
               <span>
-                {analysisMode === "openai"
-                  ? "LLM 即時推論"
-                  : "NovaOS 專家模型"}
+                {analysisMode === "gemini"
+                  ? "Gemini AI 即時推論"
+                  : analysisMode === "openai"
+                    ? "OpenAI 即時推論"
+                    : "NovaOS 專家模型"}
               </span>
             </div>
           </div>

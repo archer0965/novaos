@@ -6,6 +6,10 @@ import {
   type AiAnalyzeApiResponse,
 } from "@/lib/novashield/aiAnalyzer";
 import {
+  generateJsonWithGeminiFallback,
+  getGeminiApiKey,
+} from "@/lib/novashield/gemini";
+import {
   computeAiQuotaSnapshot,
   consumeOneAiCredit,
   normalizeAiQuotaState,
@@ -181,14 +185,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Run LLM analysis (or structured mock fallback if OPENAI_API_KEY unset)
+    // 3. Run LLM analysis:
+    // Priority 1: GEMINI_API_KEY (reuses existing Nova AI Doc Gemini setup & fallback chain)
+    // Priority 2: OPENAI_API_KEY (optional OpenAI support)
+    // Priority 3: Built-in structured NovaOS domain model (fallback)
     const fallbackResult = generateSmartMockAnalysis(feedbackText, shopName);
-    const openAiKey = (process.env.OPENAI_API_KEY || "").trim();
+    const userPrompt = shopName
+      ? `門市名稱：${shopName}\n顧客負評原文：\n${feedbackText}`
+      : `顧客負評原文：\n${feedbackText}`;
 
-    let finalMode: "openai" | "mock" = "mock";
+    let finalMode: "gemini" | "openai" | "mock" = "mock";
     let finalResult = fallbackResult;
 
-    if (openAiKey) {
+    if (getGeminiApiKey()) {
+      const geminiParsed = await generateJsonWithGeminiFallback({
+        systemPrompt: AI_ANALYZE_SYSTEM_PROMPT,
+        userPrompt,
+      });
+      if (geminiParsed) {
+        finalResult = normalizeAiAnalysis(geminiParsed, fallbackResult);
+        finalMode = "gemini";
+      }
+    }
+
+    const openAiKey = (process.env.OPENAI_API_KEY || "").trim();
+    if (finalMode === "mock" && openAiKey) {
       const model = (process.env.OPENAI_MODEL || "gpt-4o-mini").trim();
       try {
         const response = await fetch(
@@ -205,12 +226,7 @@ export async function POST(request: Request) {
               response_format: { type: "json_object" },
               messages: [
                 { role: "system", content: AI_ANALYZE_SYSTEM_PROMPT },
-                {
-                  role: "user",
-                  content: shopName
-                    ? `門市名稱：${shopName}\n顧客負評原文：\n${feedbackText}`
-                    : `顧客負評原文：\n${feedbackText}`,
-                },
+                { role: "user", content: userPrompt },
               ],
             }),
           },
