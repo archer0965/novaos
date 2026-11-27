@@ -24,10 +24,21 @@ async function parseBody(request: Request): Promise<Record<string, string>> {
       Object.entries(json).map(([k, v]) => [k, String(v ?? "")]),
     );
   }
-  const form = await request.formData();
+  if (contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    const params: Record<string, string> = {};
+    form.forEach((value, key) => {
+      params[key] = String(value);
+    });
+    return params;
+  }
+  // Standard ECPay ReturnURL callback: application/x-www-form-urlencoded.
+  // URLSearchParams preserves empty-string fields (CustomField3=, StoreID=) verbatim.
+  const rawText = await request.text();
+  const search = new URLSearchParams(rawText);
   const params: Record<string, string> = {};
-  form.forEach((value, key) => {
-    params[key] = String(value);
+  search.forEach((value, key) => {
+    params[key] = value;
   });
   return params;
 }

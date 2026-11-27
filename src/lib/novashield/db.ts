@@ -343,8 +343,10 @@ export async function markNovaShieldReminderSent(
 /** Master admin: downgrade a shop back to FREE and clear expiry. */
 export async function setNovaShieldShopFree(shopId: string): Promise<ShopConfig> {
   const admin = getAdmin();
-  const existing = await getNovaShieldShop(shopId);
-  const base = existing ?? getInitialShopConfig(shopId);
+  const existingRow = await getNovaShieldShopRow(shopId);
+  const base = existingRow
+    ? rowToShopConfig(existingRow)
+    : getInitialShopConfig(shopId);
 
   const downgraded = normalizeShopConfig(shopId, {
     ...base,
@@ -359,6 +361,7 @@ export async function setNovaShieldShopFree(shopId: string): Promise<ShopConfig>
   const { error } = await admin.from("novashield_shops").upsert(
     {
       shop_id: shopId,
+      owner_id: existingRow?.owner_id ?? null,
       config: downgraded,
       plan: "FREE",
       billing_cycle: null,

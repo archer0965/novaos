@@ -34,10 +34,20 @@ async function parseBody(request: Request): Promise<Record<string, string>> {
     );
   }
 
-  const form = await request.formData();
+  if (contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    const params: Record<string, string> = {};
+    form.forEach((value, key) => {
+      params[key] = String(value);
+    });
+    return params;
+  }
+
+  const rawText = await request.text();
+  const search = new URLSearchParams(rawText);
   const params: Record<string, string> = {};
-  form.forEach((value, key) => {
-    params[key] = String(value);
+  search.forEach((value, key) => {
+    params[key] = value;
   });
   return params;
 }
@@ -329,7 +339,7 @@ export async function POST(request: Request) {
     if (plan === "starter" || plan === "pro") {
       update.active_modules = [starterModuleFromField, "pass"];
     } else if (plan === "unlimited") {
-      update.active_modules = ["booking", "store", "ai_doc", "pass"];
+      update.active_modules = ["booking", "store", "pass"];
     }
 
     const { error } = await admin

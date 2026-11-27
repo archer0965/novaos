@@ -68,8 +68,11 @@ export async function fulfillDimensionCredits(input: {
   }
 
   const url = `${DIMENSION_SITE_URL}/api/credits/fulfill`;
+  const normalizedAccountId = input.accountId.startsWith("novaos_")
+    ? input.accountId
+    : `novaos_${input.accountId}`;
   const payload = JSON.stringify({
-    accountId: input.accountId,
+    accountId: normalizedAccountId,
     planId: input.planId,
     paymentId: input.paymentId,
     paymentStatus: "success",

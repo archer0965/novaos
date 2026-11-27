@@ -123,21 +123,45 @@ export function ecpayUrlEncode(value: string): string {
 function sortedQuery(
   params: Record<string, string | number>,
   hashKey: string,
-  hashIV: string
+  hashIV: string,
+  options?: { includeEmpty?: boolean; asciiSort?: boolean }
 ): string {
+  const includeEmpty = options?.includeEmpty ?? false;
+  const asciiSort = options?.asciiSort ?? false;
   const sorted = Object.keys(params)
     .filter(
       (k) =>
         k !== "CheckMacValue" &&
         params[k] !== undefined &&
         params[k] !== null &&
-        params[k] !== ""
+        (includeEmpty || params[k] !== "")
     )
-    .sort((a, b) => (a.toLowerCase() > b.toLowerCase() ? 1 : a.toLowerCase() < b.toLowerCase() ? -1 : 0))
+    .sort((a, b) => {
+      const ka = asciiSort ? a : a.toLowerCase();
+      const kb = asciiSort ? b : b.toLowerCase();
+      return ka > kb ? 1 : ka < kb ? -1 : 0;
+    })
     .map((k) => `${k}=${params[k]}`)
     .join("&");
 
   return `HashKey=${hashKey}&${sorted}&HashIV=${hashIV}`;
+}
+
+function hashMac(
+  algo: "sha256" | "md5",
+  params: Record<string, string | number>,
+  hashKey: string,
+  hashIV: string,
+  options?: { includeEmpty?: boolean; asciiSort?: boolean }
+): string {
+  const raw = sortedQuery(params, hashKey, hashIV, options);
+  const encoded = ecpayUrlEncode(raw).toLowerCase();
+  return crypto.createHash(algo).update(encoded).digest("hex").toUpperCase();
+}
+
+function safeMacEqual(a: string, b: string): boolean {
+  if (a.length !== b.length || a.length === 0) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
 export function generateCheckMacValue(
@@ -146,9 +170,7 @@ export function generateCheckMacValue(
   hashIV?: string
 ): string {
   const cfg = getEcpayConfig();
-  const raw = sortedQuery(params, hashKey || cfg.HashKey, hashIV || cfg.HashIV);
-  const encoded = ecpayUrlEncode(raw).toLowerCase();
-  return crypto.createHash("md5").update(encoded).digest("hex").toUpperCase();
+  return hashMac("md5", params, hashKey || cfg.HashKey, hashIV || cfg.HashIV);
 }
 
 export function generateCheckMacValueSha256(
@@ -157,20 +179,47 @@ export function generateCheckMacValueSha256(
   hashIV?: string
 ): string {
   const cfg = getEcpayConfig();
-  const raw = sortedQuery(params, hashKey || cfg.HashKey, hashIV || cfg.HashIV);
-  const encoded = ecpayUrlEncode(raw).toLowerCase();
-  return crypto.createHash("sha256").update(encoded).digest("hex").toUpperCase();
+  return hashMac(
+    "sha256",
+    params,
+    hashKey || cfg.HashKey,
+    hashIV || cfg.HashIV
+  );
 }
 
-/** Prefer SHA256 (EncryptType=1); also accept MD5 for legacy callbacks. */
+/**
+ * Verify incoming ECPay callback CheckMacValue.
+ * ECPay ReturnURL callbacks include empty-string fields (e.g. CustomField3=,
+ * CustomField4=, StoreID=) inside the signed payload, so we verify with
+ * includeEmpty=true first and also accept includeEmpty=false for synthetic tests.
+ */
 export function verifyCheckMacValueAuto(
   params: Record<string, string>
 ): boolean {
-  const incoming = (params.CheckMacValue || "").toUpperCase();
+  const incoming = (params.CheckMacValue || "").trim().toUpperCase();
   if (!incoming) return false;
-  const sha = generateCheckMacValueSha256(params);
-  const md5 = generateCheckMacValue(params);
-  return incoming === sha || incoming === md5;
+  const cfg = getEcpayConfig();
+  const variants: Array<{
+    algo: "sha256" | "md5";
+    includeEmpty: boolean;
+    asciiSort: boolean;
+  }> = [
+    { algo: "sha256", includeEmpty: true, asciiSort: false },
+    { algo: "sha256", includeEmpty: true, asciiSort: true },
+    { algo: "sha256", includeEmpty: false, asciiSort: false },
+    { algo: "sha256", includeEmpty: false, asciiSort: true },
+    { algo: "md5", includeEmpty: true, asciiSort: false },
+    { algo: "md5", includeEmpty: false, asciiSort: false },
+  ];
+  return variants.some((v) =>
+    safeMacEqual(
+      incoming,
+      hashMac(v.algo, params, cfg.HashKey, cfg.HashIV, {
+        includeEmpty: v.includeEmpty,
+        asciiSort: v.asciiSort,
+      })
+    )
+  );
 }
 
 export function verifyCheckMacValue(params: Record<string, string>): boolean {

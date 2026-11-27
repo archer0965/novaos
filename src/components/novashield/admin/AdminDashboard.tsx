@@ -89,9 +89,22 @@ export function AdminDashboard({
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
-    if (paymentStatus === "pending") {
+    if (paymentStatus !== "pending") return;
+    let attempts = 0;
+    let cancelled = false;
+    void refreshFromServer();
+    const timer = window.setInterval(() => {
+      if (cancelled) return;
+      attempts += 1;
       void refreshFromServer();
-    }
+      if (attempts >= 8) {
+        window.clearInterval(timer);
+      }
+    }, 2500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [paymentStatus, refreshFromServer]);
 
   function showToast(message: string, type: "success" | "error" = "success") {
