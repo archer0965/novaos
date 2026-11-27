@@ -177,12 +177,18 @@ export function MasterAdminShell({
                   {email}
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
                 <Link
-                  href="/dashboard/pass"
-                  className="hidden rounded-lg px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/5 hover:text-slate-200 sm:inline"
+                  href="/"
+                  className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5 hover:text-white"
                 >
-                  會員中心
+                  公開首頁
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5 hover:text-white"
+                >
+                  會員後台
                 </Link>
                 <Button
                   variant="ghost"

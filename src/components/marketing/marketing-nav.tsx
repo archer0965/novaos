@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -16,6 +17,18 @@ const LINKS = [
 
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setSignedIn(Boolean(data.session?.user));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <header className="absolute inset-x-0 top-0 z-50">
@@ -35,18 +48,37 @@ export function MarketingNav() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="/login"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
-          >
-            登入
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-          >
-            免費開始
-          </Link>
+          {signedIn ? (
+            <>
+              <Link
+                href="/dashboard/pass"
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
+              >
+                會員中心
+              </Link>
+              <Link
+                href="/dashboard"
+                className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              >
+                進入後台
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
+              >
+                登入
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              >
+                免費開始
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -76,20 +108,41 @@ export function MarketingNav() {
               {link.label}
             </a>
           ))}
-          <Link
-            href="/login"
-            className="rounded-lg px-3 py-3 text-sm font-medium text-slate-200"
-            onClick={() => setOpen(false)}
-          >
-            登入
-          </Link>
-          <Link
-            href="/signup"
-            className="mt-1 rounded-xl bg-cyan-400 px-3 py-3 text-center text-sm font-semibold text-slate-950"
-            onClick={() => setOpen(false)}
-          >
-            免費開始
-          </Link>
+          {signedIn ? (
+            <>
+              <Link
+                href="/dashboard/pass"
+                className="rounded-lg px-3 py-3 text-sm font-medium text-slate-200"
+                onClick={() => setOpen(false)}
+              >
+                會員中心
+              </Link>
+              <Link
+                href="/dashboard"
+                className="mt-1 rounded-xl bg-cyan-400 px-3 py-3 text-center text-sm font-semibold text-slate-950"
+                onClick={() => setOpen(false)}
+              >
+                進入後台
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-lg px-3 py-3 text-sm font-medium text-slate-200"
+                onClick={() => setOpen(false)}
+              >
+                登入
+              </Link>
+              <Link
+                href="/signup"
+                className="mt-1 rounded-xl bg-cyan-400 px-3 py-3 text-center text-sm font-semibold text-slate-950"
+                onClick={() => setOpen(false)}
+              >
+                免費開始
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

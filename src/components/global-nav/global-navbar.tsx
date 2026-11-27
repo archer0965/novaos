@@ -26,10 +26,11 @@ export type GlobalNavbarProps = {
 };
 
 const QUICK_DESKTOP: {
-  id: NovaModuleId | "hub" | "subkeeper";
+  id: NovaModuleId | "home" | "hub" | "subkeeper";
   href: string;
   label: string;
 }[] = [
+  { id: "home", href: "/", label: "首頁" },
   { id: "hub", href: "/dashboard", label: "總控台" },
   {
     id: "booking",
@@ -110,16 +111,20 @@ export function GlobalNavbar({
               <nav className="hidden items-center gap-0.5 lg:flex" aria-label="模組捷徑">
                 {QUICK_DESKTOP.map((item) => {
                   const active =
-                    item.id === "hub"
-                      ? pathname === "/dashboard"
-                      : item.id === "subkeeper"
-                        ? false
-                        : mode === item.id;
+                    item.id === "home"
+                      ? pathname === "/"
+                      : item.id === "hub"
+                        ? pathname === "/dashboard"
+                        : item.id === "subkeeper"
+                          ? false
+                          : mode === item.id;
                   const free =
+                    item.id === "home" ||
                     item.id === "hub" ||
                     item.id === "subkeeper" ||
                     isFreeModule(item.id as NovaModuleId);
                   const locked =
+                    item.id !== "home" &&
                     item.id !== "hub" &&
                     item.id !== "subkeeper" &&
                     !free &&
@@ -140,17 +145,22 @@ export function GlobalNavbar({
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                       )}
                       title={
-                        item.id === "subkeeper"
-                          ? "開啟訂閱管家（獨立站）"
-                          : free
-                            ? "帳號中心・免費"
-                            : locked
-                              ? "尚未啟用 — 免費試用"
-                              : undefined
+                        item.id === "home"
+                          ? "回到公開首頁"
+                          : item.id === "hub"
+                            ? "對帳與營運總控台"
+                            : item.id === "subkeeper"
+                              ? "開啟訂閱管家（獨立站）"
+                              : isFreeModule(item.id as NovaModuleId)
+                                ? "帳號中心・免費"
+                                : locked
+                                  ? "尚未啟用 — 免費試用"
+                                  : undefined
                       }
                     >
                       {item.label}
-                      {free ? (
+                      {item.id === "subkeeper" ||
+                      isFreeModule(item.id as NovaModuleId) ? (
                         <span className="text-[9px] opacity-80">免費</span>
                       ) : locked ? (
                         <span className="text-[9px] opacity-80">試用</span>

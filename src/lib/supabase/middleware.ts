@@ -37,7 +37,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isHome = path === "/";
   const isDashboard =
     path.startsWith("/dashboard") || path.startsWith("/novashield/admin");
   const isAuthPage = path === "/login" || path === "/signup";
@@ -52,12 +51,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Already signed in: skip marketing / auth screens and open the app shell.
-  // Absolute product returns go through /auth/handoff so session tokens can be attached.
-  if (user && (isHome || isAuthPage)) {
-    const dest = isAuthPage
-      ? resolveAuthNext(request.nextUrl.searchParams.get("next"))
-      : "/dashboard";
+  // Already signed in on /login or /signup: jump to intended destination.
+  // Do NOT hijack "/" so admins and members can freely browse the public homepage.
+  if (user && isAuthPage) {
+    const dest = resolveAuthNext(request.nextUrl.searchParams.get("next"));
     const url = request.nextUrl.clone();
     if (isAbsoluteTrustedReturn(dest)) {
       url.pathname = "/auth/handoff";
