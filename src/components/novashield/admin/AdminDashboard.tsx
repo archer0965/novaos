@@ -11,8 +11,11 @@ import {
   CheckCircle2,
   CreditCard,
   Crown,
+  Layers,
   LayoutDashboard,
+  Lock,
   LogOut,
+  MessageSquare,
   Plus,
   QrCode,
   RotateCcw,
@@ -26,12 +29,15 @@ import {
 } from "lucide-react";
 import { AiFeedbackCoach } from "./AiFeedbackCoach";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
-import { ShopSettingsForm } from "./ShopSettingsForm";
-import { LineConfigPanel } from "./LineConfigPanel";
-import { QrCodeShareCard } from "./QrCodeShareCard";
-import { LivePhonePreview } from "./LivePhonePreview";
-import { PricingSection } from "./PricingSection";
 import { EcpayUpgradeModal } from "./EcpayUpgradeModal";
+import { FeedbackManagementHub } from "./FeedbackManagementHub";
+import { LineConfigPanel } from "./LineConfigPanel";
+import { LivePhonePreview } from "./LivePhonePreview";
+import { MultiStoreManager } from "./MultiStoreManager";
+import { PricingSection } from "./PricingSection";
+import { QrCodeShareCard } from "./QrCodeShareCard";
+import { ShopSettingsForm } from "./ShopSettingsForm";
+import { createFallbackShopConfig } from "@/lib/novashield/mockData";
 import { useShopStore } from "@/lib/novashield/shopStore";
 import {
   formatExpiresAtTaipei,
@@ -49,6 +55,14 @@ interface AdminDashboardProps {
   userEmail: string;
   isPlatformAdmin: boolean;
 }
+
+type AdminTab =
+  | "analytics"
+  | "complaints"
+  | "ai"
+  | "multistore"
+  | "qrcode"
+  | "settings";
 
 export function AdminDashboard({
   userId,
@@ -79,16 +93,14 @@ export function AdminDashboard({
     requestedShopId,
   });
 
+  const [activeTab, setActiveTab] = useState<AdminTab>("analytics");
+  const [aiPrefillText, setAiPrefillText] = useState("");
   const [newShopIdInput, setNewShopIdInput] = useState("");
   const [showNewShopInput, setShowNewShopInput] = useState(false);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "analytics" | "ai" | "qrcode" | "settings"
-  >("analytics");
-  const [aiPrefillText, setAiPrefillText] = useState("");
   const [mobileTab, setMobileTab] = useState<"settings" | "preview">(
     "settings",
   );
@@ -169,6 +181,10 @@ export function AdminDashboard({
   }
 
   async function handleCreateCustomShop() {
+    if (!hasMultiStoreAccess) {
+      openUpgradeModal("monthly");
+      return;
+    }
     const cleaned = sanitizeShopId(newShopIdInput);
     if (!cleaned) {
       showToast(
@@ -181,24 +197,80 @@ export function AdminDashboard({
     if (result.synced) {
       setNewShopIdInput("");
       setShowNewShopInput(false);
-      showToast(
-        `已建立並綁定您的免費版門市：${cleaned}（付費升級後解鎖專業版）`,
-      );
+      showToast(`已建立並切換至分店：${cleaned}`);
     } else {
       showToast(
-        result.errorMessage || "建立門市失敗，該門市代碼可能已被使用。",
+        result.errorMessage || "建立分店失敗，該代碼可能已被使用。",
         "error",
       );
     }
   }
 
+  async function handleCreateBranchFromManager(payload: {
+    shopId: string;
+    shopName: string;
+    googleReviewUrl: string;
+    lineId: string;
+  }) {
+    if (!hasMultiStoreAccess) {
+      openUpgradeModal("monthly");
+      return {
+        ok: false,
+        errorMessage: "升級專業版 ($199/月) 解鎖多門市管理與客訴處理紀錄系統",
+      };
+    }
+    const base = createFallbackShopConfig(payload.shopId);
+    const nextConfig: ShopConfig = {
+      ...base,
+      shopId: payload.shopId,
+      shopName: payload.shopName,
+      googleReviewUrl: payload.googleReviewUrl || base.googleReviewUrl,
+      lineId: payload.lineId,
+      emailNotification: userEmail,
+    };
+    const result = await persistShop(nextConfig);
+    if (result.synced) {
+      selectShop(result.config.shopId);
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      errorMessage: result.errorMessage || "建立分店失敗。",
+    };
+  }
+
+  async function handleUpdateBranchFromManager(shop: ShopConfig) {
+    const result = await persistShop(shop);
+    if (result.synced) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      errorMessage: result.errorMessage || "更新分店失敗。",
+    };
+  }
+
   const shopList = Object.values(shops);
   const isPro = config.plan === "PRO";
+  const hasMultiStoreAccess =
+    isPro || isPlatformAdmin || shopList.some((s) => s.plan === "PRO");
+
+  function handleSwitcherChange(value: string) {
+    if (value === "__ADD_NEW__") {
+      if (!hasMultiStoreAccess) {
+        openUpgradeModal("monthly");
+        return;
+      }
+      setActiveTab("multistore");
+      return;
+    }
+    selectShop(value);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-      {/* Signed-in NovaOS Account Bar */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xs shadow-sm">
+      {/* Signed-in NovaOS Account & Store Switcher Bar */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xs shadow-sm">
         <div className="flex flex-wrap items-center gap-2 text-slate-600">
           <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800">
             <UserCheck className="h-4 w-4 text-emerald-600" />
@@ -211,7 +283,7 @@ export function AdminDashboard({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-100"
@@ -254,7 +326,7 @@ export function AdminDashboard({
         </div>
       )}
 
-      {/* Top Action Bar */}
+      {/* Top Action & Multi-Store Switcher Card */}
       <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -302,7 +374,7 @@ export function AdminDashboard({
               <p className="mt-1 text-xs text-slate-500 sm:text-sm">
                 {config.subscriptionExpired
                   ? "您的專業版已到期並自動切回免費版；透過綠界續費後即可重新開啟全部付費功能。"
-                  : "目前為免費版，進階付費功能將呈現鎖定狀態；完成綠界付款（$199/月 或 $1,990/年）後自動開通。"}
+                  : "目前為免費版（限單一門市），升級專業版 ($199/月) 解鎖多門市管理、客訴處理紀錄系統與 LINE 私訊引導。"}
               </p>
             )}
           </div>
@@ -319,32 +391,59 @@ export function AdminDashboard({
           </button>
         </div>
 
+        {/* Store Switcher & Quick Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <Store className="h-4 w-4 text-slate-500" />
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 ${
+                hasMultiStoreAccess
+                  ? "border-slate-200 bg-slate-50"
+                  : "border-slate-200 bg-slate-50/70"
+              }`}
+            >
+              {hasMultiStoreAccess ? (
+                <Store className="h-4 w-4 text-amber-600" />
+              ) : (
+                <Lock className="h-4 w-4 text-slate-400" />
+              )}
               <select
-                aria-label="切換門市"
+                aria-label="門市切換器"
                 value={selectedShopId}
-                onChange={(e) => selectShop(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none sm:text-sm"
+                disabled={!hasMultiStoreAccess && shopList.length <= 1}
+                onChange={(e) => handleSwitcherChange(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none disabled:cursor-not-allowed sm:text-sm"
               >
                 {shopList.map((item) => (
                   <option key={item.shopId} value={item.shopId}>
-                    {item.shopName} ({item.shopId} · {item.plan})
+                    【{item.shopName}】({item.shopId} · {item.plan})
                   </option>
                 ))}
+                {hasMultiStoreAccess && (
+                  <option value="__ADD_NEW__">+ 新增分店（前往多門市管理）</option>
+                )}
               </select>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowNewShopInput((prev) => !prev)}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 sm:text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              <span>新增門市</span>
-            </button>
+            {hasMultiStoreAccess ? (
+              <button
+                type="button"
+                onClick={() => setShowNewShopInput((prev) => !prev)}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50/60 hover:text-amber-900 sm:text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span>新增分店</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openUpgradeModal("monthly")}
+                title="升級專業版 ($199/月) 解鎖多門市管理與客訴處理紀錄系統"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span>多門市切換（專業版解鎖）</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -369,10 +468,10 @@ export function AdminDashboard({
         </div>
       </div>
 
-      {showNewShopInput && (
+      {hasMultiStoreAccess && showNewShopInput && (
         <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 sm:flex-row sm:items-center">
           <span className="text-xs font-bold text-amber-900">
-            建立專屬門市代碼（預設免費版，綁定於您的帳號）：
+            快速建立分店代碼（自動沿用專業版帳號）：
           </span>
           <input
             type="text"
@@ -384,7 +483,7 @@ export function AdminDashboard({
                 void handleCreateCustomShop();
               }
             }}
-            placeholder="例如：cafe02 或 ramen-taipei"
+            placeholder="例如：station-store 或 xinyi02"
             className="flex-1 rounded-xl border border-amber-200 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
           />
           <button
@@ -392,7 +491,7 @@ export function AdminDashboard({
             onClick={() => void handleCreateCustomShop()}
             className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
           >
-            建立並編輯
+            建立並切換
           </button>
         </div>
       )}
@@ -415,79 +514,87 @@ export function AdminDashboard({
         </div>
       )}
 
-      {/* Top-level Admin Section Tabs */}
+      {/* 6-Tab Workspace Navigation */}
       <div
         role="tablist"
         aria-label="後台功能分頁"
-        className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm sm:grid-cols-4"
+        className="mb-6 grid grid-cols-2 gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm sm:grid-cols-3 lg:grid-cols-6"
       >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "analytics"}
-          onClick={() => setActiveTab("analytics")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
-            activeTab === "analytics"
-              ? "bg-[#0F172A] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-          }`}
-        >
-          <BarChart3
-            className={`h-4 w-4 ${activeTab === "analytics" ? "text-[#F59E0B]" : ""}`}
-          />
-          <span>數據儀表板</span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "ai"}
-          onClick={() => setActiveTab("ai")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
-            activeTab === "ai"
-              ? "bg-[#0F172A] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-          }`}
-        >
-          <Sparkles
-            className={`h-4 w-4 ${activeTab === "ai" ? "text-[#F59E0B]" : "text-amber-500"}`}
-          />
-          <span>AI 客訴智能分析</span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "qrcode"}
-          onClick={() => setActiveTab("qrcode")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
-            activeTab === "qrcode"
-              ? "bg-[#0F172A] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-          }`}
-        >
-          <QrCode
-            className={`h-4 w-4 ${activeTab === "qrcode" ? "text-[#F59E0B]" : ""}`}
-          />
-          <span>QR Code 設計</span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "settings"}
-          onClick={() => setActiveTab("settings")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
-            activeTab === "settings"
-              ? "bg-[#0F172A] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-          }`}
-        >
-          <Sliders
-            className={`h-4 w-4 ${activeTab === "settings" ? "text-[#F59E0B]" : ""}`}
-          />
-          <span>門市與 LINE 設定</span>
-        </button>
+        {(
+          [
+            {
+              id: "analytics",
+              label: "數據儀表板",
+              icon: BarChart3,
+              locked: false,
+            },
+            {
+              id: "complaints",
+              label: "客訴管理中心",
+              icon: MessageSquare,
+              locked: !isPro,
+            },
+            {
+              id: "ai",
+              label: "AI 客訴分析",
+              icon: Sparkles,
+              locked: false,
+            },
+            {
+              id: "multistore",
+              label: "多門市管理",
+              icon: Layers,
+              locked: !hasMultiStoreAccess,
+            },
+            {
+              id: "qrcode",
+              label: "QR Code 設計",
+              icon: QrCode,
+              locked: false,
+            },
+            {
+              id: "settings",
+              label: "門市與 LINE",
+              icon: Sliders,
+              locked: false,
+            },
+          ] as const
+        ).map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2.5 text-xs font-bold transition ${
+                active
+                  ? "bg-[#0F172A] text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Icon
+                className={`h-4 w-4 shrink-0 ${
+                  active
+                    ? "text-[#F59E0B]"
+                    : tab.id === "ai"
+                      ? "text-amber-500"
+                      : ""
+                }`}
+              />
+              <span className="truncate">{tab.label}</span>
+              {tab.locked && (
+                <Lock
+                  className={`h-3 w-3 shrink-0 ${
+                    active ? "text-amber-300" : "text-slate-400"
+                  }`}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab 1: Analytics Dashboard */}
@@ -502,7 +609,20 @@ export function AdminDashboard({
         />
       )}
 
-      {/* Tab 2: AI Complaint Analyzer & Reply Coach */}
+      {/* Tab 2: Feedback Management Hub (PRO) */}
+      {activeTab === "complaints" && (
+        <FeedbackManagementHub
+          config={config}
+          managerName={userEmail || "門市店長"}
+          onUpgradeToPro={() => openUpgradeModal("monthly")}
+          onAnalyzeWithAi={(text) => {
+            setAiPrefillText(text);
+            setActiveTab("ai");
+          }}
+        />
+      )}
+
+      {/* Tab 3: AI Complaint Analyzer & Reply Coach */}
       {activeTab === "ai" && (
         <AiFeedbackCoach
           config={config}
@@ -511,12 +631,28 @@ export function AdminDashboard({
         />
       )}
 
-      {/* Tab 2: Customizable QR Code Generator */}
+      {/* Tab 4: Multi-Store Manager (PRO) */}
+      {activeTab === "multistore" && (
+        <MultiStoreManager
+          shops={shopList}
+          activeShopId={selectedShopId}
+          hasProAccess={hasMultiStoreAccess}
+          onSelectShop={(id) => {
+            selectShop(id);
+            showToast(`已切換至門市：${shops[id]?.shopName || id}`);
+          }}
+          onCreateBranch={handleCreateBranchFromManager}
+          onUpdateBranch={handleUpdateBranchFromManager}
+          onUpgradeToPro={() => openUpgradeModal("monthly")}
+        />
+      )}
+
+      {/* Tab 5: Customizable QR Code Generator */}
       {activeTab === "qrcode" && (
         <QrCodeShareCard shopId={config.shopId} shopName={config.shopName} />
       )}
 
-      {/* Tab 3: Shop Settings + Live Mobile Preview */}
+      {/* Tab 6: Shop Settings + Live Mobile Preview */}
       {activeTab === "settings" && (
         <>
           <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-200/70 p-1 lg:hidden">

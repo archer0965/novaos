@@ -158,6 +158,34 @@ export async function upsertNovaShieldShopSettingsForUser(
     );
   }
 
+  // Multi-Store Manager gating:
+  // FREE accounts may only manage 1 store; PRO accounts may create multiple branches
+  // and new branches automatically inherit the master account's active PRO entitlement.
+  let inheritedPro: {
+    billingCycle: BillingCycle | null;
+    planExpiresAt: string | null;
+  } | null = null;
+
+  if (!existingRow && !actor.isPlatformAdmin) {
+    const ownedShops = await listNovaShieldShopsForUser({
+      userId: actor.userId,
+      isPlatformAdmin: false,
+    });
+    const ownedList = Object.values(ownedShops);
+    const activeProShop = ownedList.find((s) => s.plan === "PRO");
+
+    if (activeProShop) {
+      inheritedPro = {
+        billingCycle: activeProShop.billingCycle ?? "monthly",
+        planExpiresAt: activeProShop.planExpiresAt ?? null,
+      };
+    } else if (ownedList.length >= 1) {
+      throw new NovaShieldForbiddenError(
+        "免費版僅能管理單一門市，請升級專業版 ($199/月) 解鎖多門市管理與客訴處理紀錄系統。",
+      );
+    }
+  }
+
   const existingConfig = existingRow ? rowToShopConfig(existingRow) : null;
   const base =
     existingConfig ??
@@ -165,6 +193,10 @@ export async function upsertNovaShieldShopSettingsForUser(
       ? getInitialShopConfig(shopId)
       : {
           ...createFallbackShopConfig(shopId),
+          plan: inheritedPro ? ("PRO" as PlanTier) : ("FREE" as PlanTier),
+          billingCycle: inheritedPro?.billingCycle ?? null,
+          planExpiresAt: inheritedPro?.planExpiresAt ?? null,
+          ratingMode: inheritedPro ? ("multi" as const) : ("single" as const),
           emailNotification: actor.userEmail?.trim() || "",
         });
 

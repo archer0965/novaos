@@ -8,6 +8,16 @@ export type RatingMode = "single" | "multi";
 
 export type FeedbackStatus = "messaged" | "pending";
 
+export type ComplaintCaseStatus = "unhandled" | "in_progress" | "resolved";
+
+export interface ComplaintNoteEntry {
+  id: string;
+  note: string;
+  author: string;
+  statusAfter?: ComplaintCaseStatus;
+  createdAt: string;
+}
+
 export interface ShopConfig {
   shopId: string;
   shopName: string;
@@ -54,11 +64,14 @@ export interface FeedbackLogItem {
   id: string;
   shopId: string;
   rating: number;
+  category?: string;
   summary: string;
   customerName?: string;
   phone?: string;
   channel: "google" | "line" | "email";
   status: FeedbackStatus;
+  caseStatus?: ComplaintCaseStatus;
+  notes?: ComplaintNoteEntry[];
   categoryScores?: Record<string, number>;
   createdAt: string;
 }
@@ -81,7 +94,24 @@ export interface ShopAnalyticsSummary {
   googleRedirectCount: number;
   googleRedirectRate: number;
   interceptedCount: number;
+  interceptRate: number;
+  unhandledCount: number;
   starDistribution: StarDistributionBucket[];
   categoryAverages: CategoryAverageMetric[];
   recentFeedbacks: FeedbackLogItem[];
+}
+
+export interface MultiStorePerformanceRow {
+  shopId: string;
+  shopName: string;
+  plan: PlanTier;
+  lineId: string;
+  googleReviewUrl: string;
+  totalCount: number;
+  averageRating: number;
+  googleRedirectCount: number;
+  googleRedirectRate: number;
+  interceptedCount: number;
+  interceptRate: number;
+  unhandledCount: number;
 }
