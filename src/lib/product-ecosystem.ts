@@ -2,7 +2,7 @@ import type { NovaModuleId } from "@/lib/novaos";
 import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 
 export type ProductCard = {
-  id: NovaModuleId | "hub" | "dimension" | "subkeeper";
+  id: NovaModuleId | "hub" | "dimension" | "subkeeper" | "novashield";
   name: string;
   nameEn: string;
   tagline: string;
@@ -87,6 +87,25 @@ export const PRODUCT_ECOSYSTEM: ProductCard[] = [
     external: true,
     badge: "獨立站",
     accent: "rose",
+  },
+  {
+    id: "novashield",
+    name: "Nova商譽寶",
+    nameEn: "NovaShield",
+    tagline: "門市 5 星商譽防線：Google Maps 好評引導 × LINE 客訴私訊攔截",
+    audience: "餐飲咖啡廳、美業沙龍、實體零售與連鎖門市",
+    highlights: [
+      "4–5 星滿意顧客一鍵導流 Google Maps 留下好評",
+      "1–3 星負評一鍵喚起 LINE 官方帳號私訊店長處理（專業版）",
+      "多維度自訂評分、品牌 Logo／主題色客製與到期前 3 天續費提醒",
+      "免費版 $0／專業版 NT$199 月繳或 NT$1,990 年繳（綠界 ECPay 收款）",
+    ],
+    advantage: "兼顧台灣《公平交易法》與 Google 評論合規，把客訴留在離店前溫柔化解",
+    ctaLabel: "體驗 Nova商譽寶",
+    href: "https://novashield-mauve.vercel.app",
+    external: true,
+    badge: "獨立站",
+    accent: "amber",
   },
   {
     id: "subkeeper",

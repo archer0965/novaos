@@ -59,6 +59,17 @@
       "repo": null,
       "role": "product",
       "notes": "AI 軟裝空間改造；Vercel 未連接 Git。價目以該站為準。"
+    },
+    {
+      "id": "novashield",
+      "name": "Nova商譽寶",
+      "nameEn": "NovaShield",
+      "url": "https://novashield-mauve.vercel.app",
+      "vercelProject": "novashield",
+      "repo": "https://github.com/archer0965/novashield",
+      "localFallback": "../repos/novashield",
+      "role": "product",
+      "notes": "門市顧客評分與 LINE 即時私訊引導；免費版 $0、專業版 $199/月 或 $1,990/年（綠界收款），價目以該站為準。"
     }
   ]
 }
