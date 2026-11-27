@@ -16,10 +16,41 @@ import { LandingPricing } from "@/components/novashield/landing/LandingPricing";
 import { FaqAccordion } from "@/components/novashield/landing/FaqAccordion";
 import { MerchantTermsSection } from "@/components/novashield/legal/MerchantTermsSection";
 
+import { PRODUCTION_URL } from "@/lib/site";
+
+const OG_IMAGE_URL = "/og-novashield.png?v=20261127";
+const PAGE_TITLE = "Nova商譽寶（NovaShield）｜門市 5 星商譽的第一道防線";
+const PAGE_DESC =
+  "讓滿意好評順暢引導至 Google Maps，讓負評客訴在 LINE 私訊溫柔解決。內建顧客回饋數據儀表板、自訂 QR Code 立牌與 AI 客訴回覆大師，免費版 $0 立即體驗。";
+
 export const metadata: Metadata = {
-  title: "Nova商譽寶（NovaShield）｜門市 5 星商譽的第一道防線",
-  description:
-    "拓新雲端 NovaOS 旗下門市商譽微服務：讓滿意好評順暢引導至 Google Maps，讓負評客訴在 LINE 私訊溫柔解決。",
+  title: PAGE_TITLE,
+  description: PAGE_DESC,
+  alternates: {
+    canonical: "/novashield",
+  },
+  openGraph: {
+    type: "website",
+    locale: "zh_TW",
+    url: `${PRODUCTION_URL}/novashield`,
+    siteName: "拓新雲端 NovaOS",
+    title: PAGE_TITLE,
+    description: PAGE_DESC,
+    images: [
+      {
+        url: OG_IMAGE_URL,
+        width: 1200,
+        height: 630,
+        alt: "Nova商譽寶（NovaShield）— 門市 5 星商譽的第一道防線",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: PAGE_TITLE,
+    description: PAGE_DESC,
+    images: [OG_IMAGE_URL],
+  },
 };
 
 const FEATURES = [

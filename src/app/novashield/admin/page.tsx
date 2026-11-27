@@ -7,12 +7,40 @@ import { Navbar } from "@/components/novashield/Navbar";
 import { AdminDashboard } from "@/components/novashield/admin/AdminDashboard";
 import { MerchantTermsSection } from "@/components/novashield/legal/MerchantTermsSection";
 
+import { PRODUCTION_URL } from "@/lib/site";
+
 export const dynamic = "force-dynamic";
 
+const OG_IMAGE_URL = "/og-novashield.png?v=20261127";
+const ADMIN_TITLE = "店家管理後台｜Nova商譽寶（NovaShield）";
+const ADMIN_DESC =
+  "使用拓新雲端 NovaOS 帳號登入管理門市顧客評分頁、數據儀表板、自訂 QR Code 立牌、AI 客訴回覆大師與 LINE 私訊引導。";
+
 export const metadata: Metadata = {
-  title: "店家管理後台｜Nova商譽寶（NovaShield）",
-  description:
-    "使用拓新雲端 NovaOS 帳號登入管理門市顧客評分頁、QR Code、LINE 官方帳號 Deep Link 與綠界訂閱升級。",
+  title: ADMIN_TITLE,
+  description: ADMIN_DESC,
+  openGraph: {
+    type: "website",
+    locale: "zh_TW",
+    url: `${PRODUCTION_URL}/novashield/admin`,
+    siteName: "拓新雲端 NovaOS",
+    title: ADMIN_TITLE,
+    description: ADMIN_DESC,
+    images: [
+      {
+        url: OG_IMAGE_URL,
+        width: 1200,
+        height: 630,
+        alt: "Nova商譽寶（NovaShield）店家管理後台",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: ADMIN_TITLE,
+    description: ADMIN_DESC,
+    images: [OG_IMAGE_URL],
+  },
 };
 
 export default async function NovaShieldAdminPage() {
