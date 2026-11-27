@@ -26,11 +26,14 @@ const Toaster = dynamic(
   { ssr: false }
 );
 
-const siteTitle = "拓新雲端 NovaOS｜專業雲端工具與軟體解決方案";
+/** Must match public/og-image.jpg hero copy exactly (LINE/FB preview title). */
+const siteTitle = "拓新雲端 NovaOS｜智慧雲端工具矩陣";
 const siteDescription =
-  "拓新雲端開發商業級雲端產品矩陣：NovaStore 賣場對帳、拓脈預約、Nova AI Doc 文件智能、拓維空間 AI 軟裝、訂閱管家 訂閱管理——讓微型團隊用企業級穩定度成長。";
+  "專為新創與社群商家打造的智慧雲端工具矩陣。整合 NovaStore 賣場對帳、拓脈預約、Nova商譽寶、訂閱管家與拓維空間。";
 const twitterDescription =
-  "拓新雲端 NovaOS：商業級雲端工具與軟體解決方案開發商。";
+  "專為新創與社群商家打造的智慧雲端工具矩陣｜拓新雲端 NovaOS";
+/** Bump when OG title/image change so crawlers treat it as a new asset. */
+const ogCacheKey = "20261122-meta-v2";
 
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_URL),
@@ -46,6 +49,8 @@ export const metadata: Metadata = {
     "拓新雲端",
     "拓脈預約",
     "NovaStore",
+    "Nova商譽寶",
+    "NovaShield",
     "拓維空間",
     "NovaDimension",
     "美業預約",
@@ -68,10 +73,10 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/og-image.jpg?v=20261122-og",
+        url: `/og-image.jpg?v=${ogCacheKey}`,
         width: 2848,
         height: 1504,
-        alt: "拓新雲端 NovaOS｜智慧雲端工具矩陣",
+        alt: "拓新雲端 NovaOS｜專為新創與社群商家打造的智慧雲端工具矩陣",
       },
     ],
   },
@@ -79,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: twitterDescription,
-    images: ["/og-image.jpg?v=20261122-og"],
+    images: [`/og-image.jpg?v=${ogCacheKey}`],
   },
   appleWebApp: {
     capable: true,

@@ -1,114 +1,94 @@
-# NovaOS 整合計畫（會員／價格／品牌）
+# NovaOS 整合規劃（會員／方案／付款／資料）
 
-日期：2026-11-22（Asia/Taipei）  
-原則：**不刪除既有使用者、不擅自合併帳號、不改正式資料。**
-
----
-
-## 1. 現況 Auth 架構（程式觀察）
-
-| 產品 | Auth | 備註 |
-|------|------|------|
-| Hub | Supabase Auth | 主帳號體系 |
-| DocMate | Supabase Auth | 程式與文案聲稱與 NovaOS **共用**；表用 `docmate_profiles` |
-| NovaStore | Supabase Auth | 本機 env 顯示 **同一 project ref 跡象** |
-| 拓脈 | 未知 | 無法檢查原始碼；有 `/login` |
-| SubKeeper | 設計上免登入／本機 | 公開無 `/login`；**不應強制雲端帳號** |
-
-**不可假設：** 即使 URL 相同，也必須你確認正式環境 project；不同 project 的 `user_id` **不能**直接當同一人。
+**更新：** 2026-11-22（Asia/Taipei）  
+**原則：** 先評估、不合併 DB、不假裝 SSO、不改正式價格。
 
 ---
 
-## 2. 建議的 NovaOS Account 路線（安全、漸進）
+## 1. 產品定位（勿混淆）
 
-### 階段 A — 確認與盤點（先做）
-
-1. 你提供：各站正式 `NEXT_PUBLIC_SUPABASE_URL`（可遮罩 key）  
-2. 產出對照表：同 project / 異 project  
-3. 若異 project：規劃 **Account Linking**（email 驗證後綁定），禁止直接合併 UUID
-
-### 階段 B — 統一入口（不破壞既有）
-
-1. Hub 新增 `/account`（訂閱中控延伸）：已啟用產品、到期日、推薦碼  
-2. 各產品登入頁加「使用 NovaOS 帳號」說明＋deep-link  
-3. SubKeeper **維持免登入**；可選「匯出／備份」；雲端同步僅在你明確要求後做
-
-### 階段 C — 權益與付款
-
-1. 所有付費寫入只經 **service_role**（配合 `026` trigger）  
-2. DocMate plan 以 hub ECPay callback 為唯一真相，或 webhook 回寫  
-3. 付款紀錄表（跨產品）讀 `ecpay_processed_trades`＋各產品 subscription 表
-
-### 階段 D — 帳號生命週期
-
-忘記密碼／重設／刪除申請：先在 **Hub + DocMate** 補齊（DocMate 目前缺），再複製模式到 NovaStore／拓脈。
-
----
-
-## 3. 中央價格設定（建議資料模型）
-
-```ts
-type CentralPlan = {
-  product_id: "hub" | "novastore" | "booking" | "docmate" | "subkeeper";
-  product_name: string;
-  product_url: string;
-  plan_id: string;
-  plan_name: string;
-  monthly_price: number;
-  yearly_price: number | null;
-  half_yearly_price?: number | null;
-  trial_days: number;
-  usage_limits: Record<string, number>;
-  feature_list: string[];
-  discount_rules: unknown;
-  product_status: "active" | "beta" | "deprecated";
-};
-```
-
-### 目前程式盤點（衝突待你確認）
-
-| 產品 | 程式所見 |
-|------|----------|
-| NovaStore（獨立站） | free 15 筆；starter 299／1610／2990；pro 499／2690／4990 |
-| Hub 拓脈／Store | starter 299；unlimited 499；另有 half/year 基價 1794／3588 等＋tier 折扣 |
-| DocMate | free／pro **199**／business **499** |
-| Hub 全家桶 | unlimited **499**/月 含拓脈+Store+AI Doc |
-| SubKeeper | 公開免登入；hub 視為免費模組 — **待原始碼確認是否收費** |
-| 拓脈創始店家 | 行銷有；**獨立站原始碼未取得** |
-
-**規則：** 發現衝突時**不自行改價**；列差異等你確認權威來源後，再抽到 `@novaos/plans` 或 hub API `/api/plans`。
-
----
-
-## 4. 品牌統一
-
-| 項目 | 目標 |
+| 名稱 | 角色 |
 |------|------|
-| 母品牌 | 拓新雲端 NovaOS |
-| 電商 | NovaStore |
-| 預約 | 拓脈預約 |
-| AI 文件 | **DocMate AI**（避免 DocMeta／僅稱 Nova AI Doc 造成混淆；hub 模組可標「DocMate」） |
-| 個人訂閱 | **SubKeeper**（禁止 Nova Pass） |
-| Hub pass 模組 UI | 「訂閱中控」（與 SubKeeper 產品分離） |
-| 法律 | 一律連 `https://paycheck.com.de/legal` |
-| Logo | 使用 hub 已更新之圓形品牌標 |
+| 拓新雲端 NovaOS | 母品牌／主站／帳號入口 |
+| 訂閱中控（Pass／`module=pass`） | **跨產品訂閱與綠界付費中樞** |
+| 訂閱管家 | **個人訂閱支出管理**（正式＝免登入本機站） |
+| NovaStore／拓脈／Nova AI Doc／拓維 | 獨立產品 |
 
-視覺：Premium SaaS；各產品保留 accent（Store 琥珀、Booking 青、DocMate 品牌藍、SubKeeper 依其站）。
+**禁止：** 把「訂閱管家」當 Nova Pass／跨站會員系統。
 
 ---
 
-## 5. 整合阻礙
+## 2. 會員（NovaOS Account）現況
 
-1. 拓脈／SubKeeper 無 Git → 無法改 Footer／SSO／價格  
-2. 雙 Supabase 風險未確認  
-3. Hub 內嵌 MVP 與獨立站雙軌 → 需決定「redirect-only」或「繼續維護」
+| 站 | Auth | 可互通 |
+|----|------|--------|
+| hub ⇄ NovaStore | 同 Supabase project | Cookie **不同網域** → 需各站登入 |
+| DocMate | 設計共用 Auth／profiles | 同左 |
+| 拓脈／拓維 | 未知 | 不可假設 |
+| 訂閱管家 | 無帳號 | 不強制雲端帳號 |
+
+### 可行方案（建議順序）
+
+**A. 短期（低風險，建議先做）**
+
+- 主站會員中心列出五產品＋「已連線／未連線」狀態（hub 側 entitlement）
+- 各產品「用 NovaOS 帳號登入」＝同 Email／同 Supabase，**仍各自 session**
+- 明確文案：「登入狀態不會自動帶過其他網域」
+
+**B. 中期（真正跨站 session）**
+
+- 中央 Auth 網域（例如 `auth.paycheck.com.de`）＋ OAuth／token 交換
+- 或 Supabase custom domain＋同父網域 cookie（需各產品遷到子網域）
+
+**C. 禁止**
+
+- 把不同 project 的 user 表直接 merge／overwrite
+- 前端塞假 JWT／共享 localStorage 當 SSO
 
 ---
 
-## 6. 下一步（需你點頭）
+## 3. 方案與價格權威
 
-1. 提供兩站 repo 或連接 Vercel Git  
-2. 確認 Supabase 是否共用  
-3. 確認價格權威表  
-4. 批准 `026` 與後續部署  
-5. 確認 SubKeeper 永遠本機 or 可選登入同步
+| 產品 | 價格權威（現行） | 付費路徑 |
+|------|------------------|----------|
+| NovaStore | 產品站顯示；與 hub 月價對齊 | → hub ECPay |
+| 拓脈 | 產品站；年繳公式與 hub 不一致 | 宣稱綠界（未證實） |
+| Nova AI Doc | **產品站** FREE／PRO／BUSINESS | → hub ECPay |
+| 拓維 | **產品站** Credit／週期 | 宣稱主站綠界 |
+| 訂閱管家 | 免費本機 | 無 |
+| hub 單模組／全家桶 | hub `CENTRAL_PLANS` | hub ECPay |
+
+**整合建議：** 「付費路徑統一」與「價格統一」分開。路徑可導 hub；價格變更須你授權。
+
+**中央方案表（理想欄位）：** product_id、plan_id、月／年價、trial、usage_limit、billing_cycle、status — 以 hub 後端為 source of truth，子站 **讀取** 而非各自硬編碼（實作需你確認後再改正式價顯示來源）。
+
+---
+
+## 4. 早鳥
+
+目前非單一後端。整合前需你確認：
+
+1. 是否同一活動？  
+2. 名額上限是 15 還是 10？  
+3. 計數單位是「啟用模組」還是「店家註冊」？
+
+確認前：**標「需人工確認」**，不虛構剩餘名額。
+
+---
+
+## 5. 付款整合
+
+- 現況：hub 為唯一已驗證 ECPay 實作；Store／DocMate 已導流。
+- 拓脈／拓維：接 Git 後對齊「checkout 建立 pending → callback 解鎖」。
+- Webhook 必須驗 CheckMacValue；權益以 callback 為準。
+
+---
+
+## 6. 訂閱管家雙軌說明
+
+| 軌 | URL／路徑 | 定位 |
+|----|-----------|------|
+| 正式產品 | temporary-speedy-reef… | 免登入本機 |
+| hub 實驗 | `/dashboard/subkeeper` | 可選雲端（需 migration 028／029） |
+
+對外矩陣只推正式產品 URL；勿強制使用者改雲端。

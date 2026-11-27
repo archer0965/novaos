@@ -42,8 +42,8 @@ export const TIER_META: Record<
 > = {
   early_bird: {
     id: "early_bird",
-    label: "早鳥優惠（前 15 名啟用）",
-    trialDays: 14,
+    label: "早鳥優惠（前 15 名於各產品站後台開始試用時占用）",
+    trialDays: 7,
     multipliers: { monthly: 0.9, half_yearly: 0.85, yearly: 0.8 },
     foldLabels: { monthly: "9 折", half_yearly: "85 折", yearly: "8 折" },
   },
@@ -56,7 +56,7 @@ export const TIER_META: Record<
   },
   vip: {
     id: "vip",
-    label: "特約店家／推廣大使",
+    label: "特約店家",
     trialDays: 14,
     multipliers: { monthly: 0.9, half_yearly: 0.82, yearly: 0.75 },
     foldLabels: { monthly: "9 折", half_yearly: "82 折", yearly: "75 折" },
@@ -157,7 +157,7 @@ export function resolvePricingTier(options: {
   moduleId?: NovaModuleId | null;
   /** 特約店家 — NovaStore & 拓脈預約 */
   isPartnerStore?: boolean | null;
-  /** 推廣大使 — Nova AI Doc */
+  /** 推廣大使（已停止提供） */
   isAmbassador?: boolean | null;
   /** Whether this seller's activation for the module is early-bird */
   moduleIsEarlyBird?: boolean | null;
@@ -192,7 +192,7 @@ export function resolvePricingTier(options: {
 /** Modules that share 特約店家優惠 */
 export const PARTNER_STORE_MODULES: NovaModuleId[] = ["booking", "store"];
 
-/** Module that uses 推廣大使優惠 */
+/** 已停止提供的模組（推廣大使資格原對應） */
 export const AMBASSADOR_MODULE: NovaModuleId = "ai_doc";
 
 /** AI 文件助理獨立方案（與拓脈／NovaStore 價格結構分開） */
@@ -273,7 +273,7 @@ export const AI_DOC_PLAN_META: Record<
       "每月 2,000 次提問",
       "進階文件分析",
       "優先處理",
-      "團隊功能（後續開發）",
+      "團隊功能",
     ],
   },
 };

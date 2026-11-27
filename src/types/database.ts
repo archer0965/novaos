@@ -64,9 +64,9 @@ export interface Profile {
   expiry_reminder_1d_for?: string | null;
   /** Admin-approved 特約店家 (DB column kept as is_early_bird). Applies to NovaStore & 拓脈預約. */
   is_early_bird?: boolean | null;
-  /** lifetime_special = 特約店家；ambassador = 推廣大使 (AI Doc) */
+  /** lifetime_special = 特約店家；ambassador = 推廣大使（已停止，僅保留既有資料相容） */
   discount_tier?: DiscountTier | string | null;
-  /** 推廣大使（Nova AI Doc Tier 3） */
+  /** 推廣大使（已停止提供，僅保留既有資料相容） */
   is_ambassador?: boolean | null;
   /**
    * @deprecated Signup no longer consumes early-bird seats.
@@ -280,17 +280,17 @@ export const PRICING_CONFIG = {
   currency: "NTD",
   freeTrial: {
     enabled: true,
-    /** Default (一般資格) — actual days decided at module activation */
+    /** Default (一般資格) — actual days decided at module activation via TIER_META */
     durationDays: 7,
     description:
-      "註冊帳號不會開始試用；啟用子模組後才倒數（早鳥／特約／大使 14 天，一般 7 天）",
+      "註冊帳號不會開始試用；啟用子模組後才倒數（早鳥／一般 7 天，特約店家 14 天）。以主站 pricing-tiers 為準。",
   },
-  /** @deprecated Use per-module early bird (module_activations, max 15 each) */
+  /** @deprecated Use per-module early bird (module_activations, max 15 each) — trialDays must match TIER_META.early_bird (7) */
   signupEarlyBird: {
     maxUsers: 15,
-    trialDays: 14,
+    trialDays: 7,
     label: "子模組早鳥優惠",
-    description: "各子模組前 15 名啟用者享 14 天試用與早鳥價",
+    description: "各子模組前 15 名啟用者享 7 天試用與早鳥價（特約店家另為 14 天）",
   },
   /** Tier 3：特約店家（NovaStore & 拓脈預約連動） */
   earlyBird: {
@@ -312,12 +312,14 @@ export const PRICING_CONFIG = {
     termsTitle: "特約店家合作條款",
     terms: [
       "申請人須能證明進單、出貨量穩定，並提供賣場連結供審核。",
-      "特約優惠適用 NovaStore 與拓脈預約，兩者規則連動同步。",
+      "特約優惠適用 NovaStore 與拓脈預約，兩者規則連動同步；折扣以拓新雲端主站定價為權威（月繳 9 折／半年繳 82 折／年繳 75 折）。",
+      "特約不含訂閱管家（訂閱管家永久免費）與拓維空間獨立 Credit 方案。",
       "成為特約店家後，同意於合理範圍協助推廣拓新雲端 NovaOS。",
       "長期未配合或明顯不符標準，官方得調整或取消特約資格。",
+      "子站顯示之特約文案須與本條款及主站定價一致；若有衝突以主站為準。",
     ],
   },
-  /** Tier 3：推廣大使（Nova AI Doc） */
+  /** Tier 3：推廣大使（已停止提供） */
   ambassador: {
     trialDays: 14,
     cycleMultipliers: {
@@ -326,9 +328,9 @@ export const PRICING_CONFIG = {
       yearly: 0.75,
     } satisfies Record<BillingCycle, number>,
     discountTier: "ambassador" as const,
-    label: "推廣大使專屬優惠",
+    label: "推廣大使專屬優惠（已停止提供）",
     description:
-      "適用 Nova AI Doc；啟用時 14 天試用，續約享月 9 折／半年 82 折／年 75 折。",
+      "推廣大使計畫已停止，不再開通新資格。",
   },
   billingCycles: {
     monthly: {
@@ -362,7 +364,7 @@ export const PRICING_CONFIG = {
       isPopular: false,
       blurb: "註冊後請啟用子模組開始試用",
       features: [
-        "訂閱中控永久免費；個人訂閱管理見 訂閱管家",
+        "帳號內建訂閱中控；個人訂閱開銷請用「訂閱管家」",
         "註冊不扣早鳥名額、不開始試用倒數",
         "付費模組點擊啟用後才開始試用",
       ],
@@ -381,11 +383,10 @@ export const PRICING_CONFIG = {
       isBundle: false,
       features: [
         "任選 1 個付費模組（拓脈預約／NovaStore）",
-        "訂閱中控永久免費附贈",
+        "帳號內建訂閱中控（不含其他模組授權）",
         "NovaStore 訂單額度每月 100 筆",
         "依資格套用早鳥／一般／特約折扣",
         "推薦碼首月現折 $50",
-        "Nova AI Doc 另有獨立方案（Pro NT$199／Business NT$499）",
       ],
       prices: {
         monthly: { total: 299, avgMonthly: 299 },
@@ -412,14 +413,16 @@ export const PRICING_CONFIG = {
       name: "NovaOS 旗艦全家桶",
       monthlyQuota: -1,
       isPopular: true,
-      popularBadge: "三模組全開",
+      popularBadge: "全家桶",
       isBundle: true,
-      blurb: "解鎖拓脈＋NovaStore＋Nova AI Doc；訂閱中控永久免費",
+      blurb: "雙模組方案：拓脈預約＋NovaStore",
       features: [
-        "拓脈預約 + NovaStore + Nova AI Doc 全開",
-        "訂閱中控永久免費附贈",
-        "NovaStore 訂單處理無上限",
-        "依資格套用早鳥／一般／特約／大使折扣",
+        "雙模組：拓脈預約",
+        "雙模組：NovaStore（訂單無上限）",
+        "含訂閱中控（NovaOS 會員中心）",
+        "不含拓維空間（獨立 Credit／訂閱）",
+        "訂閱管家＝永久免費個人工具（≠ 訂閱中控，不佔方案價）",
+        "依資格套用早鳥／一般／特約折扣",
         "推薦碼首月現折 $50",
       ],
       prices: {

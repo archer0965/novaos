@@ -48,19 +48,25 @@ export async function countModuleEarlyBirdUsed(
 
 export async function getModuleEarlyBirdStatus(moduleId: NovaModuleId) {
   let used = 0;
+  let reliable = true;
   try {
     used = await countModuleEarlyBirdUsed(moduleId);
   } catch (error) {
     console.error("[module-early-bird] count failed", moduleId, error);
-    used = 0;
+    // Do not invent remaining seats when the DB count fails.
+    reliable = false;
+    used = MODULE_EARLY_BIRD_MAX;
   }
-  const remaining = Math.max(0, MODULE_EARLY_BIRD_MAX - used);
+  const remaining = reliable
+    ? Math.max(0, MODULE_EARLY_BIRD_MAX - used)
+    : 0;
   return {
     moduleId,
-    open: used < MODULE_EARLY_BIRD_MAX,
-    used,
+    open: reliable && used < MODULE_EARLY_BIRD_MAX,
+    used: reliable ? used : null,
     max: MODULE_EARLY_BIRD_MAX,
     remaining,
+    reliable,
     trialDays: TIER_META.early_bird.trialDays,
   };
 }

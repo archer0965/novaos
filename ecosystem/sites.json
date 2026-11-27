@@ -10,7 +10,7 @@
     "repo": "https://github.com/archer0965/novaos",
     "localPath": ".",
     "role": "hub",
-    "notes": "品牌主站。付款路徑統一主站 ECPay；價目：NovaStore／拓脈跟 hub，Nova AI Doc／拓維跟各站。"
+    "notes": "品牌主站。付款路徑統一主站 ECPay；價目：NovaStore／拓脈跟 hub，拓維跟各站，Nova商譽寶已整合至 /novashield。"
   },
   "sites": [
     {
@@ -24,31 +24,34 @@
       "notes": "價目本站顯示；付費升級導向 paycheck.com.de Pass（綠界）。"
     },
     {
-      "id": "docmate",
-      "name": "Nova AI Doc",
-      "url": "https://docmate-ai-one.vercel.app",
-      "vercelProject": "docmate-ai",
-      "repo": "https://github.com/archer0965/docmate-ai",
-      "localFallback": "../repos/docmate-ai",
-      "role": "product"
-    },
-    {
       "id": "booking",
       "name": "拓脈預約",
       "url": "https://taiwanbiz.vercel.app",
       "vercelProject": "taiwanbiz",
-      "repo": null,
+      "repo": "https://github.com/archer0965/taiwanbiz",
       "role": "product",
-      "notes": "獨立站；Vercel 專案未連接 Git，無法在此環境同步／稽核原始碼。"
+      "notes": "GitHub archer0965/taiwanbiz 已串 Vercel taiwanbiz；早鳥 15；年繳以 hub 權威；登入／註冊導主站。",
+      "localFallback": "../repos/taiwanbiz"
+    },
+    {
+      "id": "novashield",
+      "name": "Nova商譽寶",
+      "nameEn": "NovaShield",
+      "url": "https://paycheck.com.de/novashield",
+      "vercelProject": "novaos",
+      "repo": "https://github.com/archer0965/novaos",
+      "role": "product",
+      "notes": "已整合進拓新雲端主站（/novashield），共用 Supabase、綠界 ECPay 金流與 Resend 到期提醒；免費版 $0、專業版 $199/月 或 $1,990/年。"
     },
     {
       "id": "subkeeper",
       "name": "訂閱管家",
       "url": "https://temporary-speedy-reef-cy4xhhu.vercel.app",
       "vercelProject": "temporary-speedy-reef-cy4xhhu",
-      "repo": null,
+      "repo": "https://github.com/archer0965/subkeeper",
       "role": "product",
-      "notes": "訂閱管家正式網址；Vercel 未連接 Git。"
+      "notes": "GitHub archer0965/subkeeper 已串 Vercel temporary-speedy-reef；需登入並統一導主站。",
+      "localFallback": "../repos/subkeeper"
     },
     {
       "id": "dimension",
@@ -56,19 +59,10 @@
       "nameEn": "NovaDimension AI",
       "url": "https://novadimension.vercel.app",
       "vercelProject": "novadimension",
-      "repo": null,
+      "repo": "https://github.com/archer0965/novadimension",
       "role": "product",
-      "notes": "AI 軟裝空間改造；Vercel 未連接 Git。價目以該站為準。"
-    },
-    {
-      "id": "novashield",
-      "name": "Nova商譽寶",
-      "nameEn": "NovaShield",
-      "url": "https://paycheck.com.de/novashield",
-      "vercelProject": "paycheck-tw",
-      "repo": "https://github.com/archer0965/novaos",
-      "role": "product",
-      "notes": "已整合進拓新雲端主站（/novashield），共用 Supabase、綠界 ECPay 金流與 Resend 到期提醒；免費版 $0、專業版 $199/月 或 $1,990/年。"
+      "notes": "GitHub archer0965/novadimension 已串 Vercel novadimension；登入／註冊導主站。",
+      "localFallback": "../repos/novadimension"
     }
   ]
 }

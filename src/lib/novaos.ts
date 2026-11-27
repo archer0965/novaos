@@ -6,7 +6,7 @@ export const NOVA_BRAND = {
   displayName: "拓新雲端 NovaOS",
   shortName: "NovaOS",
   legalName: "拓新雲端 NovaOS",
-  tagline: "專業雲端工具與軟體解決方案——賣場、預約、AI 文件、空間改造與營運中控",
+  tagline: "專為新創與社群商家打造的智慧雲端工具矩陣",
   domain: "paycheck.com.de",
 } as const;
 
@@ -52,14 +52,26 @@ export const NOVA_MODULES: Record<NovaModuleId, NovaModuleDef> = {
     nameEn: "Billing Hub",
     emoji: "⚙️",
     href: "/dashboard/pass",
-    blurb: "方案升級、付款與推薦碼中控（永久免費；個人訂閱開銷請用訂閱管家）",
+    blurb: "方案升級、付款與推薦碼中控（帳號中心；個人訂閱開銷請用訂閱管家）",
   },
 };
 
-export const NOVA_MODULE_IDS = Object.keys(NOVA_MODULES) as NovaModuleId[];
+/**
+ * 已停止提供的模組：不在前台導覽、方案選項與可啟用清單中顯示。
+ * 既有付款回調與資料列保留，避免影響已成立的交易紀錄。
+ */
+export const RETIRED_MODULE_IDS: readonly NovaModuleId[] = ["ai_doc"];
+
+export function isRetiredModule(id: NovaModuleId | string | null | undefined): boolean {
+  return RETIRED_MODULE_IDS.includes(id as NovaModuleId);
+}
+
+export const NOVA_MODULE_IDS = (Object.keys(NOVA_MODULES) as NovaModuleId[]).filter(
+  (id) => !isRetiredModule(id)
+);
 
 /** Paid product modules — billing hub (pass) is free forever and never sold alone. */
-export const PAID_MODULE_IDS: NovaModuleId[] = ["booking", "store", "ai_doc"];
+export const PAID_MODULE_IDS: NovaModuleId[] = ["booking", "store"];
 
 /** Always unlocked for every registered account — no trial, no early-bird seat. */
 export const FREE_MODULE_IDS: NovaModuleId[] = ["pass"];
@@ -69,7 +81,7 @@ export function isFreeModule(id: NovaModuleId | string | null | undefined): bool
 }
 
 export function isPaidModule(id: NovaModuleId | string | null | undefined): id is NovaModuleId {
-  return id === "booking" || id === "store" || id === "ai_doc";
+  return id === "booking" || id === "store";
 }
 
 export const REFERRAL_CONFIG = {

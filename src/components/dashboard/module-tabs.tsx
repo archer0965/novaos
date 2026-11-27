@@ -6,7 +6,7 @@ import { isFreeModule, NOVA_MODULES, type NovaModuleId } from "@/lib/novaos";
 import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
 import { cn } from "@/lib/utils";
 
-const ORDER: NovaModuleId[] = ["booking", "store", "ai_doc", "pass"];
+const ORDER: NovaModuleId[] = ["booking", "store", "pass"];
 
 export function ModuleTabs({
   unlocked,
@@ -20,13 +20,10 @@ export function ModuleTabs({
       <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border/80 bg-secondary/40 p-1 sm:min-w-0">
         {ORDER.map((id) => {
           const mod = NOVA_MODULES[id];
-          const externalHref =
-            id === "ai_doc" ? "https://docmate-ai-one.vercel.app" : null;
-          const active = externalHref
-            ? false
-            : pathname === mod.href || pathname.startsWith(`${mod.href}/`);
+          const active =
+            pathname === mod.href || pathname.startsWith(`${mod.href}/`);
           const free = isFreeModule(id);
-          const locked = !free && !unlockedSet.has(id) && !externalHref;
+          const locked = !free && !unlockedSet.has(id);
           const className = cn(
             "inline-flex min-w-[7.5rem] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
             active
@@ -35,10 +32,8 @@ export function ModuleTabs({
                 ? "text-muted-foreground/70 hover:bg-background/60"
                 : "text-muted-foreground hover:bg-background hover:text-foreground"
           );
-          const title = externalHref
-            ? "開啟 Nova AI Doc（獨立站）"
-            : free
-              ? "訂閱中控永久免費"
+          const title = free
+              ? "訂閱中控（帳號中心）"
               : locked
                 ? "尚未啟用 — 點擊前往啟用試用"
                 : mod.blurb;
@@ -53,20 +48,6 @@ export function ModuleTabs({
               ) : null}
             </>
           );
-          if (externalHref) {
-            return (
-              <a
-                key={id}
-                href={externalHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={className}
-                title={title}
-              >
-                {inner}
-              </a>
-            );
-          }
           return (
             <Link
               key={id}

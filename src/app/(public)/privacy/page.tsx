@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <Section title="1. 適用範圍">
         <p>
           本政策適用於拓新雲端 NovaOS
-          總站及旗下工具（含 NovaStore、拓脈預約、Nova AI Doc、拓維空間
+          總站及旗下工具（含 NovaStore、拓脈預約、Nova商譽寶、拓維空間
           NovaDimension、訂閱管家 等）於提供服務過程中所蒐集之個人資料。獨立產品站若另有補充說明，應一併適用；若有衝突，以對當事人保護較有利者為優先，並以總站法律中心為統一參考。
         </p>
       </Section>
@@ -34,11 +34,11 @@ export default function PrivacyPage() {
           <li>
             <strong>營運設定資料</strong>
             ：銀行代碼／帳號後段資訊、LINE User
-            ID、自有官方帳號設定、預約／賣場／文件等業務設定。
+            ID、自有官方帳號設定、預約／賣場等業務設定。
           </li>
           <li>
             <strong>交易與使用資料</strong>
-            ：訂單或回報內容、預約紀錄、文件處理紀錄、訂閱方案、用量與操作日誌。
+            ：訂單或回報內容、預約紀錄、訂閱方案、用量與操作日誌。
           </li>
           <li>
             <strong>買家／終端使用者資料（由您或終端使用者提交）</strong>

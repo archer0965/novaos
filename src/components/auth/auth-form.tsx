@@ -10,8 +10,33 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { sanitizeNextPath } from "@/lib/safe-next";
+import { handoffAssignUrl } from "@/lib/auth-handoff";
+import {
+  isAbsoluteTrustedReturn,
+  resolveAuthNext,
+} from "@/lib/trusted-returns";
 import { createClient } from "@/lib/supabase/client";
+
+async function finishAuthRedirect(
+  router: ReturnType<typeof useRouter>,
+  safeNext: string
+) {
+  if (!isAbsoluteTrustedReturn(safeNext)) {
+    router.push(safeNext);
+    router.refresh();
+    return;
+  }
+  const supabase = createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const assign = handoffAssignUrl(safeNext, session);
+  if (assign) {
+    window.location.assign(assign);
+    return;
+  }
+  window.location.assign(safeNext);
+}
 
 export function AuthForm({
   mode,
@@ -24,7 +49,7 @@ export function AuthForm({
   signupHint?: string | null;
 }) {
   const router = useRouter();
-  const safeNext = sanitizeNextPath(nextPath);
+  const safeNext = resolveAuthNext(nextPath);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,8 +78,7 @@ export function AuthForm({
 
         if (data.session) {
           toast.success("註冊成功");
-          router.push(safeNext);
-          router.refresh();
+          await finishAuthRedirect(router, safeNext);
         } else {
           toast.success("請至信箱完成驗證後再登入");
           router.push(`/login?next=${encodeURIComponent(safeNext)}`);
@@ -65,13 +89,11 @@ export function AuthForm({
           password,
         });
         if (error) throw error;
-        // Touch NovaOS profile / last_login_at (best-effort)
         await fetch("/api/subkeeper/session", { method: "POST" }).catch(
           () => null
         );
         toast.success("登入成功");
-        router.push(safeNext);
-        router.refresh();
+        await finishAuthRedirect(router, safeNext);
       }
     } catch (err) {
       const raw = err instanceof Error ? err.message : "操作失敗";
@@ -94,12 +116,12 @@ export function AuthForm({
         <BrandLogo className="mb-8 justify-center" />
         <div className="rounded-2xl border border-border/80 bg-card/90 p-6 shadow-sm">
           <h1 className="font-display text-2xl font-semibold">
-            {mode === "login" ? "登入 NovaStore" : "免費建立賣場"}
+            {mode === "login" ? "登入拓新雲端" : "建立 NovaOS 帳號"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "login"
-              ? "進入賣家控制台管理賣場、訂單與自動對帳"
-              : "3 分鐘建立 IG 專屬獨立賣場，粉絲自己下單結帳"}
+              ? "統一帳號入口：登入後可回到各產品站繼續使用"
+              : "一組 Email／密碼適用 NovaStore、訂閱管家等產品"}
           </p>
           {mode === "signup" && signupHint ? (
             <p className="mt-3 rounded-md border border-accent/35 bg-accent/10 px-3 py-2 text-sm font-medium text-accent-foreground">
@@ -110,7 +132,7 @@ export function AuthForm({
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
               <div className="space-y-2">
-                <Label htmlFor="shop_name">店名</Label>
+                <Label htmlFor="shop_name">顯示名稱／店名</Label>
                 <Input
                   id="shop_name"
                   className="h-12"
@@ -136,7 +158,7 @@ export function AuthForm({
               />
               {mode === "signup" ? (
                 <p className="text-xs text-muted-foreground">
-                  此 Email 同時用於登入，以及訂閱成功、到期續費提醒通知。
+                  此 Email 同時用於登入與訂閱／到期通知。
                 </p>
               ) : null}
             </div>

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminEmail } from "@/lib/admin";
 import {
-  assignAmbassador,
   assignEarlyBird,
   countEarlyBirdSeats,
   listEarlyBirdSeats,
@@ -87,10 +86,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, ...result });
     }
     if (parsed.data.action === "assign_ambassador") {
-      const result = await assignAmbassador({
-        targetUserEmail: parsed.data.email,
-      });
-      return NextResponse.json({ ok: true, ...result });
+      return NextResponse.json(
+        { error: "推廣大使計畫已停止" },
+        { status: 410 }
+      );
     }
     if (parsed.data.action === "revoke_ambassador") {
       const result = await revokeAmbassador(parsed.data.email);

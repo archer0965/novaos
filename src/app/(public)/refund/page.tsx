@@ -21,7 +21,7 @@ export default function RefundPolicyPage() {
         <p>
           本政策適用於透過拓新雲端 NovaOS
           總站或其授權結帳流程（含綠界科技 ECPay）購買之訂閱、方案升級與相關付費項目，涵蓋旗下工具之付費方案（如
-          NovaStore、拓脈預約、Nova AI Doc、拓維空間、訂閱管家
+          NovaStore、拓脈預約、Nova商譽寶、拓維空間、訂閱管家
           相關付費權益等）。免費額度、試用與人工審核優惠另依站上說明。
         </p>
       </Section>
@@ -38,7 +38,7 @@ export default function RefundPolicyPage() {
             推薦碼、點數折抵或其他促銷，僅於符合條件時適用，且不得要求轉換為現金，除非法令另有規定。
           </li>
           <li>
-            特約店家、推廣大使等資格需人工審核，通過後始適用對應折扣；申請方式見首頁合作區塊與 LINE
+            特約店家等資格需人工審核，通過後始適用對應折扣；申請方式見首頁合作區塊與 LINE
             客服。
           </li>
         </ul>

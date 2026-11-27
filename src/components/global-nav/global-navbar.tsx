@@ -42,11 +42,6 @@ const QUICK_DESKTOP: {
     label: NOVA_MODULES.store.name,
   },
   {
-    id: "ai_doc",
-    href: "https://docmate-ai-one.vercel.app",
-    label: NOVA_MODULES.ai_doc.name,
-  },
-  {
     id: "pass",
     href: NOVA_MODULES.pass.href,
     label: NOVA_MODULES.pass.name,
@@ -117,7 +112,7 @@ export function GlobalNavbar({
                   const active =
                     item.id === "hub"
                       ? pathname === "/dashboard"
-                      : item.id === "subkeeper" || item.id === "ai_doc"
+                      : item.id === "subkeeper"
                         ? false
                         : mode === item.id;
                   const free =
@@ -127,11 +122,9 @@ export function GlobalNavbar({
                   const locked =
                     item.id !== "hub" &&
                     item.id !== "subkeeper" &&
-                    item.id !== "ai_doc" &&
                     !free &&
                     !unlocked.has(item.id as NovaModuleId);
-                  const external =
-                    item.id === "subkeeper" || item.id === "ai_doc";
+                  const external = item.id === "subkeeper";
                   return (
                     <Link
                       key={item.id}
@@ -150,7 +143,7 @@ export function GlobalNavbar({
                         item.id === "subkeeper"
                           ? "開啟訂閱管家（獨立站）"
                           : free
-                            ? "永久免費"
+                            ? "帳號中心・免費"
                             : locked
                               ? "尚未啟用 — 免費試用"
                               : undefined

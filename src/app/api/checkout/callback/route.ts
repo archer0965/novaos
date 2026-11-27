@@ -9,7 +9,12 @@ import {
   buildSubscriptionUpdate,
   formatExpiresAtTaipei,
 } from "@/lib/subscription";
+import {
+  fulfillDimensionCredits,
+  parseDimensionPlanField,
+} from "@/lib/dimension-billing";
 import { getSiteUrl } from "@/lib/site";
+import { reportTelemetry } from "@/lib/telemetry";
 import {
   getPlanDisplayName,
   isPaidPlan,
@@ -39,12 +44,23 @@ async function parseBody(request: Request): Promise<Record<string, string>> {
 
 function parsePlanField(raw: string): {
   mode: "purchase" | "upgrade";
-  catalog: "novaos" | "ai_doc";
-  plan: PaidPlanKey | "pro" | "business";
+  catalog: "novaos" | "ai_doc" | "dimension";
+  plan: PaidPlanKey | "pro" | "business" | string;
   aiPlan?: "pro" | "business";
+  dimensionPlan?: ReturnType<typeof parseDimensionPlanField>;
   cycle: BillingCycle;
 } {
   const parts = (raw || "pro:monthly").split(":");
+  const dimPlan = parseDimensionPlanField(raw);
+  if (dimPlan) {
+    return {
+      mode: "purchase",
+      catalog: "dimension",
+      plan: dimPlan,
+      dimensionPlan: dimPlan,
+      cycle: "monthly",
+    };
+  }
   if (parts[0] === "ai") {
     const aiPlan = parts[1] === "business" ? "business" : "pro";
     const cycle = normalizeBillingCycle(parts[2]);
@@ -74,6 +90,13 @@ export async function POST(request: Request) {
 
     if (!verifyCheckMacValueAuto(params)) {
       console.error("[ecpay/callback] CheckMacValue mismatch");
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "error",
+        message: "CheckMacValue mismatch",
+        product: "hub",
+      });
       return new NextResponse("0|CheckMacValueError", { status: 400 });
     }
 
@@ -85,15 +108,66 @@ export async function POST(request: Request) {
 
     if (rtnCode !== "1") {
       console.warn("[ecpay/callback] payment not success", rtnCode, tradeNo);
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "warn",
+        message: `payment_not_success rtn=${rtnCode}`,
+        product: catalog === "ai_doc" ? "docmate" : "hub",
+        userId: sellerId || null,
+        meta: { tradeNo, rtnCode },
+      });
       return new NextResponse("1|OK", { status: 200 });
     }
 
     if (!sellerId) {
       console.error("[ecpay/callback] missing CustomField1 (seller id)");
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: "payment_failure",
+        severity: "error",
+        message: "missing CustomField1 seller id",
+        product: "hub",
+        meta: { tradeNo },
+      });
       return new NextResponse("0|MissingSeller", { status: 400 });
     }
 
     const admin = createAdminClient();
+
+    // 拓維空間：付款成功後授權產品站入帳（Credit／訂閱）
+    if (catalog === "dimension" && parsedPlan.dimensionPlan) {
+      const dimPlan = parsedPlan.dimensionPlan;
+      const paymentId = tradeNo || `dim-${sellerId}-${Date.now()}`;
+      const fulfilled = await fulfillDimensionCredits({
+        accountId: sellerId,
+        planId: dimPlan,
+        paymentId,
+      });
+      await reportTelemetry({
+        source: "api/checkout/callback",
+        kind: fulfilled.ok ? "payment_success" : "payment_failure",
+        severity: fulfilled.ok ? "info" : "error",
+        message: fulfilled.ok
+          ? `dimension_fulfill_ok ${dimPlan}`
+          : `dimension_fulfill_failed ${fulfilled.status} ${fulfilled.body}`,
+        product: "novadimension",
+        userId: sellerId,
+        meta: { tradeNo: paymentId, planId: dimPlan },
+      });
+      if (!fulfilled.ok) {
+        // Still ack ECPay so it does not retry forever; ops can replay fulfill.
+        console.error(
+          "[ecpay/callback] dimension fulfill failed",
+          fulfilled.status,
+          fulfilled.body
+        );
+      }
+      return new NextResponse("1|OK", {
+        status: 200,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
 
     // AI Doc 獨立訂閱：更新 docmate_profiles（共用 Auth）
     if (catalog === "ai_doc" && parsedPlan.aiPlan) {
@@ -330,6 +404,16 @@ export async function POST(request: Request) {
       tradeNo
     );
 
+    await reportTelemetry({
+      source: "api/checkout/callback",
+      kind: "payment_success",
+      severity: "info",
+      message: `payment_ok ${mode} ${plan}/${cycle}`,
+      product: catalog === "ai_doc" ? "docmate" : "hub",
+      userId: sellerId,
+      meta: { tradeNo, expiresAt: update.expires_at },
+    });
+
     // Notify seller (email + optional LINE). Failures must not break ECPay ack.
     try {
       const expiresAt = String(update.expires_at || "");
@@ -345,6 +429,14 @@ export async function POST(request: Request) {
         });
         if (!mail.ok && !mail.skipped) {
           console.error("[ecpay/callback] confirm mail failed", mail.error);
+          await reportTelemetry({
+            source: "api/checkout/callback",
+            kind: "notify_failure",
+            severity: "warn",
+            message: String(mail.error || "confirm_mail_failed"),
+            product: "hub",
+            userId: sellerId,
+          });
         }
       }
 

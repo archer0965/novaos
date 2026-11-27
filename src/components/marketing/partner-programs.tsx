@@ -1,4 +1,4 @@
-import { ArrowUpRight, Handshake, Megaphone } from "lucide-react";
+import { ArrowUpRight, Handshake } from "lucide-react";
 import { siteConfig } from "@/lib/site";
 
 const PROGRAMS = [
@@ -8,17 +8,8 @@ const PROGRAMS = [
     eyebrow: "PARTNER STORE",
     title: "特約店家",
     blurb:
-      "適用 NovaStore 與拓脈預約。進單、出貨穩定即可申請，人工審核通過後開通專屬折扣。",
+      "適用 NovaStore 與拓脈預約（規則連動）。審核通過後：14 天試用，續約月繳 9 折／半年 82 折／年 75 折。不含訂閱管家（永久免費）與拓維空間。",
     cta: "LINE 申請特約店家",
-  },
-  {
-    id: "ambassador",
-    icon: Megaphone,
-    eyebrow: "AMBASSADOR",
-    title: "推廣大使",
-    blurb:
-      "適用 Nova AI Doc。協助推廣文件助理，人工審核通過後享大使試用與續約折扣。",
-    cta: "LINE 申請推廣大使",
   },
 ] as const;
 
@@ -32,7 +23,7 @@ export function PartnerPrograms() {
             PARTNERSHIP
           </p>
           <h2 className="font-display mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            特約店家／推廣大使
+            特約店家
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">
             此資格需人工審核，不在定價方案直接選購。請透過官方 LINE

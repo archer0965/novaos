@@ -29,7 +29,7 @@ export default function LegalIndexPage() {
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
           這裡彙整 {siteConfig.legalName}{" "}
-          與旗下工具（NovaStore、拓脈預約、Nova AI Doc、拓維空間、訂閱管家
+          與旗下工具（NovaStore、拓脈預約、Nova商譽寶、拓維空間、訂閱管家
           等）之主要法律文件。請於使用服務前詳閱；註冊或繼續使用即表示您已閱讀並同意相關條款。
         </p>
         <p className="text-sm text-muted-foreground">

@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { activateModule } from "@/lib/module-activation";
-import { isFreeModule, isNovaModuleId, NOVA_MODULES } from "@/lib/novaos";
+import {
+  isFreeModule,
+  isNovaModuleId,
+  isRetiredModule,
+  NOVA_MODULES,
+} from "@/lib/novaos";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
@@ -21,6 +26,12 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(await request.json().catch(() => ({})));
     if (!parsed.success || !isNovaModuleId(parsed.data.moduleId)) {
       return NextResponse.json({ error: "無效的子模組" }, { status: 400 });
+    }
+    if (isRetiredModule(parsed.data.moduleId)) {
+      return NextResponse.json(
+        { error: "此模組已停止提供，無法啟用" },
+        { status: 410 }
+      );
     }
 
     const { data: profile } = await supabase
@@ -45,7 +56,7 @@ export async function POST(request: Request) {
         trialDays: 0,
         tier: "general",
         free: true,
-        message: `${mod.emoji} ${mod.name} 永久免費，無需啟用試用`,
+        message: `${mod.emoji} ${mod.name} 為帳號中心，無需啟用試用`,
       });
     }
 
@@ -68,7 +79,7 @@ export async function POST(request: Request) {
             result.earlyBird
               ? "早鳥名額已佔用，"
               : result.tier === "vip"
-                ? "特約／大使資格，"
+                ? "特約店家資格，"
                 : "一般資格，"
           }試用 ${result.trialDays} 天`
         : `${mod.name} 先前已啟用`,

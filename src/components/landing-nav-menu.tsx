@@ -22,7 +22,7 @@ const SECTIONS = [
   },
   {
     title: "合作與安裝",
-    items: [{ href: "#partner", label: "特約店家／推廣大使" }],
+    items: [{ href: "#partner", label: "特約店家" }],
   },
 ] as const;
 

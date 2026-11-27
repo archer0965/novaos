@@ -20,7 +20,7 @@ export default function TermsPage() {
       <Section title="1. 接受條款">
         <p>
           歡迎使用「{siteConfig.legalName}」（下稱「本服務」）。本服務包含總站帳號體系、訂閱中控，以及旗下
-          NovaStore、拓脈預約、Nova AI Doc、拓維空間（NovaDimension）、訂閱管家
+          NovaStore、拓脈預約、Nova商譽寶（NovaShield）、拓維空間（NovaDimension）、訂閱管家
           等雲端工具與相關功能。您註冊、登入或以其他方式使用本服務，即表示您已閱讀、瞭解並同意受本服務條款拘束。若您不同意，請立即停止使用。
         </p>
       </Section>
@@ -28,7 +28,7 @@ export default function TermsPage() {
       <Section title="2. 服務性質與範圍">
         <ul>
           <li>
-            本服務為軟體即服務（SaaS）及相關數位工具，協助您進行賣場對帳、預約檔期、文件智能處理、訂閱開銷管理等營運或個人用途。
+            本服務為軟體即服務（SaaS）及相關數位工具，協助您進行賣場對帳、預約檔期、空間預覽、訂閱開銷管理等營運或個人用途。
           </li>
           <li>
             本服務屬<strong>系統輔助性質</strong>
@@ -65,7 +65,7 @@ export default function TermsPage() {
             部分功能採免費額度、試用期或付費訂閱制；實際方案、價格與折扣以站上定價頁及結帳畫面為準。
           </li>
           <li>
-            特約店家、推廣大使等優惠資格需經人工審核，審核通過後始生效力，細節見首頁合作申請與{" "}
+            特約店家等優惠資格需經人工審核，審核通過後始生效力，細節見首頁合作申請與{" "}
             <Link href="/refund" className="text-primary underline-offset-2 hover:underline">
               付費與退款政策
             </Link>

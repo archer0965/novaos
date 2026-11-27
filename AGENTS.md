@@ -9,7 +9,6 @@
 | 產品 | 網址 | 獨立專案 |
 |------|------|----------|
 | NovaStore | https://novastore-omega.vercel.app | `novastore`（`ecosystem/sites.json`） |
-| Nova AI Doc | https://docmate-ai-one.vercel.app | `docmate-ai` |
 | 拓脈預約 | https://taiwanbiz.vercel.app | 獨立站（repo 待綁） |
 | 訂閱管家 | https://temporary-speedy-reef-cy4xhhu.vercel.app | 獨立站（repo 待綁） |
 | Nova商譽寶 | https://paycheck.com.de/novashield | 主站內建模組（`/novashield`） |

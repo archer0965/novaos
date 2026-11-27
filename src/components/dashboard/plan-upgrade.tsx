@@ -9,12 +9,9 @@ import { Label } from "@/components/ui/label";
 import type { ModuleActivationRow } from "@/lib/module-activation";
 import { NOVA_MODULES, PAID_MODULE_IDS, type NovaModuleId } from "@/lib/novaos";
 import {
-  AI_DOC_PLAN_META,
-  buildAiDocCheckoutQuote,
   buildCheckoutQuote,
   resolvePricingTier,
   TIER_META,
-  type AiDocPaidPlanKey,
   type PricingTierId,
 } from "@/lib/pricing-tiers";
 import { isSubscriptionExpired } from "@/lib/subscription";
@@ -50,14 +47,30 @@ function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
   return PLAN_RANK[target] > PLAN_RANK[current];
 }
 
+function resolveInitialModule(
+  initialProduct: string | null | undefined,
+  activeModules: string[] | null | undefined
+): NovaModuleId {
+  const raw = (initialProduct || "").trim().toLowerCase();
+  if (raw === "booking" || raw === "taiwanbiz") return "booking";
+  if (raw === "store" || raw === "novastore") return "store";
+  const first = activeModules?.[0];
+  if (first && MODULE_PICK.includes(first as NovaModuleId)) {
+    return first as NovaModuleId;
+  }
+  return "store";
+}
+
 export function PlanUpgrade({
   profile,
   activations = [],
   forcedTier,
+  initialProduct,
 }: {
   profile: Profile;
   activations?: ModuleActivationRow[];
   forcedTier?: PricingTierId | null;
+  initialProduct?: string | null;
 }) {
   const current = normalizePlan(profile.plan_type);
   const trialOn = isTrialActive(profile.trial_ends_at);
@@ -67,8 +80,8 @@ export function PlanUpgrade({
   const [loadingPlan, setLoadingPlan] = useState<PaidPlanKey | null>(null);
   const [quote, setQuote] = useState<UpgradeProrationQuote | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<NovaModuleId>(
-    (profile.active_modules?.[0] as NovaModuleId) || "store"
+  const [selectedModule, setSelectedModule] = useState<NovaModuleId>(() =>
+    resolveInitialModule(initialProduct, profile.active_modules)
   );
   const [referralCode, setReferralCode] = useState("");
 
@@ -175,24 +188,6 @@ export function PlanUpgrade({
       setLoadingPlan(null);
     }
   }
-
-  async function checkoutAiDoc(plan: AiDocPaidPlanKey) {
-    setLoadingPlan(plan as PaidPlanKey);
-    try {
-      await submitHtmlCheckout("/api/checkout", {
-        plan,
-        cycle,
-        catalog: "ai_doc",
-        module: "ai_doc",
-        referralCode: referralCode.trim() || undefined,
-      });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "升級失敗");
-      setLoadingPlan(null);
-    }
-  }
-
-  const isAiDocMode = selectedModule === "ai_doc";
 
   async function onSelectPlan(plan: PaidPlanKey) {
     if (canProrateUpgrade(profile, plan)) {
@@ -306,7 +301,7 @@ export function PlanUpgrade({
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>選擇產品線（拓管永久免費）</Label>
+          <Label>選擇產品線（訂閱中控為帳號中心）</Label>
           <div className="flex flex-wrap gap-1.5">
             {MODULE_PICK.map((id) => {
               const mod = NOVA_MODULES[id];
@@ -329,115 +324,11 @@ export function PlanUpgrade({
             })}
           </div>
           <p className="text-xs text-muted-foreground">
-            {isAiDocMode
-              ? `Nova AI Doc 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）· 折扣規則與全站一致`
-              : `拓脈／NovaStore 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：${TIER_META[tierForBundle].label}`}
+            {`拓脈／NovaStore 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：${TIER_META[tierForBundle].label}`}
           </p>
         </div>
       </div>
 
-      {isAiDocMode ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {(["pro", "business"] as AiDocPaidPlanKey[]).map((key) => {
-            const plan = AI_DOC_PLAN_META[key];
-            const priceQuote = buildAiDocCheckoutQuote({
-              plan: key,
-              cycle,
-              tier: tierForStarter,
-              referralFirstDiscount:
-                firstDiscountEligible && Boolean(referralCode.trim()),
-              applyCredit:
-                cycle === "monthly"
-                  ? Math.min(100, Number(profile.referral_credit_balance) || 0)
-                  : 0,
-            });
-            const period =
-              cycle === "yearly" ? "年" : cycle === "half_yearly" ? "半年" : "月";
-
-            return (
-              <div
-                key={key}
-                className={cn(
-                  "rounded-2xl border p-5",
-                  plan.isPopular
-                    ? "border-2 border-accent bg-gradient-to-br from-primary to-primary/85 text-primary-foreground ring-2 ring-accent/30"
-                    : "border-border bg-background/70"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <p className="font-display text-lg font-semibold">{plan.name}</p>
-                  {plan.isPopular ? (
-                    <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-                      {plan.popularBadge || "主推"}
-                    </span>
-                  ) : null}
-                </div>
-                <p
-                  className={cn(
-                    "mt-1 text-sm",
-                    plan.isPopular
-                      ? "text-primary-foreground/80"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {plan.blurb}
-                </p>
-                <p className="mt-4 font-display text-3xl font-bold">
-                  {priceQuote.savingsVsBase > 0 ? (
-                    <span className="mr-2 text-base font-medium line-through opacity-70">
-                      ${priceQuote.baseAmount}
-                    </span>
-                  ) : null}
-                  ${priceQuote.finalAmount}
-                  <span className="text-base font-medium opacity-80">
-                    {" "}
-                    / {period}
-                  </span>
-                </p>
-                <p
-                  className={cn(
-                    "mt-1 text-xs font-medium",
-                    plan.isPopular ? "text-accent" : "text-amber-700"
-                  )}
-                >
-                  {priceQuote.tierLabel} · {priceQuote.foldLabel}
-                  {priceQuote.savingsVsBase > 0
-                    ? ` · 省 $${priceQuote.savingsVsBase}`
-                    : ""}
-                  {priceQuote.referralDiscount
-                    ? ` · 推薦 −$${priceQuote.referralDiscount}`
-                    : ""}
-                </p>
-                <ul className="mt-4 space-y-2 text-sm">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  type="button"
-                  disabled={loadingPlan !== null}
-                  onClick={() => checkoutAiDoc(key)}
-                  className={cn(
-                    "mt-5 h-11 w-full gap-1.5",
-                    plan.isPopular
-                      ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                      : ""
-                  )}
-                  variant={plan.isPopular ? "default" : "outline"}
-                >
-                  {loadingPlan === key ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : null}
-                  綠界付款升級 {plan.name}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
       <div className="grid gap-4 lg:grid-cols-2">
         {PRIMARY_PAID_PLAN_KEYS.map((key) => {
           const plan = PLAN_CATALOG[key];
@@ -554,7 +445,6 @@ export function PlanUpgrade({
           );
         })}
       </div>
-      )}
 
       {quote ? (
         <div
