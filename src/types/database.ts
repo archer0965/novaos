@@ -444,6 +444,115 @@ export const PAID_PLAN_KEYS: PaidPlanKey[] = ["starter", "pro", "unlimited"];
 /** Plans shown on pricing / upgrade (hide legacy pro duplicate) */
 export const PRIMARY_PAID_PLAN_KEYS: PaidPlanKey[] = ["starter", "unlimited"];
 
+/** All selectable NovaOS hub checkout plans (DB plan_type remains starter|unlimited for constraint safety). */
+export type CheckoutPlanKey =
+  | "starter"
+  | "starter_shield"
+  | "unlimited"
+  | "flagship_shield";
+
+export type CheckoutPlanMeta = {
+  id: CheckoutPlanKey;
+  dbPlanType: "starter" | "unlimited";
+  includesNovaShield: boolean;
+  isBundle: boolean;
+  isPopular?: boolean;
+  popularBadge?: string;
+  name: string;
+  shortName: string;
+  blurb: string;
+  features: string[];
+  monthlyPrice: number;
+};
+
+export const CHECKOUT_PLAN_ORDER: CheckoutPlanKey[] = [
+  "starter",
+  "starter_shield",
+  "unlimited",
+  "flagship_shield",
+];
+
+export const CHECKOUT_PLAN_CATALOG: Record<CheckoutPlanKey, CheckoutPlanMeta> = {
+  starter: {
+    id: "starter",
+    dbPlanType: "starter",
+    includesNovaShield: false,
+    isBundle: false,
+    name: "單模組／基礎版",
+    shortName: "基礎版",
+    blurb: "任選拓脈預約或 NovaStore",
+    monthlyPrice: 299,
+    features: [
+      "任選 1 個模組（拓脈預約 或 NovaStore）",
+      "NovaStore 訂單額度每月 100 筆",
+      "帳號內建訂閱中控",
+      "依資格套用早鳥／一般／特約折扣",
+    ],
+  },
+  starter_shield: {
+    id: "starter_shield",
+    dbPlanType: "starter",
+    includesNovaShield: true,
+    isBundle: false,
+    name: "單模組＋Nova商譽寶",
+    shortName: "基礎＋商譽寶",
+    blurb: "拓脈預約或 NovaStore ＋ Nova商譽寶 PRO",
+    monthlyPrice: 399,
+    features: [
+      "任選 1 個模組（拓脈預約 或 NovaStore）",
+      "含 Nova商譽寶 PRO（原價 $199／月，組合只要 +$100）",
+      "Google Maps 好評引導 ＋ LINE 客訴私訊攔截",
+      "帳號內建訂閱中控・依資格套用早鳥／一般／特約折扣",
+    ],
+  },
+  unlimited: {
+    id: "unlimited",
+    dbPlanType: "unlimited",
+    includesNovaShield: false,
+    isBundle: true,
+    name: "雙模組旗艦版",
+    shortName: "雙模組旗艦",
+    blurb: "拓脈預約 ＋ NovaStore（訂單無上限）",
+    monthlyPrice: 499,
+    features: [
+      "拓脈預約（完整模組）",
+      "NovaStore（訂單無上限）",
+      "含訂閱中控（NovaOS 會員中心）",
+      "依資格套用早鳥／一般／特約折扣",
+    ],
+  },
+  flagship_shield: {
+    id: "flagship_shield",
+    dbPlanType: "unlimited",
+    includesNovaShield: true,
+    isBundle: true,
+    isPopular: true,
+    popularBadge: "三合一全家桶",
+    name: "旗艦全家桶（含商譽寶）",
+    shortName: "旗艦全家桶",
+    blurb: "拓脈預約 ＋ NovaStore ＋ Nova商譽寶 PRO",
+    monthlyPrice: 599,
+    features: [
+      "拓脈預約（完整模組）",
+      "NovaStore（訂單無上限）",
+      "Nova商譽寶 PRO（LINE 私訊攔截＋多維度評分＋品牌客製）",
+      "含訂閱中控・不含拓維空間（獨立 Credit）",
+      "依資格套用早鳥／一般／特約折扣",
+    ],
+  },
+};
+
+export function isCheckoutPlanKey(
+  raw: string | null | undefined
+): raw is CheckoutPlanKey {
+  return (
+    raw === "starter" ||
+    raw === "starter_shield" ||
+    raw === "unlimited" ||
+    raw === "flagship_shield"
+  );
+}
+
 export const FREE_PLAN_LIMIT = PLAN_CATALOG.free.monthlyQuota;
 export const STARTER_PLAN_LIMIT = PLAN_CATALOG.starter.monthlyQuota;
 export const PRO_PLAN_LIMIT = PLAN_CATALOG.pro.monthlyQuota;

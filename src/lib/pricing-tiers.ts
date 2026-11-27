@@ -8,7 +8,12 @@ import type { NovaModuleId } from "@/lib/novaos";
 
 /** Local aliases to avoid circular import with types/database */
 export type TierBillingCycle = "monthly" | "half_yearly" | "yearly";
-export type TierPaidPlanKey = "starter" | "pro" | "unlimited";
+export type BaseSubscriptionPlanKey =
+  | "starter"
+  | "starter_shield"
+  | "unlimited"
+  | "flagship_shield";
+export type TierPaidPlanKey = BaseSubscriptionPlanKey | "pro";
 
 export type PricingTierId = "early_bird" | "general" | "vip";
 
@@ -18,16 +23,29 @@ export const SUBSCRIPTION_BASE_PRICES = {
     half_yearly: 1794,
     yearly: 3588,
   },
+  starter_shield: {
+    monthly: 399,
+    half_yearly: 2394,
+    yearly: 4788,
+  },
   unlimited: {
     monthly: 499,
     half_yearly: 2994,
     yearly: 5988,
   },
+  flagship_shield: {
+    monthly: 599,
+    half_yearly: 3594,
+    yearly: 7188,
+  },
 } as const;
 
 /** Legacy `pro` priced as starter */
-export function basePlanKey(plan: TierPaidPlanKey): "starter" | "unlimited" {
-  return plan === "unlimited" ? "unlimited" : "starter";
+export function basePlanKey(plan: TierPaidPlanKey): BaseSubscriptionPlanKey {
+  if (plan === "starter_shield") return "starter_shield";
+  if (plan === "unlimited") return "unlimited";
+  if (plan === "flagship_shield") return "flagship_shield";
+  return "starter";
 }
 
 export const TIER_META: Record<
@@ -66,19 +84,25 @@ export const TIER_META: Record<
 /** Exact totals from product sheet (avoid float drift). */
 export const TIER_CHECKOUT_TOTALS: Record<
   PricingTierId,
-  Record<"starter" | "unlimited", Record<TierBillingCycle, number>>
+  Record<BaseSubscriptionPlanKey, Record<TierBillingCycle, number>>
 > = {
   early_bird: {
     starter: { monthly: 269, half_yearly: 1524, yearly: 2870 },
+    starter_shield: { monthly: 359, half_yearly: 2034, yearly: 3830 },
     unlimited: { monthly: 449, half_yearly: 2544, yearly: 4790 },
+    flagship_shield: { monthly: 539, half_yearly: 3054, yearly: 5750 },
   },
   general: {
     starter: { monthly: 299, half_yearly: 1614, yearly: 3049 },
+    starter_shield: { monthly: 399, half_yearly: 2154, yearly: 4069 },
     unlimited: { monthly: 499, half_yearly: 2694, yearly: 5089 },
+    flagship_shield: { monthly: 599, half_yearly: 3234, yearly: 6109 },
   },
   vip: {
     starter: { monthly: 269, half_yearly: 1471, yearly: 2691 },
+    starter_shield: { monthly: 359, half_yearly: 1963, yearly: 3591 },
     unlimited: { monthly: 449, half_yearly: 2455, yearly: 4491 },
+    flagship_shield: { monthly: 539, half_yearly: 2947, yearly: 5391 },
   },
 };
 

@@ -128,13 +128,20 @@ export default async function PassPage({
       };
     }
     if (p.id === "novashield") {
+      const bundleIncluded =
+        activeMods.includes("novashield") &&
+        typedProfile.plan_type !== "free" &&
+        (!typedProfile.expires_at ||
+          new Date(typedProfile.expires_at).getTime() > Date.now());
       return {
         ...p,
         entitlement: {
-          status: "external",
-          plan: "independent",
-          label: "獨立訂閱（免費版 $0／專業版 NT$199 起）",
-          expiresAt: null,
+          status: bundleIncluded ? "active" : "external",
+          plan: bundleIncluded ? "pro" : "independent",
+          label: bundleIncluded
+            ? "已開通 PRO（含於組合／全家桶）"
+            : "獨立訂閱（免費版 $0／專業版 $199 或組合方案）",
+          expiresAt: bundleIncluded ? typedProfile.expires_at : null,
           trialEndsAt: null,
         },
       };

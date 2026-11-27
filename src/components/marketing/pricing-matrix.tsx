@@ -11,7 +11,7 @@ import {
   type TierBillingCycle,
 } from "@/lib/pricing-tiers";
 import { SUBKEEPER_PRODUCT } from "@/lib/subkeeper";
-import { PLAN_CATALOG, PRIMARY_PAID_PLAN_KEYS } from "@/types/database";
+import { CHECKOUT_PLAN_CATALOG, CHECKOUT_PLAN_ORDER } from "@/types/database";
 import { cn } from "@/lib/utils";
 
 const CYCLES: { id: TierBillingCycle; label: string }[] = [
@@ -23,8 +23,7 @@ const CYCLES: { id: TierBillingCycle; label: string }[] = [
 const TIERS: PricingTierId[] = ["early_bird", "general"];
 
 /**
- * Homepage pricing: simple comparison first; discount math in a details panel.
- * Hub is the authority for paid modules; 訂閱管家 is explicitly free.
+ * Homepage pricing: clear 4-tier comparison + free 訂閱管家; discount math in details panel.
  */
 export function PricingMatrix() {
   const [cycle, setCycle] = useState<TierBillingCycle>("monthly");
@@ -48,7 +47,7 @@ export function PricingMatrix() {
             方案比較
           </h2>
           <p className="mt-4 text-base leading-relaxed text-slate-400 sm:text-lg">
-            先看清楚方案差異；折扣與週期細節收在下方說明。{" "}
+            單模組、加購 Nova商譽寶組合、雙模組旗艦與三合一旗艦全家桶一次看清楚。{" "}
             <strong className="font-semibold text-emerald-300">
               {SUBKEEPER_PRODUCT.name}永久免費
             </strong>
@@ -56,17 +55,29 @@ export function PricingMatrix() {
           </p>
         </div>
 
-        {/* Simple comparison strip */}
+        {/* Comparison table */}
         <div className="mt-10 overflow-x-auto rounded-2xl border border-white/10">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[780px] text-left text-sm">
             <thead className="bg-white/5 text-slate-300">
               <tr>
                 <th className="px-4 py-3 font-medium">項目</th>
                 <th className="px-4 py-3 font-medium">基礎版</th>
+                <th className="px-4 py-3 font-medium text-amber-200">
+                  基礎＋商譽寶
+                  <span className="mt-0.5 block text-[11px] font-normal text-amber-200/80">
+                    單模組＋商譽寶 PRO
+                  </span>
+                </th>
+                <th className="px-4 py-3 font-medium text-sky-200">
+                  雙模組旗艦
+                  <span className="mt-0.5 block text-[11px] font-normal text-sky-200/80">
+                    拓脈＋NovaStore
+                  </span>
+                </th>
                 <th className="px-4 py-3 font-medium text-cyan-200">
                   旗艦全家桶
                   <span className="mt-0.5 block text-[11px] font-normal text-cyan-200/80">
-                    雙模組方案
+                    三合一（含商譽寶 PRO）
                   </span>
                 </th>
                 <th className="px-4 py-3 font-medium text-emerald-200">
@@ -78,19 +89,33 @@ export function PricingMatrix() {
               <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">月費（原價）</td>
                 <td className="px-4 py-3">NT$299</td>
-                <td className="px-4 py-3 text-cyan-100">NT$499</td>
+                <td className="px-4 py-3 font-semibold text-amber-100">NT$399</td>
+                <td className="px-4 py-3 text-sky-100">NT$499</td>
+                <td className="px-4 py-3 font-semibold text-cyan-100">NT$599</td>
                 <td className="px-4 py-3 font-semibold text-emerald-300">免費</td>
               </tr>
               <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">拓脈預約</td>
                 <td className="px-4 py-3">任選 1</td>
+                <td className="px-4 py-3">任選 1</td>
+                <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">NovaStore</td>
                 <td className="px-4 py-3">任選 1</td>
+                <td className="px-4 py-3">任選 1</td>
                 <td className="px-4 py-3">✓</td>
+                <td className="px-4 py-3">✓</td>
+                <td className="px-4 py-3 text-slate-500">—</td>
+              </tr>
+              <tr className="border-t border-white/10">
+                <td className="px-4 py-3 text-slate-400">Nova商譽寶 PRO</td>
+                <td className="px-4 py-3 text-slate-500">另購 $199/月</td>
+                <td className="px-4 py-3 font-semibold text-amber-200">✓ 內含 PRO</td>
+                <td className="px-4 py-3 text-slate-500">另購 $199/月</td>
+                <td className="px-4 py-3 font-semibold text-cyan-200">✓ 內含 PRO</td>
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
@@ -102,17 +127,15 @@ export function PricingMatrix() {
                 </td>
                 <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3">✓</td>
-                <td className="px-4 py-3 text-slate-500">—</td>
-              </tr>
-              <tr className="border-t border-white/10">
-                <td className="px-4 py-3 text-slate-400">Nova商譽寶</td>
-                <td className="px-4 py-3 text-slate-500">獨立訂閱</td>
-                <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
+                <td className="px-4 py-3">✓</td>
+                <td className="px-4 py-3">✓</td>
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
               <tr className="border-t border-white/10">
                 <td className="px-4 py-3 text-slate-400">拓維空間</td>
                 <td className="px-4 py-3 text-slate-500">獨立 Credit</td>
+                <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
+                <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
                 <td className="px-4 py-3 text-slate-500">不含（獨立產品）</td>
                 <td className="px-4 py-3 text-slate-500">—</td>
               </tr>
@@ -124,7 +147,9 @@ export function PricingMatrix() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-emerald-300">免費可用</td>
-                <td className="px-4 py-3 text-emerald-300">免費可用（不含於方案價）</td>
+                <td className="px-4 py-3 text-emerald-300">免費可用</td>
+                <td className="px-4 py-3 text-emerald-300">免費可用</td>
+                <td className="px-4 py-3 text-emerald-300">免費可用</td>
                 <td className="px-4 py-3 text-emerald-300">永久免費</td>
               </tr>
             </tbody>
@@ -149,16 +174,18 @@ export function PricingMatrix() {
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-4 text-sm text-cyan-50">
-          <p className="font-semibold">旗艦全家桶＝雙模組方案</p>
+          <p className="font-semibold">
+            旗艦全家桶系列（NT$399／NT$499／NT$599）
+          </p>
           <p className="mt-1 text-xs text-cyan-100/80">
-            僅含拓脈預約、NovaStore（加帳號內建訂閱中控）。Nova商譽寶、拓維空間與
-            {SUBKEEPER_PRODUCT.name}不在方案價內。
+            依門市需求自由搭配：單模組＋Nova商譽寶 PRO（$399/月）、拓脈＋NovaStore（$499/月），或三合一全家桶 拓脈＋NovaStore＋Nova商譽寶 PRO（$599/月）。拓維空間為獨立 Credit 產品，不在方案價內。
           </p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
             {[
-              "✓ 拓脈預約（完整模組）",
-              "✓ NovaStore（訂單無上限）",
-              "✓ 訂閱中控（NovaOS 會員中心）",
+              "✓ 拓脈預約或 NovaStore ＋ 商譽寶 PRO：NT$399／月",
+              "✓ 拓脈預約 ＋ NovaStore（雙模組旗艦）：NT$499／月",
+              "✓ 拓脈預約 ＋ NovaStore ＋ 商譽寶 PRO：NT$599／月",
+              "✓ 付款成功自動同步開通 Nova商譽寶 PRO",
             ].map((item) => (
               <li key={item} className="flex gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
@@ -166,13 +193,14 @@ export function PricingMatrix() {
               </li>
             ))}
           </ul>
-          <ul className="mt-3 grid gap-1 text-xs text-cyan-100/75 sm:grid-cols-2">
-            <li>不含：Nova商譽寶（獨立訂閱）、拓維空間（獨立 Credit／訂閱）</li>
-            <li>
-              另提供：{SUBKEEPER_PRODUCT.name}
-              （個人訂閱管理工具，永久免費，≠ 訂閱中控）
-            </li>
-          </ul>
+          <div className="mt-4">
+            <Link
+              href="/login?next=%2Fdashboard%2Fpass%23upgrade"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-cyan-400 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+            >
+              前往訂閱中控選擇方案 →
+            </Link>
+          </div>
         </div>
 
         <button
@@ -240,11 +268,10 @@ export function PricingMatrix() {
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              {PRIMARY_PAID_PLAN_KEYS.map((key) => {
-                const plan = PLAN_CATALOG[key];
-                const baseKey = key === "unlimited" ? "unlimited" : "starter";
-                const base = SUBSCRIPTION_BASE_PRICES[baseKey][cycle];
-                const price = TIER_CHECKOUT_TOTALS[tier][baseKey][cycle];
+              {CHECKOUT_PLAN_ORDER.map((key) => {
+                const plan = CHECKOUT_PLAN_CATALOG[key];
+                const base = SUBSCRIPTION_BASE_PRICES[key][cycle];
+                const price = TIER_CHECKOUT_TOTALS[tier][key][cycle];
                 return (
                   <article
                     key={key}
@@ -255,9 +282,17 @@ export function PricingMatrix() {
                         : "border-white/10 bg-white/[0.03]"
                     )}
                   >
-                    <h4 className="font-display text-lg font-semibold text-white">
-                      {plan.name}
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-display text-lg font-semibold text-white">
+                        {plan.name}
+                      </h4>
+                      {plan.popularBadge ? (
+                        <span className="rounded-md bg-cyan-400/20 px-2 py-0.5 text-xs font-semibold text-cyan-200">
+                          {plan.popularBadge}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">{plan.blurb}</p>
                     <p className="mt-5 font-display text-3xl font-bold text-white">
                       {price < base ? (
                         <span className="mr-2 text-base font-medium text-slate-500 line-through">
@@ -288,6 +323,7 @@ export function PricingMatrix() {
                 );
               })}
             </div>
+
             <p className="text-xs text-slate-500">
               首次付費可套用推薦碼現折 NT$50；月繳可再扣抵推薦點數（上限
               NT$100）。子站顯示之折扣需與本表一致。

@@ -18,20 +18,20 @@ import { isSubscriptionExpired } from "@/lib/subscription";
 import type { UpgradeProrationQuote } from "@/lib/subscription";
 import {
   BILLING_CYCLES,
+  CHECKOUT_PLAN_CATALOG,
+  CHECKOUT_PLAN_ORDER,
   FREE_TRIAL,
-  PRIMARY_PAID_PLAN_KEYS,
-  PLAN_CATALOG,
   PLAN_RANK,
   getCycleLabel,
   getPlanDisplayName,
   hasAmbassadorDiscount,
   hasLifetimeSpecialDiscount,
-  isDowngrade,
   isPaidPlan,
   isTrialActive,
   normalizeBillingCycle,
   normalizePlan,
   type BillingCycle,
+  type CheckoutPlanKey,
   type PaidPlanKey,
   type Profile,
 } from "@/types/database";
@@ -40,7 +40,24 @@ import { cn } from "@/lib/utils";
 const CYCLE_OPTIONS: BillingCycle[] = ["monthly", "half_yearly", "yearly"];
 const MODULE_PICK: NovaModuleId[] = [...PAID_MODULE_IDS];
 
-function canProrateUpgrade(profile: Profile, target: PaidPlanKey): boolean {
+const CHECKOUT_RANK: Record<CheckoutPlanKey, number> = {
+  starter: 1,
+  starter_shield: 2,
+  unlimited: 3,
+  flagship_shield: 4,
+};
+
+function currentCheckoutRank(profile: Profile): number {
+  const current = normalizePlan(profile.plan_type);
+  if (!isPaidPlan(current) || isSubscriptionExpired(profile.expires_at)) return 0;
+  const mods = Array.isArray(profile.active_modules) ? profile.active_modules : [];
+  const hasShield = mods.includes("novashield");
+  if (current === "unlimited") return hasShield ? 4 : 3;
+  return hasShield ? 2 : 1;
+}
+
+function canProrateUpgrade(profile: Profile, target: CheckoutPlanKey): boolean {
+  if (target === "starter_shield" || target === "flagship_shield") return false;
   const current = normalizePlan(profile.plan_type);
   if (!isPaidPlan(current)) return false;
   if (isSubscriptionExpired(profile.expires_at)) return false;
@@ -73,11 +90,15 @@ export function PlanUpgrade({
   initialProduct?: string | null;
 }) {
   const current = normalizePlan(profile.plan_type);
+  const currentRank = currentCheckoutRank(profile);
+  const hasNovaShieldBundle =
+    Array.isArray(profile.active_modules) &&
+    profile.active_modules.includes("novashield");
   const trialOn = isTrialActive(profile.trial_ends_at);
   const [cycle, setCycle] = useState<BillingCycle>(
     normalizeBillingCycle(profile.billing_cycle)
   );
-  const [loadingPlan, setLoadingPlan] = useState<PaidPlanKey | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<CheckoutPlanKey | null>(null);
   const [quote, setQuote] = useState<UpgradeProrationQuote | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [selectedModule, setSelectedModule] = useState<NovaModuleId>(() =>
@@ -173,14 +194,15 @@ export function PlanUpgrade({
     throw new Error("付款回應格式錯誤");
   }
 
-  async function checkoutFull(plan: PaidPlanKey) {
+  async function checkoutFull(plan: CheckoutPlanKey) {
     setLoadingPlan(plan);
     try {
+      const isSingle = plan === "starter" || plan === "starter_shield";
       await submitHtmlCheckout("/api/checkout", {
         plan,
         cycle,
         catalog: "novaos",
-        module: plan === "starter" ? selectedModule : undefined,
+        module: isSingle ? selectedModule : undefined,
         referralCode: referralCode.trim() || undefined,
       });
     } catch (err) {
@@ -189,14 +211,14 @@ export function PlanUpgrade({
     }
   }
 
-  async function onSelectPlan(plan: PaidPlanKey) {
+  async function onSelectPlan(plan: CheckoutPlanKey) {
     if (canProrateUpgrade(profile, plan)) {
       setLoadingPlan(plan);
       try {
         const res = await fetch("/api/upgrade", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan, action: "quote" }),
+          body: JSON.stringify({ plan: plan as PaidPlanKey, action: "quote" }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "無法計算差價");
@@ -252,6 +274,7 @@ export function PlanUpgrade({
           <p className="text-sm text-muted-foreground">目前方案</p>
           <h2 className="mt-1 font-display text-2xl font-semibold">
             {getPlanDisplayName(current)}
+            {hasNovaShieldBundle ? " ＋ Nova商譽寶 PRO" : ""}
             {current !== "free"
               ? `（${getCycleLabel(normalizeBillingCycle(profile.billing_cycle))}）`
               : ""}
@@ -259,7 +282,7 @@ export function PlanUpgrade({
           <p className="mt-1 text-sm text-muted-foreground">
             {trialOn
               ? `${FREE_TRIAL.description}｜試用參考至 ${trialLabel}（台北時間）`
-              : "註冊不會開始試用；請先啟用子模組。應付＝原價 × 資格折扣 − 推薦現折。"}
+              : "選擇單模組、加購 Nova商譽寶 PRO 組合，或三合一旗艦全家桶；付款成功自動開通。"}
           </p>
         </div>
         <div className="inline-flex flex-wrap rounded-xl bg-secondary p-1">
@@ -301,7 +324,7 @@ export function PlanUpgrade({
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>選擇產品線（訂閱中控為帳號中心）</Label>
+          <Label>單模組方案選擇（適用 $299 基礎版與 $399 單模組＋商譽寶）</Label>
           <div className="flex flex-wrap gap-1.5">
             {MODULE_PICK.map((id) => {
               const mod = NOVA_MODULES[id];
@@ -324,15 +347,16 @@ export function PlanUpgrade({
             })}
           </div>
           <p className="text-xs text-muted-foreground">
-            {`拓脈／NovaStore 資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：${TIER_META[tierForBundle].label}`}
+            {`單模組資格：${TIER_META[tierForStarter].label}（${TIER_META[tierForStarter].foldLabels[cycle]}）／旗艦：${TIER_META[tierForBundle].label}`}
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {PRIMARY_PAID_PLAN_KEYS.map((key) => {
-          const plan = PLAN_CATALOG[key];
-          const tier = key === "unlimited" ? tierForBundle : tierForStarter;
+        {CHECKOUT_PLAN_ORDER.map((key) => {
+          const plan = CHECKOUT_PLAN_CATALOG[key];
+          const isBundle = plan.isBundle;
+          const tier = isBundle ? tierForBundle : tierForStarter;
           const priceQuote = buildCheckoutQuote({
             plan: key,
             cycle,
@@ -344,9 +368,9 @@ export function PlanUpgrade({
                 ? Math.min(100, Number(profile.referral_credit_balance) || 0)
                 : 0,
           });
-          const isCurrent =
-            current === key || (current === "pro" && key === "starter");
-          const downgrade = isDowngrade(current, key);
+          const thisRank = CHECKOUT_RANK[key];
+          const isCurrent = currentRank === thisRank;
+          const downgrade = currentRank > thisRank;
           const prorate = canProrateUpgrade(profile, key);
           const period =
             cycle === "yearly" ? "年" : cycle === "half_yearly" ? "半年" : "月";
@@ -355,17 +379,23 @@ export function PlanUpgrade({
             <div
               key={key}
               className={cn(
-                "rounded-2xl border p-5",
+                "flex flex-col rounded-2xl border p-5",
                 plan.isPopular
                   ? "border-2 border-accent bg-gradient-to-br from-primary to-primary/85 text-primary-foreground ring-2 ring-accent/30"
-                  : "border-border bg-background/70"
+                  : plan.includesNovaShield
+                    ? "border-amber-400/60 bg-amber-50/40"
+                    : "border-border bg-background/70"
               )}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="font-display text-lg font-semibold">{plan.name}</p>
                 {plan.isPopular ? (
                   <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
                     {plan.popularBadge || "旗艦"}
+                  </span>
+                ) : plan.includesNovaShield ? (
+                  <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                    含商譽寶 PRO
                   </span>
                 ) : null}
               </div>
@@ -408,7 +438,7 @@ export function PlanUpgrade({
                   ? ` · 扣抵 −$${priceQuote.creditApplied}`
                   : ""}
               </p>
-              <ul className="mt-4 space-y-2 text-sm">
+              <ul className="mt-4 flex-1 space-y-2 text-sm">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
                     <Check className="mt-0.5 h-4 w-4 shrink-0" />
@@ -438,8 +468,8 @@ export function PlanUpgrade({
                   : downgrade
                     ? "已是更高方案"
                     : prorate
-                      ? `綠界補差價升級 ${plan.name}`
-                      : `綠界付款升級 ${plan.name}`}
+                      ? `綠界補差價升級 ${plan.shortName}`
+                      : `綠界付款升級 ${plan.shortName}`}
               </Button>
             </div>
           );

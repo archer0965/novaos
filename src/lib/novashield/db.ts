@@ -170,14 +170,46 @@ export async function upsertNovaShieldShopSettingsForUser(
 
   const nextOwnerId = existingRow?.owner_id ?? actor.userId;
 
+  // Check if owner has an active NovaOS bundle that includes Nova商譽寶 PRO
+  let inheritedProExpiresAt: string | null = null;
+  let inheritedBillingCycle: BillingCycle | null = null;
+  if (!existingRow) {
+    try {
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("plan_type, billing_cycle, expires_at, active_modules")
+        .eq("id", actor.userId)
+        .maybeSingle();
+      const mods = Array.isArray(prof?.active_modules)
+        ? (prof!.active_modules as string[])
+        : [];
+      const activeBundle =
+        mods.includes("novashield") &&
+        prof?.plan_type &&
+        prof.plan_type !== "free" &&
+        (!prof.expires_at ||
+          new Date(prof.expires_at).getTime() > Date.now());
+      if (activeBundle) {
+        inheritedProExpiresAt = prof?.expires_at ?? null;
+        inheritedBillingCycle =
+          prof?.billing_cycle === "yearly" ? "yearly" : "monthly";
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
   const merged = normalizeShopConfig(shopId, {
     ...base,
     ...incoming,
     shopId,
-    plan: base.plan,
-    billingCycle: base.billingCycle ?? null,
-    planExpiresAt: base.planExpiresAt ?? null,
+    plan: inheritedProExpiresAt ? "PRO" : base.plan,
+    billingCycle: inheritedProExpiresAt
+      ? inheritedBillingCycle
+      : (base.billingCycle ?? null),
+    planExpiresAt: inheritedProExpiresAt ?? base.planExpiresAt ?? null,
     reminder3dSentFor: base.reminder3dSentFor ?? null,
+    ratingMode: inheritedProExpiresAt ? "multi" : base.ratingMode,
   });
 
   const { error } = await admin.from("novashield_shops").upsert(
@@ -274,6 +306,104 @@ export async function activateNovaShieldProSubscription(params: {
 
   checkTableMissing(error);
   return upgraded;
+}
+
+/**
+ * Hub bundle callback: unlock Nova商譽寶 PRO for all shops owned by this NovaOS user.
+ * If the user has no shop yet, create their starter shop as PRO so /novashield/admin
+ * opens directly with PRO unlocked.
+ */
+export async function activateNovaShieldProForOwner(params: {
+  userId: string;
+  userEmail?: string | null;
+  shopName?: string | null;
+  expiresAt: string;
+  cycle: BillingCycle;
+}): Promise<{ updatedCount: number; shopIds: string[] }> {
+  const admin = getAdmin();
+  const { data: rows, error } = await admin
+    .from("novashield_shops")
+    .select(
+      "shop_id, owner_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
+    )
+    .eq("owner_id", params.userId);
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return { updatedCount: 0, shopIds: [] };
+    }
+    throw error;
+  }
+
+  const owned = (rows || []) as NovaShieldShopRow[];
+  const targetMs = new Date(params.expiresAt).getTime();
+
+  if (owned.length === 0) {
+    const tag = params.userId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toLowerCase();
+    const shopId = `shop-${tag || "mine"}`;
+    const base = createFallbackShopConfig(shopId);
+    const upgraded = normalizeShopConfig(shopId, {
+      ...base,
+      shopId,
+      shopName: params.shopName?.trim() || "我的門市",
+      emailNotification: params.userEmail?.trim() || "",
+      plan: "PRO",
+      billingCycle: params.cycle,
+      planExpiresAt: params.expiresAt,
+      reminder3dSentFor: null,
+      ratingMode: "multi",
+    });
+    const { error: upsertErr } = await admin.from("novashield_shops").upsert(
+      {
+        shop_id: shopId,
+        owner_id: params.userId,
+        config: upgraded,
+        plan: "PRO",
+        billing_cycle: params.cycle,
+        plan_expires_at: params.expiresAt,
+        reminder_3d_for: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "shop_id" },
+    );
+    checkTableMissing(upsertErr);
+    return { updatedCount: 1, shopIds: [shopId] };
+  }
+
+  const shopIds: string[] = [];
+  for (const row of owned) {
+    const base = rowToShopConfig(row);
+    const existingMs = row.plan_expires_at
+      ? new Date(row.plan_expires_at).getTime()
+      : 0;
+    const finalExpiresAt =
+      !Number.isNaN(existingMs) && !Number.isNaN(targetMs) && existingMs > targetMs
+        ? row.plan_expires_at!
+        : params.expiresAt;
+    const upgraded = normalizeShopConfig(row.shop_id, {
+      ...base,
+      shopId: row.shop_id,
+      plan: "PRO",
+      billingCycle: params.cycle,
+      planExpiresAt: finalExpiresAt,
+      reminder3dSentFor: null,
+      ratingMode: "multi",
+    });
+    const { error: updateErr } = await admin
+      .from("novashield_shops")
+      .update({
+        config: upgraded,
+        plan: "PRO",
+        billing_cycle: params.cycle,
+        plan_expires_at: finalExpiresAt,
+        reminder_3d_for: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("shop_id", row.shop_id);
+    checkTableMissing(updateErr);
+    shopIds.push(row.shop_id);
+  }
+  return { updatedCount: shopIds.length, shopIds };
 }
 
 export interface ExpiringNovaShieldShop {

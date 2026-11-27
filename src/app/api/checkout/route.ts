@@ -25,19 +25,21 @@ import {
   isDimensionPaidPlanId,
 } from "@/lib/dimension-billing";
 import {
-  PLAN_CATALOG,
+  CHECKOUT_PLAN_CATALOG,
   getCycleLabel,
-  isPaidPlan,
+  isCheckoutPlanKey,
   normalizeBillingCycle,
   type BillingCycle,
-  type PaidPlanKey,
+  type CheckoutPlanKey,
 } from "@/types/database";
 
 const bodySchema = z.object({
   plan: z.enum([
     "starter",
+    "starter_shield",
     "pro",
     "unlimited",
+    "flagship_shield",
     "plus",
     "premium",
     "business",
@@ -191,30 +193,36 @@ export async function POST(request: Request) {
 
     const activations = await listActivationsForSeller(user.id);
 
-    // NovaOS 拓脈／NovaStore（及旗艦全家桶）— 價格結構不變
-    const plan: PaidPlanKey =
-      planRaw === "plus"
-        ? "starter"
-        : planRaw === "premium"
-          ? "unlimited"
-          : planRaw === "pro"
+    // NovaOS 拓脈／NovaStore／Nova商譽寶組合與旗艦全家桶
+    const checkoutPlan: CheckoutPlanKey =
+      planRaw === "starter_shield"
+        ? "starter_shield"
+        : planRaw === "flagship_shield"
+          ? "flagship_shield"
+          : planRaw === "plus" || planRaw === "pro" || planRaw === "starter"
             ? "starter"
-            : planRaw === "business"
+            : planRaw === "premium" ||
+                planRaw === "business" ||
+                planRaw === "unlimited"
               ? "unlimited"
-              : (planRaw as PaidPlanKey);
+              : "starter";
 
-    if (!isPaidPlan(plan)) {
+    if (!isCheckoutPlanKey(checkoutPlan)) {
       return NextResponse.json({ error: "無效的付費方案" }, { status: 400 });
     }
+
+    const planMeta = CHECKOUT_PLAN_CATALOG[checkoutPlan];
+    const isSingleModulePlan =
+      checkoutPlan === "starter" || checkoutPlan === "starter_shield";
 
     const tier = resolveSellerPricingTier({
       profile: profile || {},
       activations,
-      moduleId: plan === "starter" ? selectedModule || "store" : null,
+      moduleId: isSingleModulePlan ? selectedModule || "store" : null,
     });
 
     const quote = buildCheckoutQuote({
-      plan,
+      plan: checkoutPlan,
       cycle,
       tier,
       referralFirstDiscount: Boolean(referrerId),
@@ -223,20 +231,18 @@ export async function POST(request: Request) {
 
     // Do NOT unlock modules before ECPay success — callback grants access.
     // Encode selected module in CustomField2 so callback can apply it.
-    const starterModule =
-      plan === "starter" ? selectedModule || "store" : null;
+    const starterModule = isSingleModulePlan ? selectedModule || "store" : null;
 
-    const catalogPlan = PLAN_CATALOG[plan];
     const cycleLabel = getCycleLabel(cycle);
     const { paymentUrl, params } = buildCheckoutParams({
       merchantTradeNo,
       totalAmount: quote.finalAmount,
-      tradeDesc: `NovaOS ${catalogPlan.name} ${cycleLabel} ${tier}`,
-      itemName: `NovaOS ${catalogPlan.name} ${cycleLabel}`,
+      tradeDesc: `NovaOS ${planMeta.name} ${cycleLabel} ${tier}`,
+      itemName: `NovaOS ${planMeta.name} ${cycleLabel}`,
       returnURL: `${baseUrl}/api/checkout/callback`,
       clientBackURL: `${baseUrl}/dashboard/pass?upgraded=pending`,
       customField1: user.id,
-      customField2: `${plan}:${cycle}:t${tier}${
+      customField2: `${checkoutPlan}:${cycle}:t${tier}${
         starterModule ? `:m${starterModule}` : ""
       }${referrerId ? `:ref` : ""}${applyCredit ? `:c${applyCredit}` : ""}`,
     });

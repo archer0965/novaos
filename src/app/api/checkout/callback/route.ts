@@ -13,6 +13,7 @@ import {
   fulfillDimensionCredits,
   parseDimensionPlanField,
 } from "@/lib/dimension-billing";
+import { activateNovaShieldProForOwner } from "@/lib/novashield/db";
 import { getSiteUrl } from "@/lib/site";
 import { reportTelemetry } from "@/lib/telemetry";
 import {
@@ -56,6 +57,7 @@ function parsePlanField(raw: string): {
   mode: "purchase" | "upgrade";
   catalog: "novaos" | "ai_doc" | "dimension";
   plan: PaidPlanKey | "pro" | "business" | string;
+  includesNovaShield?: boolean;
   aiPlan?: "pro" | "business";
   dimensionPlan?: ReturnType<typeof parseDimensionPlanField>;
   cycle: BillingCycle;
@@ -80,6 +82,24 @@ function parsePlanField(raw: string): {
       plan: aiPlan,
       aiPlan,
       cycle,
+    };
+  }
+  if (parts[0] === "starter_shield") {
+    return {
+      mode: "purchase",
+      catalog: "novaos",
+      plan: "starter",
+      includesNovaShield: true,
+      cycle: normalizeBillingCycle(parts[1]),
+    };
+  }
+  if (parts[0] === "flagship_shield") {
+    return {
+      mode: "purchase",
+      catalog: "novaos",
+      plan: "unlimited",
+      includesNovaShield: true,
+      cycle: normalizeBillingCycle(parts[1]),
     };
   }
   if (parts[0] === "upgrade") {
@@ -336,10 +356,15 @@ export async function POST(request: Request) {
     const starterModuleFromField = moduleToken
       ? moduleToken.slice(1)
       : "store";
+    const includesNovaShield = Boolean(parsedPlan.includesNovaShield);
     if (plan === "starter" || plan === "pro") {
-      update.active_modules = [starterModuleFromField, "pass"];
+      update.active_modules = includesNovaShield
+        ? [starterModuleFromField, "novashield", "pass"]
+        : [starterModuleFromField, "pass"];
     } else if (plan === "unlimited") {
-      update.active_modules = ["booking", "store", "pass"];
+      update.active_modules = includesNovaShield
+        ? ["booking", "store", "novashield", "pass"]
+        : ["booking", "store", "pass"];
     }
 
     const { error } = await admin
@@ -351,6 +376,23 @@ export async function POST(request: Request) {
       console.error("[ecpay/callback] upgrade failed", error);
       await releaseTradeClaim();
       return new NextResponse("0|UpgradeFailed", { status: 500 });
+    }
+
+    // Auto-unlock Nova商譽寶 PRO for all shops owned by this account when included in bundle
+    if (includesNovaShield && typeof update.expires_at === "string") {
+      try {
+        const ownerEmail = await getUserEmailById(sellerId);
+        const nsRes = await activateNovaShieldProForOwner({
+          userId: sellerId,
+          userEmail: ownerEmail,
+          shopName: current?.shop_name,
+          expiresAt: update.expires_at,
+          cycle: cycle === "yearly" ? "yearly" : "monthly",
+        });
+        console.info("[ecpay/callback] novashield bundle unlocked", sellerId, nsRes);
+      } catch (nsErr) {
+        console.error("[ecpay/callback] novashield bundle unlock failed", nsErr);
+      }
     }
 
     // Referral rewards / credit consumption (best-effort)

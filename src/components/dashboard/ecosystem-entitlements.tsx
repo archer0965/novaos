@@ -44,8 +44,7 @@ export function EcosystemEntitlements({
         一個 NovaOS 帳號 · 六個產品權益
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        本頁是 NovaOS 會員中心：管理登入、訂閱與跨產品權益。與「訂閱管家」（個人訂閱費用追蹤工具）不同；旗艦全家桶為拓脈＋NovaStore
-        雙模組，不含拓維空間與 Nova商譽寶。付款成功後由後端回調更新權益；客服統一走官方 LINE。
+        本頁是 NovaOS 會員中心：管理登入、訂閱與跨產品權益。與「訂閱管家」（個人訂閱費用追蹤工具）不同；支援單模組（$299）、單模組＋商譽寶（$399）、雙模組旗艦（$499）與三合一旗艦全家桶（$599），不含拓維空間。付款成功後由後端回調更新權益；客服統一走官方 LINE。
       </p>
 
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
