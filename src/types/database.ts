@@ -283,14 +283,14 @@ export const PRICING_CONFIG = {
     /** Default (一般資格) — actual days decided at module activation via TIER_META */
     durationDays: 7,
     description:
-      "註冊帳號不會開始試用；啟用子模組後才倒數（早鳥／一般 7 天，特約／大使 14 天）。以主站 pricing-tiers 為準。",
+      "註冊帳號不會開始試用；啟用子模組後才倒數（早鳥／一般 7 天，特約店家 14 天）。以主站 pricing-tiers 為準。",
   },
   /** @deprecated Use per-module early bird (module_activations, max 15 each) — trialDays must match TIER_META.early_bird (7) */
   signupEarlyBird: {
     maxUsers: 15,
     trialDays: 7,
     label: "子模組早鳥優惠",
-    description: "各子模組前 15 名啟用者享 7 天試用與早鳥價（特約／大使另為 14 天）",
+    description: "各子模組前 15 名啟用者享 7 天試用與早鳥價（特約店家另為 14 天）",
   },
   /** Tier 3：特約店家（NovaStore & 拓脈預約連動） */
   earlyBird: {
@@ -422,7 +422,7 @@ export const PRICING_CONFIG = {
         "含訂閱中控（NovaOS 會員中心）",
         "不含拓維空間（獨立 Credit／訂閱）",
         "訂閱管家＝永久免費個人工具（≠ 訂閱中控，不佔方案價）",
-        "依資格套用早鳥／一般／特約／大使折扣",
+        "依資格套用早鳥／一般／特約折扣",
         "推薦碼首月現折 $50",
       ],
       prices: {

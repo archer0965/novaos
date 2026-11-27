@@ -11,7 +11,12 @@ import {
   getAllModuleEarlyBirdStatuses,
   listActivationsForSeller,
 } from "@/lib/module-activation";
-import { generateReferralCode, NOVA_MODULES, PAYMENT_GATEWAY_STATUS } from "@/lib/novaos";
+import {
+  generateReferralCode,
+  NOVA_MODULE_IDS,
+  NOVA_MODULES,
+  PAYMENT_GATEWAY_STATUS,
+} from "@/lib/novaos";
 import { NOVAOS_ECOSYSTEM_PRODUCTS } from "@/lib/novaos-trust";
 import { TIER_META } from "@/lib/pricing-tiers";
 import { createClient } from "@/lib/supabase/server";
@@ -256,12 +261,15 @@ export default async function PassPage({
 
       <section className="rounded-2xl border px-4 py-3 text-sm text-muted-foreground">
         模組捷徑：
-        {Object.values(NOVA_MODULES).map((m) => (
-          <Link key={m.id} href={m.href} className="ml-2 text-primary hover:underline">
-            {m.emoji}
-            {m.name}
-          </Link>
-        ))}
+        {NOVA_MODULE_IDS.map((id) => {
+          const m = NOVA_MODULES[id];
+          return (
+            <Link key={m.id} href={m.href} className="ml-2 text-primary hover:underline">
+              {m.emoji}
+              {m.name}
+            </Link>
+          );
+        })}
       </section>
     </div>
   );

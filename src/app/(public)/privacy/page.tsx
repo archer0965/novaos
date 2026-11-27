@@ -34,11 +34,11 @@ export default function PrivacyPage() {
           <li>
             <strong>營運設定資料</strong>
             ：銀行代碼／帳號後段資訊、LINE User
-            ID、自有官方帳號設定、預約／賣場／文件等業務設定。
+            ID、自有官方帳號設定、預約／賣場等業務設定。
           </li>
           <li>
             <strong>交易與使用資料</strong>
-            ：訂單或回報內容、預約紀錄、文件處理紀錄、訂閱方案、用量與操作日誌。
+            ：訂單或回報內容、預約紀錄、訂閱方案、用量與操作日誌。
           </li>
           <li>
             <strong>買家／終端使用者資料（由您或終端使用者提交）</strong>

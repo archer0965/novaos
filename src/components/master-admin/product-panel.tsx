@@ -64,7 +64,7 @@ export function ProductPanelHeader({
         </div>
       </div>
       <p className="rounded-lg border border-white/5 bg-black/20 px-3 py-2 text-[11px] leading-5 text-slate-500">
-        此頁為 NovaOS 總管理的跨站監看。日常開店、排班、文件與 Credit
+        此頁為 NovaOS 總管理的跨站監看。日常開店、排班與 Credit
         操作請用右側「{product.opsLabel}」。
       </p>
     </div>

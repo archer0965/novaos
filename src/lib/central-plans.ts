@@ -240,7 +240,7 @@ const ALL_CENTRAL_PLANS: CentralPlanRow[] = [
     trial_days: 7,
     usage_limits: { modules: "booking+store" },
     feature_list: ["拓脈＋NovaStore 雙模組", "訂閱中控免費"],
-    discount_rules: "早鳥／一般／特約／大使",
+    discount_rules: "早鳥／一般／特約店家",
     product_status: "active",
     authority: "novaos-hub",
   },

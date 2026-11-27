@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NOVA_MODULES, REFERRAL_CONFIG } from "@/lib/novaos";
+import { NOVA_MODULE_IDS, NOVA_MODULES, REFERRAL_CONFIG } from "@/lib/novaos";
 import {
   SUBSCRIPTION_BASE_PRICES,
   TIER_CHECKOUT_TOTALS,
@@ -204,23 +204,26 @@ export function LandingPricing() {
           })}
         </div>
 
-        <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Object.values(NOVA_MODULES).map((m) => (
-            <div
-              key={m.id}
-              className="rounded-2xl border border-border/70 bg-background/60 px-4 py-4"
-            >
-              <p className="font-medium">
-                {m.emoji} {m.name}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{m.blurb}</p>
-              <p className="mt-2 text-[11px] text-amber-800">
-                {m.id === "pass"
-                  ? "帳號中心・不佔早鳥名額"
-                  : "早鳥名額各自 15 名，啟用時才佔用"}
-              </p>
-            </div>
-          ))}
+        <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {NOVA_MODULE_IDS.map((id) => {
+            const m = NOVA_MODULES[id];
+            return (
+              <div
+                key={m.id}
+                className="rounded-2xl border border-border/70 bg-background/60 px-4 py-4"
+              >
+                <p className="font-medium">
+                  {m.emoji} {m.name}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{m.blurb}</p>
+                <p className="mt-2 text-[11px] text-amber-800">
+                  {m.id === "pass"
+                    ? "帳號中心・不佔早鳥名額"
+                    : "早鳥名額各自 15 名，啟用時才佔用"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

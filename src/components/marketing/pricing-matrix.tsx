@@ -66,7 +66,7 @@ export function PricingMatrix() {
                 <th className="px-4 py-3 font-medium text-cyan-200">
                   旗艦全家桶
                   <span className="mt-0.5 block text-[11px] font-normal text-cyan-200/80">
-                    三模組方案
+                    雙模組方案
                   </span>
                 </th>
                 <th className="px-4 py-3 font-medium text-emerald-200">

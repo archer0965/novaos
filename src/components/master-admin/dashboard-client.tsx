@@ -113,7 +113,7 @@ export function MasterDashboardClient() {
     <div className="space-y-8">
       <SectionTitle
         title="總覽"
-        subtitle="六站指揮台：先看全域，再點進單一產品監看"
+        subtitle="五站指揮台：先看全域，再點進單一產品監看"
       />
 
       {error ? (

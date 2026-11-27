@@ -80,7 +80,7 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href="/#partner" className="hover:text-primary">
-                特約／大使申請
+                特約店家申請
               </Link>
             </li>
             <li>
