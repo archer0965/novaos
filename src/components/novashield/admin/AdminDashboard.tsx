@@ -19,10 +19,12 @@ import {
   Save,
   Sliders,
   Smartphone,
+  Sparkles,
   Store,
   UserCheck,
   Zap,
 } from "lucide-react";
+import { AiFeedbackCoach } from "./AiFeedbackCoach";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { ShopSettingsForm } from "./ShopSettingsForm";
 import { LineConfigPanel } from "./LineConfigPanel";
@@ -84,8 +86,9 @@ export function AdminDashboard({
     message: string;
   } | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "analytics" | "qrcode" | "settings"
+    "analytics" | "ai" | "qrcode" | "settings"
   >("analytics");
+  const [aiPrefillText, setAiPrefillText] = useState("");
   const [mobileTab, setMobileTab] = useState<"settings" | "preview">(
     "settings",
   );
@@ -416,7 +419,7 @@ export function AdminDashboard({
       <div
         role="tablist"
         aria-label="後台功能分頁"
-        className="mb-6 grid grid-cols-3 gap-2 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm"
+        className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm sm:grid-cols-4"
       >
         <button
           type="button"
@@ -433,6 +436,23 @@ export function AdminDashboard({
             className={`h-4 w-4 ${activeTab === "analytics" ? "text-[#F59E0B]" : ""}`}
           />
           <span>數據儀表板</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "ai"}
+          onClick={() => setActiveTab("ai")}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition sm:text-sm ${
+            activeTab === "ai"
+              ? "bg-[#0F172A] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <Sparkles
+            className={`h-4 w-4 ${activeTab === "ai" ? "text-[#F59E0B]" : "text-amber-500"}`}
+          />
+          <span>AI 客訴智能分析</span>
         </button>
 
         <button
@@ -474,6 +494,19 @@ export function AdminDashboard({
       {activeTab === "analytics" && (
         <AnalyticsDashboard
           config={config}
+          onUpgradeToPro={() => openUpgradeModal("monthly")}
+          onAnalyzeFeedback={(text) => {
+            setAiPrefillText(text);
+            setActiveTab("ai");
+          }}
+        />
+      )}
+
+      {/* Tab 2: AI Complaint Analyzer & Reply Coach */}
+      {activeTab === "ai" && (
+        <AiFeedbackCoach
+          config={config}
+          initialText={aiPrefillText}
           onUpgradeToPro={() => openUpgradeModal("monthly")}
         />
       )}

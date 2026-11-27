@@ -9,6 +9,7 @@ import {
   Lock,
   MessageSquare,
   Phone,
+  Sparkles,
   Star,
   TrendingUp,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import type {
 interface AnalyticsDashboardProps {
   config: ShopConfig;
   onUpgradeToPro: () => void;
+  onAnalyzeFeedback?: (text: string) => void;
 }
 
 const STAR_BAR_STYLE: Record<
@@ -55,6 +57,7 @@ function formatTaipeiShort(iso: string): string {
 export function AnalyticsDashboard({
   config,
   onUpgradeToPro,
+  onAnalyzeFeedback,
 }: AnalyticsDashboardProps) {
   const [summary, setSummary] = useState<ShopAnalyticsSummary>(() =>
     loadShopAnalytics(config),
@@ -386,28 +389,40 @@ export function AnalyticsDashboard({
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(item.id, item.status)}
-                        title="點擊切換處理狀態"
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-                          isMessaged
-                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
-                            : "bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
-                        }`}
-                      >
-                        {isMessaged ? (
-                          <>
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>已私訊</span>
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="h-3 w-3" />
-                            <span>未處理</span>
-                          </>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {isLow && onAnalyzeFeedback && (
+                          <button
+                            type="button"
+                            onClick={() => onAnalyzeFeedback(item.summary)}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#0F172A] px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-slate-800"
+                          >
+                            <Sparkles className="h-3 w-3 text-[#F59E0B]" />
+                            <span>AI 分析</span>
+                          </button>
                         )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(item.id, item.status)}
+                          title="點擊切換處理狀態"
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+                            isMessaged
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+                              : "bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
+                          }`}
+                        >
+                          {isMessaged ? (
+                            <>
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span>已私訊</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-3 w-3" />
+                              <span>未處理</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
