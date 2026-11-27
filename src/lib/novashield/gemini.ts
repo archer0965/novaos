@@ -1,9 +1,13 @@
+import crypto from "crypto";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * Ported from archer0965/docmate-ai (Nova AI Doc) Gemini fallback client.
- * Override first choice via GEMINI_MODEL; automatically retries fallback models
- * on 404/429/503 without mutating production env vars.
+ * Supports:
+ * 1) Direct GEMINI_API_KEY on NovaOS (if configured)
+ * 2) Authenticated HMAC-SHA256 internal bridge to docmate-ai-one.vercel.app
+ *    using the shared SUPABASE_SERVICE_ROLE_KEY so existing GEMINI_API_KEY works
+ *    automatically with zero manual secret duplication.
  */
 const MODEL_FALLBACKS = [
   "gemini-3-flash-preview",
@@ -11,6 +15,9 @@ const MODEL_FALLBACKS = [
   "gemini-flash-lite-latest",
   "gemini-2.0-flash",
 ] as const;
+
+const DEFAULT_GEMINI_BRIDGE_URL =
+  "https://docmate-ai-one.vercel.app/api/internal/novashield-analyze";
 
 export function getGeminiApiKey(): string {
   return (process.env.GEMINI_API_KEY || "").trim();
@@ -79,4 +86,57 @@ export async function generateJsonWithGeminiFallback(options: {
   }
 
   return null;
+}
+
+export async function generateJsonViaDocmateGeminiBridge(options: {
+  systemPrompt: string;
+  userPrompt: string;
+}): Promise<Record<string, unknown> | null> {
+  const sharedSecret = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!sharedSecret) return null;
+
+  const bridgeUrl =
+    (process.env.NOVASHIELD_GEMINI_BRIDGE_URL || "").trim() ||
+    DEFAULT_GEMINI_BRIDGE_URL;
+
+  try {
+    const rawBody = JSON.stringify({
+      systemPrompt: options.systemPrompt,
+      userPrompt: options.userPrompt,
+    });
+    const timestamp = String(Date.now());
+    const signature = crypto
+      .createHmac("sha256", sharedSecret)
+      .update(`${timestamp}.${rawBody}`)
+      .digest("hex");
+
+    const response = await fetch(bridgeUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-novaos-timestamp": timestamp,
+        "x-novaos-signature": signature,
+      },
+      body: rawBody,
+    });
+
+    if (!response.ok) {
+      console.warn(
+        `[NovaShield AI] Gemini bridge returned HTTP ${response.status}`,
+      );
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      ok?: boolean;
+      result?: Record<string, unknown>;
+    };
+
+    return data.ok && data.result && typeof data.result === "object"
+      ? data.result
+      : null;
+  } catch (error) {
+    console.warn("[NovaShield AI] Gemini bridge call failed:", error);
+    return null;
+  }
 }

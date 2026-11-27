@@ -6,6 +6,7 @@ import {
   type AiAnalyzeApiResponse,
 } from "@/lib/novashield/aiAnalyzer";
 import {
+  generateJsonViaDocmateGeminiBridge,
   generateJsonWithGeminiFallback,
   getGeminiApiKey,
 } from "@/lib/novashield/gemini";
@@ -186,9 +187,10 @@ export async function POST(request: Request) {
     }
 
     // 3. Run LLM analysis:
-    // Priority 1: GEMINI_API_KEY (reuses existing Nova AI Doc Gemini setup & fallback chain)
-    // Priority 2: OPENAI_API_KEY (optional OpenAI support)
-    // Priority 3: Built-in structured NovaOS domain model (fallback)
+    // Priority 1: Local GEMINI_API_KEY on NovaOS
+    // Priority 2: Local OPENAI_API_KEY on NovaOS
+    // Priority 3: Signed server-to-server Gemini bridge via docmate-ai (reuses existing GEMINI_API_KEY)
+    // Priority 4: Built-in structured NovaOS domain model (fallback)
     const fallbackResult = generateSmartMockAnalysis(feedbackText, shopName);
     const userPrompt = shopName
       ? `門市名稱：${shopName}\n顧客負評原文：\n${feedbackText}`
@@ -244,7 +246,18 @@ export async function POST(request: Request) {
           }
         }
       } catch {
-        // Keep structured fallback result cleanly
+        // Keep trying bridge / fallback
+      }
+    }
+
+    if (finalMode === "mock") {
+      const bridgeParsed = await generateJsonViaDocmateGeminiBridge({
+        systemPrompt: AI_ANALYZE_SYSTEM_PROMPT,
+        userPrompt,
+      });
+      if (bridgeParsed) {
+        finalResult = normalizeAiAnalysis(bridgeParsed, fallbackResult);
+        finalMode = "gemini";
       }
     }
 
