@@ -4,20 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
 import {
+  AlertCircle,
   Building,
   Check,
+  CheckCircle2,
   Copy,
   Download,
   ExternalLink,
+  Loader2,
   Palette,
   QrCode,
   Star,
 } from "lucide-react";
+import { isSafeImageSrc } from "@/lib/novashield/validation";
 import { PRODUCTION_URL as PRODUCTION_BASE_URL } from "@/lib/site";
 
 interface QrCodeShareCardProps {
   shopId: string;
   shopName: string;
+  logoUrl?: string;
 }
 
 const FG_PRESETS = [
@@ -50,7 +55,104 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
-export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
+/**
+ * Loads an image safely with crossOrigin="anonymous" to prevent Canvas tainting.
+ * Returns null if the image fails to load or times out.
+ */
+function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const trimmed = src.trim();
+    if (!trimmed || !isSafeImageSrc(trimmed)) {
+      resolve(null);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    let settled = false;
+    const finish = (value: HTMLImageElement | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      resolve(value);
+    };
+
+    const timer = window.setTimeout(() => finish(null), 4000);
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        finish(img);
+      } else {
+        finish(null);
+      }
+    };
+    img.onerror = () => finish(null);
+    img.src = trimmed;
+  });
+}
+
+/**
+ * Resolves a valid QR Code source canvas from the given host element.
+ * Supports both <canvas> and <svg> (serializing SVG onto an offscreen canvas).
+ */
+async function resolveQrSourceCanvas(
+  host: HTMLElement | null,
+): Promise<HTMLCanvasElement | null> {
+  if (!host) return null;
+
+  const canvas = host.querySelector("canvas");
+  if (canvas && canvas.width > 0 && canvas.height > 0) {
+    return canvas;
+  }
+
+  const svg = host.querySelector("svg");
+  if (!svg) return null;
+
+  const serializer = new XMLSerializer();
+  const svgMarkup = serializer.serializeToString(svg);
+  const svgBlob = new Blob([svgMarkup], {
+    type: "image/svg+xml;charset=utf-8",
+  });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  try {
+    const img = await new Promise<HTMLImageElement | null>((resolve) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = svgUrl;
+    });
+
+    if (!img) return null;
+
+    const offscreen = document.createElement("canvas");
+    offscreen.width = 560;
+    offscreen.height = 560;
+    const ctx = offscreen.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, 560, 560);
+    return offscreen;
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
+function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function QrCodeShareCard({
+  shopId,
+  shopName,
+  logoUrl,
+}: QrCodeShareCardProps) {
   const [urlMode, setUrlMode] = useState<"production" | "local">("production");
   const [localOrigin, setLocalOrigin] = useState(PRODUCTION_BASE_URL);
   const [copied, setCopied] = useState(false);
@@ -61,8 +163,17 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
   const [showShopLabel, setShowShopLabel] = useState(true);
   const [promptText, setPromptText] = useState("掃描抽好禮 / 留下寶貴意見");
 
-  // High-res offscreen QR canvas ref for crisp print downloads
+  // Export feedback state
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFeedback, setDownloadFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  // Offscreen high-res QR host (NOT display:none so Safari/mobile always paints it)
   const exportQrHostRef = useRef<HTMLDivElement | null>(null);
+  // Visible preview QR host as guaranteed fallback
+  const previewQrHostRef = useRef<HTMLDivElement | null>(null);
 
   const feedbackPath = `/novashield/feedback/${encodeURIComponent(shopId)}`;
   const productionUrl = `${PRODUCTION_BASE_URL}${feedbackPath}`;
@@ -70,6 +181,7 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
     urlMode === "production" ? productionUrl : `${localOrigin}${feedbackPath}`;
 
   const cardTitle = `${shopName || "我的門市"} 專屬意見卡`;
+  const hasLogo = Boolean(logoUrl && isSafeImageSrc(logoUrl));
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -83,120 +195,221 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard unavailable
+      setDownloadFeedback({
+        type: "error",
+        message: "無法自動複製連結，請長按網址手動複製。",
+      });
     }
   }
 
-  function handleDownloadPng() {
-    const sourceQrCanvas = exportQrHostRef.current?.querySelector("canvas");
-    if (!sourceQrCanvas) return;
-
+  function renderExportCanvas(
+    sourceQrCanvas: HTMLCanvasElement,
+    logoImg: HTMLImageElement | null,
+  ): HTMLCanvasElement {
     const exportCanvas = document.createElement("canvas");
     const ctx = exportCanvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      throw new Error("瀏覽器無法初始化 Canvas 繪圖環境。");
+    }
 
     if (!showShopLabel) {
-      // Clean standalone QR code PNG (800x800)
       exportCanvas.width = 800;
       exportCanvas.height = 800;
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 800, 800);
       ctx.drawImage(sourceQrCanvas, 80, 80, 640, 640);
-    } else {
-      // Printable tabletop card PNG (900x1180) with header, custom QR, stars, and prompt
-      const W = 900;
-      const H = 1180;
-      exportCanvas.width = W;
-      exportCanvas.height = H;
+      return exportCanvas;
+    }
 
-      // Outer background
-      ctx.fillStyle = "#FAF8F5";
-      ctx.fillRect(0, 0, W, H);
+    const W = 900;
+    const H = 1220;
+    exportCanvas.width = W;
+    exportCanvas.height = H;
 
-      // Card container
-      drawRoundedRect(ctx, 48, 48, W - 96, H - 96, 44);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fill();
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = "#E2E8F0";
-      ctx.stroke();
+    // Outer background
+    ctx.fillStyle = "#FAF8F5";
+    ctx.fillRect(0, 0, W, H);
 
-      // Top amber accent strip inside card
+    // Card container
+    drawRoundedRect(ctx, 48, 48, W - 96, H - 96, 44);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#E2E8F0";
+    ctx.stroke();
+
+    // Top amber accent strip inside card
+    ctx.save();
+    drawRoundedRect(ctx, 48, 48, W - 96, H - 96, 44);
+    ctx.clip();
+    ctx.fillStyle = "#F59E0B";
+    ctx.fillRect(48, 48, W - 96, 18);
+    ctx.restore();
+
+    let cursorY = 104;
+
+    // Optional Store Logo (drawn safely with rounded mask)
+    if (logoImg) {
+      const logoSize = 72;
+      const logoX = (W - logoSize) / 2;
       ctx.save();
-      drawRoundedRect(ctx, 48, 48, W - 96, H - 96, 44);
+      drawRoundedRect(ctx, logoX, cursorY, logoSize, logoSize, 18);
       ctx.clip();
-      ctx.fillStyle = "#F59E0B";
-      ctx.fillRect(48, 48, W - 96, 18);
+      ctx.drawImage(logoImg, logoX, cursorY, logoSize, logoSize);
       ctx.restore();
-
+      cursorY += logoSize + 18;
+    } else {
       // Brand pill
       ctx.fillStyle = "#FEF3C7";
-      drawRoundedRect(ctx, W / 2 - 140, 102, 280, 44, 22);
+      drawRoundedRect(ctx, W / 2 - 140, cursorY, 280, 44, 22);
       ctx.fill();
       ctx.fillStyle = "#B45309";
       ctx.font =
         '700 22px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("Nova商譽寶 ・ 顧客回饋", W / 2, 125);
-
-      // Shop Name Title
-      ctx.fillStyle = "#0F172A";
-      ctx.font =
-        '800 40px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
-      const displayTitle =
-        cardTitle.length > 20 ? `${cardTitle.slice(0, 19)}…` : cardTitle;
-      ctx.fillText(displayTitle, W / 2, 206);
-
-      // QR Inner Frame
-      const qrBoxSize = 590;
-      const qrBoxX = (W - qrBoxSize) / 2;
-      const qrBoxY = 262;
-      drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 32);
-      ctx.fillStyle = bgColor;
-      ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#E2E8F0";
-      ctx.stroke();
-
-      // Crisp QR Code
-      const qrSize = 520;
-      ctx.drawImage(
-        sourceQrCanvas,
-        (W - qrSize) / 2,
-        qrBoxY + (qrBoxSize - qrSize) / 2,
-        qrSize,
-        qrSize,
-      );
-
-      // 5 Amber Gold Stars
-      ctx.fillStyle = "#F59E0B";
-      ctx.font = "700 42px sans-serif";
-      ctx.fillText("★  ★  ★  ★  ★", W / 2, 922);
-
-      // Bottom prompt banner
-      ctx.fillStyle = "#0F172A";
-      drawRoundedRect(ctx, 130, 968, W - 260, 74, 24);
-      ctx.fill();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font =
-        '700 28px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
-      const displayPrompt =
-        (promptText.trim() || "掃描抽好禮 / 留下寶貴意見").slice(0, 26);
-      ctx.fillText(displayPrompt, W / 2, 1006);
-
-      // Footer subtle URL
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "600 18px monospace";
-      const shortUrl = activeUrl.replace(/^https?:\/\//, "").slice(0, 52);
-      ctx.fillText(shortUrl, W / 2, 1084);
+      ctx.fillText("Nova商譽寶 ・ 顧客回饋", W / 2, cursorY + 23);
+      cursorY += 72;
     }
 
-    const dataUrl = exportCanvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = `${shopId}-qrcode.png`;
-    link.click();
+    // Shop Name Title
+    ctx.fillStyle = "#0F172A";
+    ctx.font =
+      '800 38px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const displayTitle =
+      cardTitle.length > 20 ? `${cardTitle.slice(0, 19)}…` : cardTitle;
+    ctx.fillText(displayTitle, W / 2, cursorY + 18);
+
+    // QR Inner Frame
+    const qrBoxSize = 590;
+    const qrBoxX = (W - qrBoxSize) / 2;
+    const qrBoxY = cursorY + 64;
+    drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 32);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#E2E8F0";
+    ctx.stroke();
+
+    // Crisp QR Code
+    const qrSize = 520;
+    ctx.drawImage(
+      sourceQrCanvas,
+      (W - qrSize) / 2,
+      qrBoxY + (qrBoxSize - qrSize) / 2,
+      qrSize,
+      qrSize,
+    );
+
+    // 5 Amber Gold Stars
+    const starsY = qrBoxY + qrBoxSize + 58;
+    ctx.fillStyle = "#F59E0B";
+    ctx.font = "700 42px sans-serif";
+    ctx.fillText("★  ★  ★  ★  ★", W / 2, starsY);
+
+    // Bottom prompt banner
+    const promptY = starsY + 42;
+    ctx.fillStyle = "#0F172A";
+    drawRoundedRect(ctx, 130, promptY, W - 260, 74, 24);
+    ctx.fill();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font =
+      '700 28px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+    const displayPrompt =
+      (promptText.trim() || "掃描抽好禮 / 留下寶貴意見").slice(0, 26);
+    ctx.fillText(displayPrompt, W / 2, promptY + 38);
+
+    // Footer subtle URL
+    ctx.fillStyle = "#94A3B8";
+    ctx.font = "600 18px monospace";
+    const shortUrl = activeUrl.replace(/^https?:\/\//, "").slice(0, 52);
+    ctx.fillText(shortUrl, W / 2, promptY + 114);
+
+    return exportCanvas;
+  }
+
+  async function handleDownloadPng() {
+    setDownloading(true);
+    setDownloadFeedback(null);
+
+    try {
+      const sourceQrCanvas =
+        (await resolveQrSourceCanvas(exportQrHostRef.current)) ??
+        (await resolveQrSourceCanvas(previewQrHostRef.current));
+
+      if (!sourceQrCanvas) {
+        setDownloadFeedback({
+          type: "error",
+          message: "找不到 QR Code 繪圖元件，請重新整理頁面後再試一次。",
+        });
+        return;
+      }
+
+      const loadedLogo =
+        showShopLabel && hasLogo && logoUrl
+          ? await loadImageForCanvas(logoUrl)
+          : null;
+
+      let exportCanvas = renderExportCanvas(sourceQrCanvas, loadedLogo);
+      let blob: Blob | null = null;
+
+      try {
+        blob = await canvasToPngBlob(exportCanvas);
+      } catch {
+        // If an external logo lacked CORS headers and tainted the canvas, retry cleanly without logo
+        if (loadedLogo) {
+          exportCanvas = renderExportCanvas(sourceQrCanvas, null);
+          blob = await canvasToPngBlob(exportCanvas);
+        } else {
+          throw new Error("CANVAS_EXPORT_FAILED");
+        }
+      }
+
+      if (!blob) {
+        setDownloadFeedback({
+          type: "error",
+          message: "無法產生 PNG 圖檔，請確認瀏覽器允許下載檔案後再試。",
+        });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const filename = `${shopId}-qrcode.png`;
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = filename;
+      link.rel = "noopener";
+      link.style.display = "none";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Delay revocation slightly so Safari / mobile browsers complete reading the Blob URL
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 1500);
+
+      setDownloadFeedback({
+        type: "success",
+        message: `已產生並開始下載「${filename}」。`,
+      });
+      window.setTimeout(() => {
+        setDownloadFeedback((prev) =>
+          prev?.type === "success" ? null : prev,
+        );
+      }, 4000);
+    } catch {
+      setDownloadFeedback({
+        type: "error",
+        message:
+          "匯出 QR Code 圖片時發生錯誤（可能受外部圖片跨域限制），請稍後重試或更換 Logo。",
+      });
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -243,8 +456,12 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
         </div>
       </div>
 
-      {/* Hidden High-Res QR Source Canvas for 560px Crisp Export */}
-      <div ref={exportQrHostRef} className="hidden" aria-hidden="true">
+      {/* Offscreen High-Res QR Source Canvas (kept rendered in DOM, never display:none) */}
+      <div
+        ref={exportQrHostRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed -left-[9999px] top-0 opacity-0"
+      >
         <QRCodeCanvas
           value={activeUrl}
           size={560}
@@ -262,15 +479,26 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
             <div className="w-full max-w-[270px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
               <div className="h-2 w-full bg-[#F59E0B]" />
               <div className="flex flex-col items-center px-5 pt-4 pb-5 text-center">
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
-                  Nova商譽寶 ・ 顧客回饋
-                </span>
-                <p className="mt-2 inline-flex items-center justify-center gap-1 text-sm font-extrabold text-[#0F172A]">
+                {hasLogo && logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt={`${shopName} Logo`}
+                    crossOrigin="anonymous"
+                    className="mb-1.5 h-10 w-10 rounded-xl border border-slate-100 object-cover"
+                  />
+                ) : (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+                    Nova商譽寶 ・ 顧客回饋
+                  </span>
+                )}
+                <p className="mt-1.5 inline-flex items-center justify-center gap-1 text-sm font-extrabold text-[#0F172A]">
                   <Building className="h-3.5 w-3.5 shrink-0 text-[#F59E0B]" />
                   <span className="line-clamp-1">{cardTitle}</span>
                 </p>
 
                 <div
+                  ref={previewQrHostRef}
                   className="mt-3.5 rounded-2xl border border-slate-200 p-3 shadow-sm"
                   style={{ backgroundColor: bgColor }}
                 >
@@ -303,6 +531,7 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
             </div>
           ) : (
             <div
+              ref={previewQrHostRef}
               className="rounded-2xl border border-slate-200 p-4 shadow-sm"
               style={{ backgroundColor: bgColor }}
             >
@@ -478,7 +707,7 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
                 </span>
                 <button
                   type="button"
-                  onClick={handleCopy}
+                  onClick={() => void handleCopy()}
                   className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-amber-50 hover:text-amber-700"
                 >
                   {copied ? (
@@ -497,15 +726,43 @@ export function QrCodeShareCard({ shopId, shopName }: QrCodeShareCardProps) {
             </div>
           </div>
 
+          {downloadFeedback && (
+            <div
+              role={downloadFeedback.type === "error" ? "alert" : "status"}
+              className={`flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-semibold ${
+                downloadFeedback.type === "error"
+                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              {downloadFeedback.type === "error" ? (
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+              ) : (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              )}
+              <span>{downloadFeedback.message}</span>
+            </div>
+          )}
+
           {/* Primary Actions */}
           <div className="flex flex-wrap gap-2.5 pt-1">
             <button
               type="button"
-              onClick={handleDownloadPng}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-4 py-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99]"
+              disabled={downloading}
+              onClick={() => void handleDownloadPng()}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-4 py-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Download className="h-4 w-4 text-[#F59E0B]" />
-              <span>下載高解析 PNG 立牌（{shopId}-qrcode.png）</span>
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-[#F59E0B]" />
+                  <span>正在匯出高解析 PNG...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 text-[#F59E0B]" />
+                  <span>下載高解析 PNG 立牌（{shopId}-qrcode.png）</span>
+                </>
+              )}
             </button>
 
             <Link

@@ -649,7 +649,11 @@ export function AdminDashboard({
 
       {/* Tab 5: Customizable QR Code Generator */}
       {activeTab === "qrcode" && (
-        <QrCodeShareCard shopId={config.shopId} shopName={config.shopName} />
+        <QrCodeShareCard
+          shopId={config.shopId}
+          shopName={config.shopName}
+          logoUrl={isPro ? config.logoUrl : undefined}
+        />
       )}
 
       {/* Tab 6: Shop Settings + Live Mobile Preview */}
