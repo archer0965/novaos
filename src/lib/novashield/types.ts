@@ -1,3 +1,5 @@
+import type { AiQuotaState } from "./aiQuota";
+
 export type PlanTier = "FREE" | "PRO";
 
 export type BillingCycle = "monthly" | "yearly";
@@ -24,6 +26,8 @@ export interface ShopConfig {
   brandColor?: string;
   emailFormEndpoint?: string;
   ratingMode?: RatingMode;
+  /** Persistent AI analysis quota & top-up credits (synced with server + localStorage) */
+  aiQuota?: AiQuotaState;
 }
 
 export interface DimensionScore {

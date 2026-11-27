@@ -1,3 +1,5 @@
+import type { AiQuotaSnapshot, AiQuotaState } from "./aiQuota";
+
 export type AiSeverity = "高" | "中" | "低";
 
 export interface AiFeedbackAnalysis {
@@ -11,6 +13,9 @@ export interface AiAnalyzeApiResponse {
   ok: boolean;
   mode: "openai" | "mock";
   result?: AiFeedbackAnalysis;
+  quota?: AiQuotaSnapshot;
+  quotaState?: AiQuotaState;
+  code?: "QUOTA_EXCEEDED" | "UNAUTHORIZED" | "RATE_LIMITED" | "VALIDATION_ERROR";
   error?: string;
 }
 

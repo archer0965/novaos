@@ -470,6 +470,28 @@ export async function markNovaShieldReminderSent(
     .eq("plan_expires_at", expectedExpiresAt);
 }
 
+/** Persists updated AI quota usage into novashield_shops.config JSONB (best-effort). */
+export async function saveNovaShieldShopAiQuota(
+  shopId: string,
+  aiQuota: NonNullable<ShopConfig["aiQuota"]>,
+): Promise<void> {
+  const admin = getAdmin();
+  const existingRow = await getNovaShieldShopRow(shopId);
+  if (!existingRow) return;
+  const currentConfig = rowToShopConfig(existingRow);
+  const nextConfig: ShopConfig = {
+    ...currentConfig,
+    aiQuota,
+  };
+  await admin
+    .from("novashield_shops")
+    .update({
+      config: nextConfig,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("shop_id", shopId);
+}
+
 /** Master admin: downgrade a shop back to FREE and clear expiry. */
 export async function setNovaShieldShopFree(shopId: string): Promise<ShopConfig> {
   const admin = getAdmin();

@@ -4,21 +4,30 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  CheckCircle2,
   ClipboardList,
   Copy,
+  CreditCard,
   Crown,
   Loader2,
   Lock,
   MessageCircle,
+  PlusCircle,
   Sparkles,
   Tag,
 } from "lucide-react";
-import { ProUpgradeCard } from "./ProUpgradeCard";
 import type {
   AiAnalyzeApiResponse,
   AiFeedbackAnalysis,
   AiSeverity,
 } from "@/lib/novashield/aiAnalyzer";
+import {
+  AI_TOPUP_PACK,
+  applyTopupPackToQuota,
+  computeAiQuotaSnapshot,
+  normalizeAiQuotaState,
+  type AiQuotaState,
+} from "@/lib/novashield/aiQuota";
 import type { ShopConfig } from "@/lib/novashield/types";
 
 interface AiFeedbackCoachProps {
@@ -27,8 +36,7 @@ interface AiFeedbackCoachProps {
   onUpgradeToPro: () => void;
 }
 
-const FREE_MONTHLY_LIMIT = 3;
-const QUOTA_STORAGE_PREFIX = "novaos:novashield:ai-quota:v1";
+const QUOTA_STORAGE_PREFIX = "novaos:novashield:ai-quota:v2";
 
 const SAMPLE_COMPLAINTS = [
   {
@@ -49,59 +57,67 @@ const SAMPLE_COMPLAINTS = [
   },
 ];
 
-function getTaipeiMonthKey(): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Taipei",
-    year: "numeric",
-    month: "2-digit",
-  }).formatToParts(new Date());
-  const y = parts.find((p) => p.type === "year")?.value || "2026";
-  const m = parts.find((p) => p.type === "month")?.value || "01";
-  return `${y}-${m}`;
-}
-
-function readMonthlyUsedCount(shopId: string): number {
-  if (typeof window === "undefined") return 0;
+function readLocalQuotaState(
+  shopId: string,
+  serverSeed?: Partial<AiQuotaState> | null,
+): AiQuotaState {
+  const normalizedServer = normalizeAiQuotaState(serverSeed);
+  if (typeof window === "undefined") return normalizedServer;
   try {
-    const key = `${QUOTA_STORAGE_PREFIX}:${shopId}:${getTaipeiMonthKey()}`;
-    const raw = window.localStorage.getItem(key);
-    const num = Number(raw || "0");
-    return Number.isFinite(num) && num >= 0 ? Math.floor(num) : 0;
+    const raw = window.localStorage.getItem(
+      `${QUOTA_STORAGE_PREFIX}:${shopId}`,
+    );
+    if (!raw) return normalizedServer;
+    const parsed = normalizeAiQuotaState(
+      JSON.parse(raw) as Partial<AiQuotaState>,
+    );
+    return {
+      monthKey: parsed.monthKey,
+      monthlyUsed: Math.max(normalizedServer.monthlyUsed, parsed.monthlyUsed),
+      topupRemaining: Math.max(
+        normalizedServer.topupRemaining,
+        parsed.topupRemaining,
+      ),
+      lastTopupOrderId:
+        parsed.lastTopupOrderId ?? normalizedServer.lastTopupOrderId ?? null,
+      lastTopupAt: parsed.lastTopupAt ?? normalizedServer.lastTopupAt ?? null,
+      novaosBillingAccountId:
+        parsed.novaosBillingAccountId ??
+        normalizedServer.novaosBillingAccountId ??
+        null,
+    };
   } catch {
-    return 0;
+    return normalizedServer;
   }
 }
 
-function incrementMonthlyUsedCount(shopId: string): number {
-  const next = readMonthlyUsedCount(shopId) + 1;
-  if (typeof window !== "undefined") {
-    try {
-      const key = `${QUOTA_STORAGE_PREFIX}:${shopId}:${getTaipeiMonthKey()}`;
-      window.localStorage.setItem(key, String(next));
-    } catch {
-      // ignore storage errors
-    }
+function writeLocalQuotaState(shopId: string, state: AiQuotaState): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      `${QUOTA_STORAGE_PREFIX}:${shopId}`,
+      JSON.stringify(state),
+    );
+  } catch {
+    // ignore storage quota errors
   }
-  return next;
 }
 
-const SEVERITY_STYLE: Record<
-  AiSeverity,
-  { label: string; className: string }
-> = {
-  高: {
-    label: "高危險・建議立即處理",
-    className: "border-rose-200 bg-rose-50 text-rose-700",
-  },
-  中: {
-    label: "中度・建議當日安撫",
-    className: "border-amber-200 bg-amber-50 text-amber-800",
-  },
-  低: {
-    label: "輕微・記錄持續優化",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  },
-};
+const SEVERITY_STYLE: Record<AiSeverity, { label: string; className: string }> =
+  {
+    高: {
+      label: "高危險・建議立即處理",
+      className: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+    中: {
+      label: "中度・建議當日安撫",
+      className: "border-amber-200 bg-amber-50 text-amber-800",
+    },
+    低: {
+      label: "輕微・記錄持續優化",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+  };
 
 export function AiFeedbackCoach({
   config,
@@ -111,20 +127,26 @@ export function AiFeedbackCoach({
   const [feedbackText, setFeedbackText] = useState(initialText);
   const [analyzing, setAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [topupToast, setTopupToast] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AiFeedbackAnalysis | null>(null);
   const [analysisMode, setAnalysisMode] = useState<"openai" | "mock" | null>(
     null,
   );
+  const [lastDeductedFrom, setLastDeductedFrom] = useState<
+    "monthly" | "topup" | null
+  >(null);
   const [copiedReply, setCopiedReply] = useState(false);
-  const [usedThisMonth, setUsedThisMonth] = useState(0);
+  const [quotaState, setQuotaState] = useState<AiQuotaState>(() =>
+    normalizeAiQuotaState(config.aiQuota),
+  );
 
   const isPro = config.plan === "PRO";
-  const remainingFree = Math.max(0, FREE_MONTHLY_LIMIT - usedThisMonth);
-  const freeQuotaExhausted = !isPro && remainingFree <= 0;
+  const quota = computeAiQuotaSnapshot(config.plan, quotaState);
+  const isOutOfQuota = quota.totalRemaining <= 0;
 
   useEffect(() => {
-    setUsedThisMonth(readMonthlyUsedCount(config.shopId));
-  }, [config.shopId]);
+    setQuotaState(readLocalQuotaState(config.shopId, config.aiQuota));
+  }, [config.shopId, config.aiQuota]);
 
   useEffect(() => {
     if (initialText) {
@@ -133,6 +155,25 @@ export function AiFeedbackCoach({
     }
   }, [initialText]);
 
+  /**
+   * Simulates purchasing the $49 / +30 AI analysis top-up pack.
+   * TODO (NovaOS 拓新雲端金流整合):
+   * Replace this local simulation with POST /api/novashield/checkout (item: ai_topup_30, amount: 49)
+   * and credit topupRemaining from the verified ECPay callback / NovaOS account billing ledger.
+   */
+  function handleSimulateTopupPack() {
+    const nextState = applyTopupPackToQuota(quotaState, {
+      orderId: `SIM-TOPUP-${Date.now()}`,
+    });
+    setQuotaState(nextState);
+    writeLocalQuotaState(config.shopId, nextState);
+    setErrorMessage(null);
+    setTopupToast(
+      `已模擬購買成功！加購包額度 +${AI_TOPUP_PACK.credits} 次（目前加購剩餘 ${nextState.topupRemaining} 次，跨月不歸零）。`,
+    );
+    setTimeout(() => setTopupToast(null), 4000);
+  }
+
   async function handleAnalyze() {
     const trimmed = feedbackText.trim();
     if (!trimmed) {
@@ -140,9 +181,9 @@ export function AiFeedbackCoach({
       return;
     }
 
-    if (freeQuotaExhausted) {
+    if (isOutOfQuota) {
       setErrorMessage(
-        "免費版本月 3 次 AI 智能分析體驗已用畢，請升級專業版解鎖無限制使用。",
+        "本月與加購 AI 分析次數已用完，請購買「$49 加購 30 次」或升級專業版。",
       );
       return;
     }
@@ -156,24 +197,33 @@ export function AiFeedbackCoach({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          feedbackText: trimmed,
+          shopId: config.shopId,
           shopName: config.shopName,
+          feedbackText: trimmed,
+          quotaState,
         }),
       });
 
       const data = (await response.json()) as AiAnalyzeApiResponse;
+
+      if (data.quotaState) {
+        setQuotaState(data.quotaState);
+        writeLocalQuotaState(config.shopId, data.quotaState);
+      }
+
       if (!response.ok || !data.ok || !data.result) {
-        setErrorMessage(data.error || "AI 分析失敗，請稍後再試。");
+        setErrorMessage(
+          data.error ||
+            (response.status === 403
+              ? "本月與加購 AI 分析次數已用完，請購買「$49 加購 30 次」或升級專業版。"
+              : "AI 分析失敗，請稍後再試。"),
+        );
         return;
       }
 
       setAnalysis(data.result);
       setAnalysisMode(data.mode);
-
-      if (!isPro) {
-        const nextUsed = incrementMonthlyUsedCount(config.shopId);
-        setUsedThisMonth(nextUsed);
-      }
+      setLastDeductedFrom(data.quota?.deductedFrom ?? null);
     } catch {
       setErrorMessage("無法連線至 AI 分析服務，請稍後再試。");
     } finally {
@@ -194,7 +244,7 @@ export function AiFeedbackCoach({
 
   return (
     <div className="space-y-6">
-      {/* Main Input Card */}
+      {/* Main Input & Quota Card */}
       <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -214,39 +264,142 @@ export function AiFeedbackCoach({
                 )}
               </div>
               <p className="mt-0.5 text-xs text-slate-500">
-                貼上顧客負評或客訴原文，AI 即時判斷問題歸因與風險等級，產出高情商 LINE 挽回話術與店內 SOP 改善對策
+                貼上顧客負評或客訴原文，AI 即時判斷問題歸因與風險等級，產出溫暖誠懇的 LINE 回覆話術與店內改善 SOP
               </p>
             </div>
           </div>
 
-          {isPro ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 ring-1 ring-amber-200/80">
-              <Crown className="h-3.5 w-3.5 text-[#F59E0B]" />
-              <span>專業版：無限制次數</span>
-            </span>
-          ) : (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-                freeQuotaExhausted
-                  ? "bg-rose-50 text-rose-700 ring-rose-200"
-                  : "bg-slate-100 text-slate-700 ring-slate-200"
-              }`}
-            >
-              {freeQuotaExhausted && <Lock className="h-3 w-3" />}
-              <span>
-                免費版體驗：本月剩餘 {remainingFree} / {FREE_MONTHLY_LIMIT} 次
-              </span>
-            </span>
-          )}
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
+              isPro
+                ? "bg-amber-50 text-amber-800 ring-amber-200"
+                : "bg-slate-100 text-slate-700 ring-slate-200"
+            }`}
+          >
+            {isPro ? (
+              <>
+                <Crown className="h-3.5 w-3.5 text-[#F59E0B]" />
+                <span>專業版：每月 20 次額度</span>
+              </>
+            ) : (
+              <span>免費版：每月 5 次額度</span>
+            )}
+          </span>
         </div>
 
-        {/* Free quota exhausted gate */}
-        {freeQuotaExhausted && (
-          <div className="mb-5">
-            <ProUpgradeCard
-              onUpgrade={onUpgradeToPro}
-              detail="免費版每月提供 3 次 AI 客訴分析體驗。升級專業版即可解鎖「NovaOS AI Powered」無限次客訴分析、高階談判話術與完整內部 SOP 改善建議。"
-            />
+        {/* Quota Status Bar + $49 Top-Up Pack Button */}
+        <div className="mb-5 rounded-2xl border border-slate-200/80 bg-[#FAF8F5] p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold text-slate-500">
+                  本月方案剩餘額度（{quota.monthKey} 重置，不累積）
+                </p>
+                <p className="mt-1 flex items-baseline gap-1">
+                  <span
+                    className={`text-xl font-black ${
+                      quota.monthlyRemaining > 0
+                        ? "text-[#0F172A]"
+                        : "text-rose-600"
+                    }`}
+                  >
+                    本月剩餘 {quota.monthlyRemaining}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">
+                    / {quota.monthlyLimit} 次
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold text-slate-500">
+                  單次加購包剩餘次數（用完才扣，跨月不歸零）
+                </p>
+                <p className="mt-1 flex items-baseline gap-1">
+                  <span className="text-xl font-black text-amber-700">
+                    加購剩餘 {quota.topupRemaining}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">次</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+              <button
+                type="button"
+                onClick={handleSimulateTopupPack}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-amber-600 active:scale-[0.99]"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>購買 $49 加購包（+30 次）</span>
+              </button>
+
+              {!isPro && (
+                <button
+                  type="button"
+                  onClick={onUpgradeToPro}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 transition hover:border-[#0F172A] hover:bg-slate-50"
+                >
+                  <CreditCard className="h-3.5 w-3.5 text-[#F59E0B]" />
+                  <span>升級專業版（每月 20 次）</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <p className="mt-3 text-[11px] text-slate-500">
+            扣點順序：優先扣除「本月方案剩餘額度」，本月用完後自動扣除「單次加購剩餘額度」；加購次數永久有效、不隨月份歸零。
+          </p>
+        </div>
+
+        {topupToast && (
+          <div
+            role="status"
+            className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span>{topupToast}</span>
+          </div>
+        )}
+
+        {/* Exhausted Quota Hard Lock Notice */}
+        {isOutOfQuota && (
+          <div
+            role="alert"
+            className="mb-5 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+                <Lock className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-rose-900">
+                  本月與加購 AI 分析次數已用完，請購買「$49 加購 30 次」或升級專業版。
+                </p>
+                <p className="mt-0.5 text-xs text-rose-700">
+                  加購包單次只需 NT$49 即可獲得 30 次額度且不會每月歸零；升級專業版每月享 20 次額度並解鎖 LINE 私訊引導。
+                </p>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleSimulateTopupPack}
+                className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-amber-600"
+              >
+                購買 $49 加購 30 次
+              </button>
+              {!isPro && (
+                <button
+                  type="button"
+                  onClick={onUpgradeToPro}
+                  className="rounded-xl bg-[#0F172A] px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
+                >
+                  升級專業版
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -309,17 +462,17 @@ export function AiFeedbackCoach({
 
         {/* Action Row */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-400">
-            {isPro
-              ? "專業版尊享高階安撫談判話術與完整內部營運檢討清單。"
-              : "免費版可體驗基礎歸因與回覆建議；升級專業版享無限次數與 NovaOS AI Powered 進階話術。"}
+          <p className="text-xs text-slate-500">
+            本次可用總額度：
+            <strong className="text-slate-800">{quota.totalRemaining} 次</strong>
+            （本月 {quota.monthlyRemaining} 次 ＋ 加購 {quota.topupRemaining} 次）
           </p>
 
           <button
             type="button"
-            disabled={analyzing || freeQuotaExhausted}
+            disabled={analyzing || isOutOfQuota}
             onClick={() => void handleAnalyze()}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {analyzing ? (
               <>
@@ -339,9 +492,8 @@ export function AiFeedbackCoach({
       {/* AI Response Card */}
       {analysis && (
         <section className="overflow-hidden rounded-2xl border border-amber-200/90 bg-white shadow-md">
-          {/* Card Header with Category & Severity Badges */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-[#0F172A] to-slate-800 px-5 py-4 text-white">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Sparkles className="h-4 w-4 text-[#F59E0B]" />
               <h3 className="text-sm font-extrabold sm:text-base">
                 AI 智能診斷與挽回方案
@@ -353,11 +505,20 @@ export function AiFeedbackCoach({
               )}
             </div>
 
-            <span className="text-[11px] text-slate-300">
-              {analysisMode === "openai"
-                ? "LLM 即時推論引擎"
-                : "NovaOS 門市營運專家模型"}
-            </span>
+            <div className="flex items-center gap-2 text-[11px] text-slate-300">
+              {lastDeductedFrom && (
+                <span className="rounded-md bg-white/10 px-2 py-0.5 font-semibold text-amber-200">
+                  {lastDeductedFrom === "monthly"
+                    ? "已扣除本月方案額度 1 次"
+                    : "已扣除加購包額度 1 次"}
+                </span>
+              )}
+              <span>
+                {analysisMode === "openai"
+                  ? "LLM 即時推論"
+                  : "NovaOS 專家模型"}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-5 p-5 sm:p-6">
@@ -415,24 +576,13 @@ export function AiFeedbackCoach({
 
             {/* Internal SOP Advice */}
             <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h4 className="inline-flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
-                  <ClipboardList className="h-4 w-4 text-amber-600" />
-                  <span>店內營運改善建議（Internal Action SOP）</span>
-                </h4>
-                {!isPro && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                    <Lock className="h-3 w-3" />
-                    免費版顯示基礎建議
-                  </span>
-                )}
-              </div>
+              <h4 className="mb-3 inline-flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
+                <ClipboardList className="h-4 w-4 text-amber-600" />
+                <span>店內營運改善建議（Internal Action SOP）</span>
+              </h4>
 
               <ol className="space-y-2.5">
-                {(isPro
-                  ? analysis.internalAdvice
-                  : analysis.internalAdvice.slice(0, 2)
-                ).map((advice, idx) => (
+                {analysis.internalAdvice.map((advice, idx) => (
                   <li
                     key={advice}
                     className="flex items-start gap-2.5 rounded-xl bg-white p-3 text-xs leading-relaxed text-slate-700 ring-1 ring-slate-200/70 sm:text-sm"
@@ -444,15 +594,6 @@ export function AiFeedbackCoach({
                   </li>
                 ))}
               </ol>
-
-              {!isPro && (
-                <div className="mt-4">
-                  <ProUpgradeCard
-                    onUpgrade={onUpgradeToPro}
-                    detail="升級專業版即可解鎖無限次 AI 分析、高階安撫談判話術與完整多步驟 SOP 預防方案。"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </section>
