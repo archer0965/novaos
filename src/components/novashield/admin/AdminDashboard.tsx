@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
+  AlertCircle,
   BellRing,
   CalendarClock,
   CheckCircle2,
   CreditCard,
   Crown,
+  LayoutDashboard,
+  LogOut,
   Plus,
   RotateCcw,
   Save,
   Sliders,
   Smartphone,
   Store,
+  UserCheck,
   Zap,
 } from "lucide-react";
 import { ShopSettingsForm } from "./ShopSettingsForm";
@@ -23,18 +28,34 @@ import { LivePhonePreview } from "./LivePhonePreview";
 import { PricingSection } from "./PricingSection";
 import { EcpayUpgradeModal } from "./EcpayUpgradeModal";
 import { useShopStore } from "@/lib/novashield/shopStore";
-import { formatExpiresAtTaipei, getCycleLabel } from "@/lib/novashield/subscription";
+import {
+  formatExpiresAtTaipei,
+  getCycleLabel,
+} from "@/lib/novashield/subscription";
 import type { BillingCycle, ShopConfig } from "@/lib/novashield/types";
-import { normalizeLineOfficialId, sanitizeShopId } from "@/lib/novashield/validation";
+import {
+  normalizeLineOfficialId,
+  sanitizeShopId,
+} from "@/lib/novashield/validation";
+import { createClient as createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  userId: string;
+  userEmail: string;
+  isPlatformAdmin: boolean;
+}
+
+export function AdminDashboard({
+  userId,
+  userEmail,
+  isPlatformAdmin,
+}: AdminDashboardProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryShop = searchParams.get("shop");
   const paymentStatus = searchParams.get("payment");
-  const initialShopId =
-    queryShop && sanitizeShopId(queryShop)
-      ? sanitizeShopId(queryShop)!
-      : "shop123";
+  const requestedShopId =
+    queryShop && sanitizeShopId(queryShop) ? sanitizeShopId(queryShop) : null;
 
   const {
     shops,
@@ -46,15 +67,26 @@ export function AdminDashboard() {
     resetSelectedShop,
     createOrSwitchShop,
     refreshFromServer,
-  } = useShopStore(initialShopId);
+  } = useShopStore({
+    userId,
+    userEmail,
+    isPlatformAdmin,
+    requestedShopId,
+  });
 
   const [newShopIdInput, setNewShopIdInput] = useState("");
   const [showNewShopInput, setShowNewShopInput] = useState(false);
-  const [saveToast, setSaveToast] = useState<string | null>(null);
-  const [mobileTab, setMobileTab] = useState<"settings" | "preview">("settings");
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [mobileTab, setMobileTab] = useState<"settings" | "preview">(
+    "settings",
+  );
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeModalCycle, setUpgradeModalCycle] =
     useState<BillingCycle>("monthly");
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (paymentStatus === "pending") {
@@ -62,14 +94,26 @@ export function AdminDashboard() {
     }
   }, [paymentStatus, refreshFromServer]);
 
-  function showToast(message: string) {
-    setSaveToast(message);
-    setTimeout(() => setSaveToast(null), 4000);
+  function showToast(message: string, type: "success" | "error" = "success") {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4500);
   }
 
   function openUpgradeModal(cycle: BillingCycle = "monthly") {
     setUpgradeModalCycle(cycle);
     setUpgradeModalOpen(true);
+  }
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      await supabase.auth.signOut();
+      router.push("/novashield");
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   async function handleSave() {
@@ -80,37 +124,50 @@ export function AdminDashboard() {
           ? normalizeLineOfficialId(config.lineId) || `@${config.shopId}`
           : config.lineId,
     };
-    const { synced } = await persistShop(normalized);
-    showToast(
-      synced
-        ? "門市設定已儲存至拓新雲端資料庫，所有裝置的顧客評分頁將同步顯示。"
-        : "雲端同步失敗，設定僅保留於本機瀏覽器。請確認 Supabase 已執行 030_novashield_shops.sql 建表。",
-    );
+    const result = await persistShop(normalized);
+    if (result.synced) {
+      showToast(
+        "門市設定已儲存至拓新雲端資料庫，所有裝置的顧客評分頁將同步顯示。",
+      );
+    } else {
+      showToast(
+        result.errorMessage || "儲存失敗，請確認帳號權限與網路狀態。",
+        "error",
+      );
+    }
   }
 
   async function handleResetDefaults() {
-    const { synced } = await resetSelectedShop();
-    showToast(
-      synced
-        ? "已還原為預設門市設定並同步至雲端資料庫（訂閱狀態維持不變）。"
-        : "已還原為預設門市設定（僅本機，雲端同步失敗）。",
-    );
+    const result = await resetSelectedShop();
+    if (result.synced) {
+      showToast("已還原為預設門市設定並同步至雲端資料庫（訂閱狀態維持不變）。");
+    } else {
+      showToast(result.errorMessage || "還原失敗，請稍後再試。", "error");
+    }
   }
 
   async function handleCreateCustomShop() {
     const cleaned = sanitizeShopId(newShopIdInput);
     if (!cleaned) {
-      showToast("門市代碼僅限英數字、底線與連字號（例如：cafe02）。");
+      showToast(
+        "門市代碼僅限英數字、底線與連字號（例如：cafe02）。",
+        "error",
+      );
       return;
     }
-    const { synced } = await createOrSwitchShop(cleaned);
-    setNewShopIdInput("");
-    setShowNewShopInput(false);
-    showToast(
-      synced
-        ? `已建立免費版門市：${cleaned}（已寫入雲端資料庫，需付費升級後解鎖專業版）`
-        : `已建立免費版門市：${cleaned}（雲端同步失敗，僅本機）`,
-    );
+    const result = await createOrSwitchShop(cleaned);
+    if (result.synced) {
+      setNewShopIdInput("");
+      setShowNewShopInput(false);
+      showToast(
+        `已建立並綁定您的免費版門市：${cleaned}（付費升級後解鎖專業版）`,
+      );
+    } else {
+      showToast(
+        result.errorMessage || "建立門市失敗，該門市代碼可能已被使用。",
+        "error",
+      );
+    }
   }
 
   const shopList = Object.values(shops);
@@ -118,6 +175,40 @@ export function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      {/* Signed-in NovaOS Account Bar */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xs shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 text-slate-600">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800">
+            <UserCheck className="h-4 w-4 text-emerald-600" />
+            <span>拓新雲端帳號：{userEmail || "已登入"}</span>
+          </span>
+          {isPlatformAdmin && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+              平台管理員
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            <span>拓新雲端總控台</span>
+          </Link>
+          <button
+            type="button"
+            disabled={signingOut}
+            onClick={() => void handleSignOut()}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>{signingOut ? "登出中..." : "登出"}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Payment Return Banner */}
       {paymentStatus === "pending" && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-950 shadow-sm">
@@ -181,7 +272,8 @@ export function AdminDashboard() {
                 </span>
                 <span className="inline-flex items-center gap-1 text-emerald-700">
                   <BellRing className="h-3.5 w-3.5" />
-                  到期前 3 天自動寄送 Email 提醒（{config.emailNotification || "請先填寫信箱"}）
+                  到期前 3 天自動寄送 Email 提醒（
+                  {config.emailNotification || userEmail || "請先填寫信箱"}）
                 </span>
               </div>
             ) : (
@@ -193,7 +285,6 @@ export function AdminDashboard() {
             )}
           </div>
 
-          {/* Authoritative ECPay Upgrade / Renewal Button (NO free toggle bypass) */}
           <button
             type="button"
             onClick={() => openUpgradeModal("monthly")}
@@ -259,7 +350,7 @@ export function AdminDashboard() {
       {showNewShopInput && (
         <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 sm:flex-row sm:items-center">
           <span className="text-xs font-bold text-amber-900">
-            建立新門市代碼（預設免費版）：
+            建立專屬門市代碼（預設免費版，綁定於您的帳號）：
           </span>
           <input
             type="text"
@@ -284,13 +375,21 @@ export function AdminDashboard() {
         </div>
       )}
 
-      {saveToast && (
+      {toast && (
         <div
-          role="status"
-          className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm"
+          role={toast.type === "error" ? "alert" : "status"}
+          className={`mb-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium shadow-sm ${
+            toast.type === "error"
+              ? "border-rose-200 bg-rose-50 text-rose-800"
+              : "border-emerald-200 bg-emerald-50 text-emerald-800"
+          }`}
         >
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-          <span>{saveToast}</span>
+          {toast.type === "error" ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+          )}
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -324,7 +423,6 @@ export function AdminDashboard() {
 
       {/* Main 2-Column Workspace */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Left: Settings */}
         <div
           className={`space-y-5 lg:col-span-7 ${
             mobileTab === "preview" ? "hidden lg:block" : "block"
@@ -345,7 +443,6 @@ export function AdminDashboard() {
           />
         </div>
 
-        {/* Right: Sticky Mobile Live Preview */}
         <div
           className={`lg:col-span-5 ${
             mobileTab === "settings" ? "hidden lg:block" : "block"
@@ -372,7 +469,7 @@ export function AdminDashboard() {
         onClose={() => setUpgradeModalOpen(false)}
         shopId={config.shopId}
         shopName={config.shopName}
-        defaultEmail={config.emailNotification}
+        defaultEmail={config.emailNotification || userEmail}
         initialCycle={upgradeModalCycle}
         isRenewal={isPro}
       />

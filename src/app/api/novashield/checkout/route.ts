@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/admin";
 import { buildAutoSubmitHtml, buildCheckoutParams } from "@/lib/ecpay";
-import { getSiteUrl } from "@/lib/site";
 import {
-  getNovaShieldShop,
   NovaShieldDbUnavailableError,
-  upsertNovaShieldShopSettings,
+  NovaShieldForbiddenError,
+  upsertNovaShieldShopSettingsForUser,
 } from "@/lib/novashield/db";
 import {
   getCycleLabel,
@@ -13,6 +13,8 @@ import {
   NOVASHIELD_PRICES,
 } from "@/lib/novashield/subscription";
 import { isValidEmail, sanitizeShopId } from "@/lib/novashield/validation";
+import { getSiteUrl } from "@/lib/site";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,6 +42,18 @@ async function parseCheckoutInput(request: Request): Promise<CheckoutBody> {
 
 export async function POST(request: Request) {
   try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "請先登入拓新雲端帳號後再進行付款升級。" },
+        { status: 401 },
+      );
+    }
+
     const body = await parseCheckoutInput(request);
     const shopId = sanitizeShopId(body.shopId || "");
     if (!shopId) {
@@ -51,7 +65,7 @@ export async function POST(request: Request) {
 
     const cycle = normalizeBillingCycle(body.cycle);
     const totalAmount = NOVASHIELD_PRICES[cycle];
-    const email = (body.emailNotification || "").trim();
+    const email = (body.emailNotification || user.email || "").trim();
 
     if (!email || !isValidEmail(email)) {
       return NextResponse.json(
@@ -62,18 +76,27 @@ export async function POST(request: Request) {
 
     let shopName = (body.shopName || "").trim();
     try {
-      const saved = await upsertNovaShieldShopSettings(shopId, {
-        emailNotification: email,
-        ...(shopName ? { shopName } : {}),
-      });
+      const saved = await upsertNovaShieldShopSettingsForUser(
+        shopId,
+        {
+          emailNotification: email,
+          ...(shopName ? { shopName } : {}),
+        },
+        {
+          userId: user.id,
+          userEmail: user.email,
+          isPlatformAdmin: isAdminEmail(user.email),
+        },
+      );
       shopName = saved.shopName;
     } catch (error) {
-      if (!(error instanceof NovaShieldDbUnavailableError)) {
-        const existing = await getNovaShieldShop(shopId).catch(() => null);
-        shopName = existing?.shopName || shopName || shopId;
-      } else {
-        shopName = shopName || shopId;
+      if (error instanceof NovaShieldForbiddenError) {
+        return NextResponse.json({ error: error.message }, { status: 403 });
       }
+      if (!(error instanceof NovaShieldDbUnavailableError)) {
+        throw error;
+      }
+      shopName = shopName || shopId;
     }
 
     const baseUrl = getSiteUrl();

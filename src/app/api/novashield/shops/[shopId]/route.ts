@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/admin";
 import {
   getNovaShieldShop,
   NovaShieldDbUnavailableError,
-  upsertNovaShieldShopSettings,
+  NovaShieldForbiddenError,
+  upsertNovaShieldShopSettingsForUser,
 } from "@/lib/novashield/db";
 import type { ShopConfig } from "@/lib/novashield/types";
 import { sanitizeShopId } from "@/lib/novashield/validation";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +17,12 @@ const MAX_BODY_BYTES = 2_000_000;
 type RouteContext = { params: { shopId: string } };
 
 function errorResponse(error: unknown) {
+  if (error instanceof NovaShieldForbiddenError) {
+    return NextResponse.json(
+      { ok: false, error: "FORBIDDEN", message: error.message },
+      { status: 403 },
+    );
+  }
   if (error instanceof NovaShieldDbUnavailableError) {
     return NextResponse.json(
       { ok: false, error: error.message },
@@ -26,6 +35,7 @@ function errorResponse(error: unknown) {
   );
 }
 
+/** Public read for C-side customer rating pages (/novashield/feedback/[shopId]). */
 export async function GET(_request: NextRequest, context: RouteContext) {
   const shopId = sanitizeShopId(context.params.shopId || "");
   if (!shopId) {
@@ -43,17 +53,35 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         { status: 404 },
       );
     }
-    return NextResponse.json({ ok: true, config });
+    // Omit internal reminder metadata from public customer-facing payload
+    const publicConfig: ShopConfig = {
+      ...config,
+      reminder3dSentFor: undefined,
+    };
+    return NextResponse.json({ ok: true, config: publicConfig });
   } catch (error) {
     return errorResponse(error);
   }
 }
 
+/** Authenticated merchant edit/create — bound to NovaOS Supabase Auth user. */
 export async function PUT(request: NextRequest, context: RouteContext) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, error: "UNAUTHORIZED", message: "請先登入拓新雲端帳號。" },
+      { status: 401 },
+    );
+  }
+
   const shopId = sanitizeShopId(context.params.shopId || "");
   if (!shopId) {
     return NextResponse.json(
-      { ok: false, error: "INVALID_SHOP_ID" },
+      { ok: false, error: "INVALID_SHOP_ID", message: "門市代碼格式不正確。" },
       { status: 400 },
     );
   }
@@ -61,7 +89,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const rawBody = await request.text();
   if (rawBody.length > MAX_BODY_BYTES) {
     return NextResponse.json(
-      { ok: false, error: "PAYLOAD_TOO_LARGE" },
+      { ok: false, error: "PAYLOAD_TOO_LARGE", message: "上傳資料過大。" },
       { status: 413 },
     );
   }
@@ -71,7 +99,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     body = JSON.parse(rawBody) as Partial<ShopConfig>;
   } catch {
     return NextResponse.json(
-      { ok: false, error: "INVALID_JSON" },
+      { ok: false, error: "INVALID_JSON", message: "無效的請求格式。" },
       { status: 400 },
     );
   }
@@ -92,7 +120,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   };
 
   try {
-    const config = await upsertNovaShieldShopSettings(shopId, safeSettings);
+    const config = await upsertNovaShieldShopSettingsForUser(
+      shopId,
+      safeSettings,
+      {
+        userId: user.id,
+        userEmail: user.email,
+        isPlatformAdmin: isAdminEmail(user.email),
+      },
+    );
     return NextResponse.json({ ok: true, config });
   } catch (error) {
     return errorResponse(error);

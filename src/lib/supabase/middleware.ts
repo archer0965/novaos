@@ -38,7 +38,8 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isHome = path === "/";
-  const isDashboard = path.startsWith("/dashboard");
+  const isDashboard =
+    path.startsWith("/dashboard") || path.startsWith("/novashield/admin");
   const isAuthPage = path === "/login" || path === "/signup";
 
   if (isDashboard && !user) {

@@ -1,11 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getInitialShopConfig } from "./mockData";
+import { createFallbackShopConfig, getInitialShopConfig } from "./mockData";
 import { normalizeShopConfig } from "./shopNormalize";
 import { calculateNextExpiry } from "./subscription";
 import type { BillingCycle, PlanTier, ShopConfig } from "./types";
 
+const RESERVED_DEMO_SHOP_IDS = new Set(["shop123", "shop-free", "bistro88"]);
+
 interface NovaShieldShopRow {
   shop_id: string;
+  owner_id: string | null;
   config: Partial<ShopConfig> | null;
   plan: string | null;
   billing_cycle: string | null;
@@ -17,6 +20,13 @@ export class NovaShieldDbUnavailableError extends Error {
   constructor(message = "NOVASHIELD_DB_UNAVAILABLE") {
     super(message);
     this.name = "NovaShieldDbUnavailableError";
+  }
+}
+
+export class NovaShieldForbiddenError extends Error {
+  constructor(message = "您沒有編輯此門市的權限。") {
+    super(message);
+    this.name = "NovaShieldForbiddenError";
   }
 }
 
@@ -67,14 +77,22 @@ function checkTableMissing(error: { code?: string; message?: string } | null) {
   throw new Error(error.message || "Supabase query failed");
 }
 
-export async function listNovaShieldShops(): Promise<Record<string, ShopConfig>> {
+export async function listNovaShieldShopsForUser(options: {
+  userId: string;
+  isPlatformAdmin: boolean;
+}): Promise<Record<string, ShopConfig>> {
   const admin = getAdmin();
-  const { data, error } = await admin
+  let query = admin
     .from("novashield_shops")
     .select(
-      "shop_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
+      "shop_id, owner_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
     );
 
+  if (!options.isPlatformAdmin) {
+    query = query.eq("owner_id", options.userId);
+  }
+
+  const { data, error } = await query;
   checkTableMissing(error);
 
   const result: Record<string, ShopConfig> = {};
@@ -84,34 +102,73 @@ export async function listNovaShieldShops(): Promise<Record<string, ShopConfig>>
   return result;
 }
 
-export async function getNovaShieldShop(
+async function getNovaShieldShopRow(
   shopId: string,
-): Promise<ShopConfig | null> {
+): Promise<NovaShieldShopRow | null> {
   const admin = getAdmin();
   const { data, error } = await admin
     .from("novashield_shops")
     .select(
-      "shop_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
+      "shop_id, owner_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
     )
     .eq("shop_id", shopId)
     .maybeSingle();
 
   checkTableMissing(error);
-  if (!data) return null;
-  return rowToShopConfig(data as NovaShieldShopRow);
+  return (data as NovaShieldShopRow | null) ?? null;
+}
+
+export async function getNovaShieldShop(
+  shopId: string,
+): Promise<ShopConfig | null> {
+  const row = await getNovaShieldShopRow(shopId);
+  if (!row) return null;
+  return rowToShopConfig(row);
 }
 
 /**
- * Updates editable merchant settings while strictly preserving server-owned
- * subscription fields (plan, billing_cycle, plan_expires_at).
+ * Updates editable merchant settings for an authenticated NovaOS user.
+ * Enforces:
+ * 1. Shop ownership (owner_id === userId, or platform admin)
+ * 2. Reserved demo IDs cannot be hijacked by regular users
+ * 3. Server-owned subscription fields (plan, billing_cycle, plan_expires_at) cannot be spoofed
  */
-export async function upsertNovaShieldShopSettings(
+export async function upsertNovaShieldShopSettingsForUser(
   shopId: string,
   incoming: Partial<ShopConfig>,
+  actor: {
+    userId: string;
+    userEmail?: string | null;
+    isPlatformAdmin: boolean;
+  },
 ): Promise<ShopConfig> {
   const admin = getAdmin();
-  const existing = await getNovaShieldShop(shopId);
-  const base = existing ?? getInitialShopConfig(shopId);
+  const existingRow = await getNovaShieldShopRow(shopId);
+
+  if (existingRow) {
+    const isOwner = existingRow.owner_id === actor.userId;
+    if (!isOwner && !actor.isPlatformAdmin) {
+      throw new NovaShieldForbiddenError(
+        "此門市代碼屬於其他帳號或系統示範用，請使用您自己的專屬門市代碼。",
+      );
+    }
+  } else if (RESERVED_DEMO_SHOP_IDS.has(shopId) && !actor.isPlatformAdmin) {
+    throw new NovaShieldForbiddenError(
+      "此門市代碼為系統保留示範代碼，請改用您的專屬門市代碼（例如您的店名英文代稱）。",
+    );
+  }
+
+  const existingConfig = existingRow ? rowToShopConfig(existingRow) : null;
+  const base =
+    existingConfig ??
+    (actor.isPlatformAdmin
+      ? getInitialShopConfig(shopId)
+      : {
+          ...createFallbackShopConfig(shopId),
+          emailNotification: actor.userEmail?.trim() || "",
+        });
+
+  const nextOwnerId = existingRow?.owner_id ?? actor.userId;
 
   const merged = normalizeShopConfig(shopId, {
     ...base,
@@ -126,6 +183,7 @@ export async function upsertNovaShieldShopSettings(
   const { error } = await admin.from("novashield_shops").upsert(
     {
       shop_id: shopId,
+      owner_id: nextOwnerId,
       config: merged,
       plan: merged.plan,
       billing_cycle: merged.billingCycle ?? null,
@@ -180,8 +238,10 @@ export async function activateNovaShieldProSubscription(params: {
   cycle: BillingCycle;
 }): Promise<ShopConfig> {
   const admin = getAdmin();
-  const existing = await getNovaShieldShop(params.shopId);
-  const base = existing ?? getInitialShopConfig(params.shopId);
+  const existingRow = await getNovaShieldShopRow(params.shopId);
+  const base = existingRow
+    ? rowToShopConfig(existingRow)
+    : getInitialShopConfig(params.shopId);
 
   const nextExpiresAt = calculateNextExpiry({
     cycle: params.cycle,
@@ -201,6 +261,7 @@ export async function activateNovaShieldProSubscription(params: {
   const { error } = await admin.from("novashield_shops").upsert(
     {
       shop_id: params.shopId,
+      owner_id: existingRow?.owner_id ?? null,
       config: upgraded,
       plan: "PRO",
       billing_cycle: params.cycle,
@@ -233,7 +294,7 @@ export async function listExpiringNovaShieldProShops(
   const { data, error } = await admin
     .from("novashield_shops")
     .select(
-      "shop_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
+      "shop_id, owner_id, config, plan, billing_cycle, plan_expires_at, reminder_3d_for",
     )
     .eq("plan", "PRO")
     .not("plan_expires_at", "is", null)

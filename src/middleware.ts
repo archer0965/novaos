@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
     const path = request.nextUrl.pathname;
-    if (path.startsWith("/dashboard")) {
+    if (path.startsWith("/dashboard") || path.startsWith("/novashield/admin")) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.search = "";
@@ -31,6 +31,8 @@ export const config = {
     "/",
     "/dashboard/:path*",
     "/admin/:path*",
+    "/novashield/admin",
+    "/novashield/admin/:path*",
     "/subkeeper",
     "/login",
     "/signup",
